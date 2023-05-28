@@ -1,0 +1,33 @@
+Spring Container  ( Spring IoC) [ Inversion of Control ]
+---------------------------------------------------------
+1. Find/Scan classes 
+2. Create object 
+3. Provide data and link objects.
+4. Destroy the obj/container
+
+*) Spring container takes 2 inputs : 
+A) Spring Bean (class + rules)
+B) Spring Configuration File ( XML / Java / Annotation )
+=========================================================
+XML Configuration Tags
+-----------------------
+<bean>			      --  creating object
+<property>		    --  calling set method
+<constructor-arg>	--  using parameterized constructor
+<value>           --  Primitive Type 
+<list> [List] <set> [Set] <map> [Map] <props> [Properties]
+
+<ref/>			      -- Reference Type (link two objects)
+----------------------------------------------------------------
+in STS IDE:-
+1. create one project
+> File > new > Spring Starter project > next > Search
+   Spring Web > choose it > next > finish
+
+ Key                         Description
+-------------------------------------------------
+ctrl+shift+T       Open pre-defined classes/interfaces
+ctrl + O           To view current class members
+		(press 2nd time to include parent members)
+ctrl + L	 Goto Line Numbers
+ctrl+shift+R      To Open workspace/project classes...
