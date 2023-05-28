@@ -1,0 +1,85 @@
+		Chapter - 1 : Spring Core
+*) DI v/s IoC:-
+Dependency Injection v/s Inversion of Control (Spring Container)
+
+*) Dependency : A variable (instance variable) exist inside a class
+		(Spring Bean)
+=> Types of Dependencies: (3)
+1. Primitive Type Dependency (PTD) [8+1]
+byte, short, int , long, float, double, boolean, char and String
+If a variable is created using one of above datatype then it is called as PTD.
+
+2. Collection Type Dependency (CTD) [4]  (java.util)
+If a variable is created using one of below types
+	List, Set, Map [I] and Properties (C)
+ then it is called as CTD.
+
+3. Reference Type Dependency (RTD) ****
+ A class or interface is used as a DataType and variable is created then it is called as RTD.
+
+========================================================
+
+Injection(4) : Providing data to variables (after object creation)
+
+1. Setter Injection (SI):
+   Provide/inject value to dependency using setter/set method.
+
+   ** Object is created using default constructor and data is provided using set method.
+
+    class A{
+      int id;
+      void setId(int id) {
+        this.id = id;
+      }
+    }
+    A  oa = new A();
+    oa.setId(10);
+
+===================================
+2. Constructor Injection (CI): Creating object and providing
+	data using parameterized constructor.
+
+class A{
+  int id;
+  A(int id) {
+    this.id = id;
+  }
+}
+A oa = new A(10);
+========================================================
+3. LookUp Method Injection (LMI)
+4. Interface Injection (II)
+
+=============================================================
+OOPs --- Java
+DI   --- Spring container ( Spring IoC )
+
+Q) What is Dependency Injection ?
+A) => Injecting all dependencies to its dependent class.
+
+=> Creating objects from independent to next level dependent classes and link (inject) them.
+
+=> Create objects and link them based on relation.
+
+Q) How many types of Dependencies in Spring ? and What are they?
+A) They are 3 types , PTD, CTD, RTD.
+
+Q) What is Injection and How many types are there in Spring?
+A) Injection : providing data to dependencies
+   Total : 4 , Spring supports: 3 (SI/CI/LMI), 
+   mostly used : 2 (SI/CI)
+========================================================
+Softwares:
+1. JDK 17 (8/11)
+https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+
+2. STS (Spring Tool Suite)
+https://spring.io/tools
+> Choose OS based Link 
+> Wait for download finish
+> Double click on JAR file (choose JDK based extract)
+> Open extracted folder (ex: sts-4.15.3.RELEASE)
+> Double click on "SpringToolSuite4"
+> Created a new folder (workspace) and choose same
+	ex: D:\Spring_Boot_In_Detailed_Way
+> Click on Launch button.
