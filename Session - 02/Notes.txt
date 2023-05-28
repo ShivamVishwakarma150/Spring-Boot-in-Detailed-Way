@@ -1,0 +1,56 @@
+Spring ?
+Spring Boot ?
+Microservices ?
+
+------------------------------------------------------------------------------------------------------------
+
+Core Java, standalone (Swings/AWT), Web based(Servlets/JSP/JDBC) ...etc
+
+1. Spring Framework : To Develop web based applications.
+
+    Framework = Technologies + Design Patterns
+
+- Framework benefits 
+    RAD = Rapid Application Development
+    Less Error rate
+    Boiler Plate Code (Reduce Duplicate code).
+
+ex: Shopping App 
+
+    Servlets, JSP, JDBC = 20K LOC 
+    Spring F/w = 10K LOC 
+#) Configuration File : XML, Java, Annotation 
+
+2. Spring Boot : AutoConfiguration, that comes with pre-defined spring code which reduces LOC.
+(Common lines of Code).
+
+=> There is parent project created by Pivotal Team.
+=> That gives some common code in pre-defined format (JARs)
+=> Your project should extend parent project.
+=> Project can be created wither using Maven/Gradle 
+=> Embedded Servers(Tomcat/Jetty/Undertow) and databases(H2/HSQL/Derby) are given in spring boot.
+
+------------------------------------------------------------------------------------------------------------
+
+OOPs ---- Java, .net, PHP, ...
+Microservices --- Design of writing an application.
+    (Spring Cloud)
+
+    AWS Cloud -- To run your application.
+    Develop -- Build -- Deployment
+
+
+Monolithic Application : Developing application build as a single unit. All Modules code as a single file.
+
+?? If one module code is modified, entire app need to be rebuild and re-deploy.
+
+?? If one module is not working properly that may effect other modules too..
+
+-----------------------------------------------
+
+Microservices : It is a design to develop  very big app.One Module is converted into One Application.
+=> Parallel Development, Deployment, Monitor, AutoScale (Load Balance).
+
+Spring Cloud :- It is a API used to develop APPS USING Microservices design.
+
+
