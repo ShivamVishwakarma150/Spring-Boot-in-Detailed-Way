@@ -1,0 +1,205 @@
+================================================================
+*) Spring Container :
+1. Find/scan classes
+2. Create object
+3. Provide data and link objects
+4. Destroy objects/container.
+
+*) Spring container takes two inputs.
+1. Spring Bean : class that follows rules given by spring container
+2. Spring Configuration : XML/ Java/ Annotation.
+======================Spring Bean==========================
+1. public class  (must be)
+2. class should be in a package.
+ [ must be in base package or sub-package]
+3. variables recommended to be private.
+   Methods need to be public only.
+4. Provide default constructor with mutators
+	(setter/getter methods)
+		[or]
+        Parameterized constructor
+	(Even both are also valid)
+5. Our class can have Object class methods overridden.
+   toString(), equals() and hashCode()
+
+6. class can inherit (extends / implements ) other valid Spring Beans only. But not Servlets/EJB ... (other external APIS)
+
+*) Spring Beans can implement java.io.Serializable (I)
+
+7. Annotations: (can be)
+	+ Core Annotations (java.lang package)
+	+ *** Spring F/w Annotation
+	+ Integrations (JPA/....)
+
+========================================================
+ctrl+shift+T : object
+ctrl+O    : members
+
+*) native : A method which has its impl code at another language
+	   (C-language)
+*) When ever we override equals() method we should even override hashCode() method also (Contract b/w equals and hashCode)
+
+*) Serialization : covert object into some other formats (n/w format, file, global formats XML/JSON)
+
+Q) Is class B serialized? 
+class A implements Serializable {
+}
+class B extends A{
+}
+A) Yes
+Q) I want B class should avoid serialized?
+=============XML Configuration=======================================
+<bean> --- creating object
+<property> --- calling set method
+<constructor-arg> -- calling parameterized constructor
+<value>        --- Primitive 
+<list> <set> <map> <props>  -- for collections
+<ref/>       --- link objects
+===============================================================
+		   Spring First Application
+*) Just test container creation, object creation, setting data check object is created!!
+
+*) New Container is " ApplicationContext " it is interface. Impl class : ClassPathXmlApplicationContext (C)
+
+   ApplicationContext = Spring container
+   XML  = XML File
+   ClassPath = Location of file (src/main/resources)
+
+1. Spring Bean
+2. Spring XML Configuration
+3. Test class 
+=========Ex#1==========
+1. Spring Bean
+package my.app;
+public class OracleCon {
+   private String driver;
+   private String url;
+   // default, set/get
+   // toString
+}
+2. Spring XML Configuration
+<bean id="con" class="my.app.OracleCon">
+	<property name="driver">
+		<value>oracle</value>
+	</property>
+	<property name="url">
+		<value>sample</value>
+	</property>
+</bean>
+3. Test class 
+ ApplicationContext ac = new ClassPathXmlApplicationContext("config.xml");
+ //read object from container
+ OracleCon con = (OracleCon) ac.getBean("con");
+ //print object to view data
+ sysout(con);
+
+ <bean> -- object
+ Spring Bean -- class
+
+===Full Steps=========================================================
+1. Start / Open Eclipse (or) STS
+2. Select workspace
+3. Create simple Maven project
+ > file > new > other > Search Maven > choose Maven Project
+ > next > Choose Checkbox [v] Create Simple Project > next
+ > Enter details
+
+ GroupId    : my.app
+ ArtifactId : SpringFirstApp
+ Version    : 1.0
+
+> Finish
+
+4. pom.xml (add some content)
+	 <properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.22</version>
+		</dependency>
+	</dependencies>
+
+//ctrl+A  , ctrl+I , ctrl+S
+
+5. Update Maven project
+> Right click on Project > maven > update project > Finish
+
+-----code-----------------------------
+1. write a java class and generate code using source menu
+ex
+package my.app;
+
+public class OracleCon {
+	private String driver;
+	private String url;
+	
+	public OracleCon() {
+		super();
+	}
+	
+	public String getDriver() {
+		return driver;
+	}
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
+	@Override
+	public String toString() {
+		return "OracleCon [driver=" + driver + ", url=" + url + "]";
+	}
+	
+}
+2. Right click on src/main/resource folder > new > file
+  > enter name : config.xml  > finish
+  > click on source tab and add below content
+---------
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="con" class="my.app.OracleCon">
+		<property name="driver">
+			<value>oracle</value>
+		</property>
+		<property name="url">
+			<value>sample</value>
+		</property>
+	</bean>
+
+</beans>
+------------
+3. Test class
+package my.app;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+//ctrl+shift+O
+
+public class Test {
+	// main   ctrl+space   enter
+	public static void main(String[] args) {
+		ApplicationContext ac = new ClassPathXmlApplicationContext("config.xml");
+		OracleCon con = (OracleCon) ac.getBean("con");
+		System.out.println(con);
+	}
+}
+
+// run : ctrl + F11
+=====================================================
+
