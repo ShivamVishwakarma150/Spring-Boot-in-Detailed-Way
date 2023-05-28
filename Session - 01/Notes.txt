@@ -1,0 +1,40 @@
+            Spring Core 
+            -----------
+
+*) Rules and guidelines to work with Spring Container.
+    Spring Container -> Predefined spring program the work of this to handle objects.
+
+*** Spring Container ***
+1. Find/Scan classes (Spring Bean)
+2. Create object (DbConnection)
+3. A ---- B ---- C ---- D (Link Object) [Inject/ HAS-A] Here ABCD are classes linking to each other 
+4. Destroy the objects (even Container)
+
+
+#) Container : Memory that holds objects.
+
+------------------------------------------------------------------------------------------------------------
+
+#) Spring Container takes 2 inputs
+1. Spring Bean : It is a class that follows rules given by Spring Container.
+2. Spring Configuration File : It gives metadata (obj name, link details, some data)
+This we can provide in 3 ways : XML config, Java config,Annotation config**
+
+------------------------------------------------------------------------------------------------------------
+
+There are two types of Containers given by Spring framework.
+1) BeanFactory(I): It supports only XML Config, It has one Implementation class, ie XmlBeanFactory(C).
+It is also called as legacy container.
+
+2) ApplicationContext(I) : It supports all configuration (XML/Java/Annotation). It has multiple impl classes 
+ex
+    ClassPathXmlApplicationContext(C)
+    FileSystemXmlApplicationContext(C)
+    AnnotationConfigApplicationContext(C)
+    ..etc 
+
+
+------------------------------------------------------------------------------------------------------------
+
+Dependency Injection and Inversion of Control (DI vs IOC)
+
