@@ -1,0 +1,219 @@
+Spring Annotation Configuration (Java with Annotation):-
+-------------------------------------------------------
+@Component : Container creates object to that class.
+@Value     : To provide data to variable (dependency)
+  | -- To hardcode variables / dependencies
+  | -- To read data from resources (.properties/.yml/.xml)
+  | -- To provide one SpEL (Spring Expression Language)
+
+HardCoding :
+ Assign a direct value to a variable inside source code
+==========================================================
+Spring Core First Application
+1. Spring bean (class + rules ) + 2. Spring Configuration 
+3. Test class (only to check object is created or not?)
+---Example-------------------
+1. Spring Bean + Spring Annotation Config
+package my.app;
+@Component("hob")
+public class HandlerInfo {
+    @Value("data")
+    private String resolverCode;
+    @Value("temp")
+    private String pathToStore;
+    //def const
+    //set,get...
+    //toString
+}
+
+*) Injections:
+1. Setter Injection
+2. Const inj
+3. LMI
+4. II
+
+Note:-
+*) @Value : 
+  It is called as Value based Injection/Direct Injection/Filed Injection , No need of setter methods. (Default constructor is required)
+*) Annotation Configuration is faster compared to XML
+   Because no reading / parsing for additional files.
+*) Annotation Configuration can be used only for our classes (if we have .java code , can be compiled)
+   Not for pre-defined classes.
+*) Annotation Configuration is used for default single object for a class. Ex: Database connection, ViewResolver..etc
+
+----------------------------------------------------------
+Q) What is var-args and how it is different from array?
+   provide all rules to work with var-args.
+
+
+Q) What is casting (up and down) ? 
+
+Q) What is overloading ? what are all rules we need to follow?
+
+Q) What is dynamic polymorphism? 
+
+Q) What is method overriding?
+=========================================================
+Example code:#1
+1. Spring Bean + annotation config
+package my.app;
+//ctrl+shift+O
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component("hob")
+public class HandlerInfo {
+	@Value("data")
+	private String reolverCode;
+	@Value("temp")
+	private String pathToStore;
+	
+	public HandlerInfo() {
+		super();
+	}
+
+	@Override
+	public String toString() {
+		return "HandlerInfo [reolverCode=" + reolverCode + ", pathToStore=" + pathToStore + "]";
+	}
+
+}
+
+2. Test class
+package my.app;
+
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		//1. first create empty container
+		AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext();
+		// 2. find all classes from given basePackage(package and sub-package)
+		ac.scan("my.app");
+		// 3. refresh spring container
+		ac.refresh();
+		//4. read object
+		HandlerInfo ob = ac.getBean("hob",HandlerInfo.class);
+		//5. print object
+		System.out.println(ob); //obtoString()
+	}
+}
+=============================================================
+basePackage :- This is the input must be given incase of Spring Annotation configuration ( So that container can find our classes )
+
+=> Container will try to find classes from given package and subpackages.
+
+=> @ComponentScan is used to provide basePackages to scan our classes 
+
+@ComponentScan(basePackages = "com.app") means find classes from app package and app all subpackage classes
+
+=> Always define one additional class to provide basePackage using annotation @ComponentScan.
+
+Possible examples:
+@ComponentScan({"com.app","test.one","abc.xyz"})
+		--or--
+@ComponentScan(basePackages =  {"com.app","test.one","abc.xyz"})
+
+@ComponentScan("com.app")
+	--or--
+@ComponentScan(basePackages = "com.app")
+
+*) if your class is having @Component but not under basePackage then it has no meaning. ie container is unable to find your class.
+
+========Example#2==================================
+1. Spring bean
+package com.app;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component("eobj")
+public class EmailConfig {
+	
+	@Value("gmail")
+	private String host;
+	
+	@Value("852")
+	private Integer port;
+	
+	@Override
+	public String toString() {
+		return "EmailConfig [host=" + host + ", port=" + port + "]";
+	}
+	
+	
+}
+--------------
+package com.app;
+
+import org.springframework.context.annotation.ComponentScan;
+
+//@ComponentScan({"com.app","test.one","abc.xyz"})
+//@ComponentScan(basePackages =  {"com.app","test.one","abc.xyz"})
+//@ComponentScan("com.app")
+@ComponentScan(basePackages = {"com.app","my.one"})
+public class MyAppConfig {
+
+}
+------------------------
+package com.app.test;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component("cob")
+public class MyCacheData {
+
+	@Value("redis")
+	private String provider;
+
+	@Override
+	public String toString() {
+		return "MyCacheData [provider=" + provider + "]";
+	}
+	
+	
+}
+---------------
+package my.one.format;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component("vr")
+public class ViewResolver {
+	@Value("pages")
+	private String prefix;
+	
+	@Value("jsp")
+	private String suffix;
+	
+	@Override
+	public String toString() {
+		return "ViewResolver [prefix=" + prefix + ", suffix=" + suffix + "]";
+	}
+	
+	
+}
+---------------------------------
+package com.app;
+
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		/*ac.scan("com.app"); 	ac.refresh();*/
+		//Object ob = ac.getBean("eobj");
+		//Object ob2 = ac.getBean("cob");
+		Object ob3 = ac.getBean("vr");
+		//System.out.println(ob);
+		//System.out.println(ob2);
+		System.out.println(ob3);
+	}
+}
+
+
+
