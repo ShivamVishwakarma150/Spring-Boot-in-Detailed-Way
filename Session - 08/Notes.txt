@@ -1,0 +1,220 @@
+Spring Annotation Configuration (Java with Annotation):-
+----------------------------------------------------------
+@ComponentScan : basePackage , to find classes.
+@Component : To create object
+
+*) If your class (Spring Bean), present under basePackage (same package or its subpackage) and having StereoType ( @Component ) annotation, then container creates object to your class.
+
+*) @Value: : To provide data to variable (dependency) -- Field Injection
+  | -- To hardcode variables / dependencies
+  | -- To read data from resources (.properties/.yml/.xml)
+  | -- To provide one SpEL (Spring Expression Language)
+============================================================
+       Direct Data                Runtime data
+  Programmer data             EndUser data (Register,Login)
+   DB Connection                  Posting 
+   Cache Config                     Like, Share...
+   Email Config
+   ..etc
+
+Q) Why are we using .properties / .xml / .yml files here?
+A) Some data is required to start application like Database Connection, JPA(Hibernate) Details, Email Config, Security Configuration..etc
+===========================================================
+=> .properties file will store data in key=val format
+=> key are case-sensitive. 
+=> If same key is provided multiple time with different value
+   then last combination is taken
+=> Symbol # indicates comment in properties file
+=> You can use _(underscore) . (dot) - (dash) symbols in key name.
+=> Autoparsing is supported based on variable datatype.
+    By default key and value (both ) are String datatype
+    ie   app.sid=200
+         app.sid  is String
+	 200      is String
+
+Notes:
+1. We need to create one properties file with any name
+  ex: myapp.properties   then add some key=val pairs
+
+2. @PropertySource is used to load our properties file into Spring container.
+
+3. Spring container creates Environment(I) [org.springframework.core.env]
+   memory (Object).
+   Environment environment = new StandardEnvironment();
+   and holds all key=vals.
+
+4. If you want to inject data to your variables(Dependencies) then use below syntax:
+                @Value("${key}")
+
+==============Full Example =====================
+1. Properties file
+#This is sample properties file
+#my.db.driver=OracleDriver
+my.db.driver=MySQLDriver
+my.db-url=jdbc:oracle:thin:sample
+my.db_user=abcd
+my.db-pwd=shivam
+# keys are case-sensitive
+my.db-Pwd=sample
+my.grade.id=240S
+
+2. Spring Config Input
+package com.app;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.PropertySource;
+
+// you can write annotation in any order
+@ComponentScan(basePackages = "com.app")
+@PropertySource("classpath:myapp.properties")
+public class MyAppConfig {
+
+}
+
+3. Spring Bean + Annotation Configuration
+package com.app.bean;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component("con")
+public class DatabaseConnection {
+
+	@Value("${my.grade.id}")
+	private int code;
+	
+	@Value("${my.db.driver}")
+	private String driver;
+	@Value("${my.db-url}")
+	private String url;
+	@Value("${my.db_user}")
+	private String userName;
+	@Value("${my.db-pwd}")
+	private String userPwd;
+	
+	@Override
+	public String toString() {
+		return "DatabaseConnection [code=" + code + ", driver=" + driver + ", url=" + url + ", userName=" + userName
+				+ ", userPwd=" + userPwd + "]";
+	}
+	
+	
+	
+	
+}
+
+
+4. Test class
+package com.app.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.app.MyAppConfig;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		Object ob = ac.getBean("con");
+		System.out.println(ob);
+		
+	}
+}
+===========================================================
+	    <ref/> type   == @Autowired
+
+Inheritance (IS-A) :
+  Connect classes using extends / implements
+
+  c--------extends------------c
+  I----------extends-----------I
+  C------------implements---------------I
+  I---------------(NOT POSSIBLE)--------C
+
+*) Association (HAS-A)
+  Creating one class/interface reference inside another class (as instance variable)
+
+class A{}
+interface B{}
+
+class C{
+   int id;
+   A   oa; //HAS-A
+   B   ob; //HAS-A
+}
+
+
+@Autowired : Annotation is used to inject its dependency data/object In simple find required object and link with current class object.
+===================Example for Autowired==============
+1. Spring Beans
+package com.app.repo;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyRepository {
+	
+	@Value("SAMPLE")
+	private String entity;
+
+	@Override
+	public String toString() {
+		return "MyRepository [entity=" + entity + "]";
+	}
+	
+	
+}
+---------
+package com.app.serv;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.app.repo.MyRepository;
+
+@Component
+public class MyService {
+	
+	@Autowired
+	private MyRepository repo; //HAS-A
+
+	@Override
+	public String toString() {
+		return "MyService [repo=" + repo + "]";
+	}
+	
+	
+}
+---------
+3. Spring Config File
+package com.app.config;
+
+import org.springframework.context.annotation.ComponentScan;
+
+//no default base package is given by Spring Core
+@ComponentScan(basePackages = "com.app")
+public class MyAppConfig {
+
+}
+
+4. Test class
+package com.app.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.app.config.MyAppConfig;
+
+public class MyTest {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		Object ob = ac.getBean("myService");
+		System.out.println(ob);
+		
+		
+	}
+}
+=================================================
