@@ -1,0 +1,178 @@
+1. By default Maven application is created with version JDK 1.5
+   To update to some other version, add below in pom.xml
+<properties>
+	<maven.compiler.source>1.8</maven.compiler.source>
+	<maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+
+2. To download and add spring jars to write application,
+<dependency>
+	<groupId>org.springframework</groupId>
+	<artifactId>spring-context</artifactId>
+	<version>5.3.22</version>
+</dependency>
+
+3. Why Test class?
+-> To create Spring Container (ApplicationContext).
+-> ClassPathXmlApplicationContext
+     : creating Spring container by reading XML file from
+         src/main/resources folder.
+-> getBean : This method is used to read object from container.
+
+4. XSD Lines (Xml Schema Design) : It provides all tags details to write in XML File (tag/child tags , order, occurrences).
+
+Ref:
+https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/xsd-configuration.html
+
+ ---------------------------------------------------------
+	Key			Description
+ ---------------------------------------------------------
+ select content 
+   ctrl + shift +  /               to comment lines
+   ctrl + shift +  \               to uncomment
+ ---------------------------------------------------------
+1. Spring Bean (class + rules)
+2. Spring Configuration (XML/Java/Annotation)
+3. Test class
+
+==============================================================
+Syntax for Ref Type:
+
+ <property name="variableName">
+    <ref bean="objForLink"/>
+ </property>
+
+ Service [repo=Repository [entity=A]]
+
+===Full code for Reference type ======================
+1. Spring Beans
+package my.app;
+
+public class Repository {
+
+	private String entity;
+	
+	//alt+shift+S  O  > Deselect All > Generate
+	public Repository() {
+		super();
+	}
+	//alt+shift+S  > R  > Select All > Generate
+	public String getEntity() {
+		return entity;
+	}
+	public void setEntity(String entity) {
+		this.entity = entity;
+	}
+	//alt+shift+S  > S  > Generate
+	@Override
+	public String toString() {
+		return "Repository [entity=" + entity + "]";
+	}
+	
+	
+	
+}
+---------
+package my.app;
+
+public class Service {
+
+	private Repository repo;
+
+	public Service() {
+		super();
+	}
+
+	public Repository getRepo() {
+		return repo;
+	}
+
+	public void setRepo(Repository repo) {
+		this.repo = repo;
+	}
+
+	@Override
+	public String toString() {
+		return "Service [repo=" + repo + "]";
+	}
+	
+	
+}
+-----------
+2. config.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="rob" class="my.app.Repository">
+    	<property name="entity">
+    		<value>A</value>
+    	</property>
+    </bean>
+    <bean id="sob" class="my.app.Service">
+    	<property name="repo">
+    		<ref bean="rob"/> <!-- It Creates Link b/w objects -->
+    	</property>
+    </bean>
+
+</beans>
+
+3. Test class
+package my.app;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+	//ctrl + F11 // ctrl+ Fn + F11
+	public static void main(String[] args) {
+		ApplicationContext ac = new ClassPathXmlApplicationContext("config.xml");
+		Service s = (Service) ac.getBean("sob");
+		System.out.println(s);
+	}
+}
+
+
+4. pom.xml
+<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.22</version>
+		</dependency>
+	</dependencies>
+=============================================================
+Spring Annotations:-
+1. StereoType Annotations :
+ Annotation that indicates creating object to spring bean.
+
+A) @Component : creating object
+B) @Repository : creating object + Database Operations
+C) @Service    : creating object + Business Logics/cal/Tx Management
+D) @Controller  : creating object + HTTP Operations (WEB MVC)
+E) @RestController : creating object + HTTP (RestFul Webservices)
+
+===================================
+
+Ex#1
++++++
+package my.app;
+@Component("sob")
+public class Sample {
+}
+//then Spring container creates object to Sample with name sob.
+
+Ex#2
++++++
+package my.app;
+@Component
+public class Sample {
+}
+//then Spring container creates object to Sample with name sample.
