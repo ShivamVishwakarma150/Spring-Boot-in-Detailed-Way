@@ -1,0 +1,503 @@
+
+@Autowired : To link objects.Injecting Dependency object into dependent class.
+
+1. If 1 child object (One Dependency Bean) is found
+		---- Inject/link them
+
+2. If Zero child object (zero Dependency Bean) is found
+		--- Throwing Exception (Child is Must)
+		---- Else use @Autowired(required=false)
+			In this case variable holds null value
+
+3. If multiple child objects (multiple Dependency Bean) are found then container throws exception: NoUniqueBeanDefinitionException
+
+
+Q) Is there any default package name given for @ComponentScan (basePackage)?
+A) No. In Spring Apps we (Programmer) must provider externally basePackage for Annotation Configuration. But in Spring Boot, starter class/main class package is taken as basePackage.
+
+
+*)Note:
+A) @Autowired internally uses one boolean attribute required=true
+That says child/dependency object is must. If no object is
+found for injection then container will throw Exception
+  NoSuchBeanDefinitionException
+
+B) We can request container to provide null as default insted
+of throwing exception, by making code as
+	@Autowired(required = false)
+
+========= Autowired Case#2 Example Code ===================
+1. Spring Bean
+package com.app.service;
+
+import org.springframework.beans.factory.annotation.Value;
+
+//@Component
+public class MyService {
+
+	@Value("SAMPLE DATA")
+	private String code;
+
+	@Override
+	public String toString() {
+		return "MyService [code=" + code + "]";
+	}
+	
+	
+}
+---------------
+package com.app.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.app.service.MyService;
+
+@Component
+public class MyController {
+	//@Autowired
+	@Autowired(required = false)
+	private MyService service; //HAS-A
+
+	@Override
+	public String toString() {
+		return "MyController [service=" + service + "]";
+	}
+	
+	
+}
+
+2. Spring Config class
+package com.app.config;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan(basePackages = "com.app")
+public class MyAppConfig {
+
+}
+
+3. Test class
+package com.app.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.app.config.MyAppConfig;
+import com.app.controller.MyController;
+
+public class TestApp {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		MyController mc =  ac.getBean("myController",MyController.class);
+		System.out.println(mc);
+	}
+}
+===============================================================
+		Spring LifeCycle Methods
+Method: It is block of code that executes a task, must be called manually (calling code should be given by programmer)
+
+LifeCycle Method: A method which is called by container/ f/w. /VMs in between Object creation and destroy.
+
+=> Adv Java (Servlets) --- 3 LifeCycle Methods (Must be there)
+ 1. init()
+ 2. service()
+ 3. destroy()
+
+=> In Spring -- 2 LifeCycle Methods (optional)
+ 1. init method
+ 2. destroy method
+   To connect with external resources we use them
+
+=> These methods are optional.
+=> We can configure them in 3 ways
+  A) using XML Configuration
+     <bean  init-method="___" destroy-method="___">
+     </bean>
+
+  B)*** Using Pre-defined interfaces given by Spring f/w.
+    InitializingBean(I)
+      afterPropertiesSet()
+    DisposableBean(I)
+      destroy()
+
+  C) JSR Annotation 
+     @PreConstruct
+     @PostDestroy
+
+=============================================================
+	Key			Description
+ ctrl+shift+X         To convert selected content to UpperCase
+ ctrl+shift+Y         To convert selected content to LowerCase
+--------------------------------------------------------------
+
+====LifeCycle methods using XML Configuration===========
+1. Spring Bean
+package com.app.service;
+
+public class ExcelExportService {
+
+	private String fileName;
+	private String mode;
+	
+	public void setup() {
+		//lot of code...
+		System.out.println("FROM INIT METHOD");
+	}
+	
+	public void clean() {
+		//some code..
+		System.out.println("FROM DESTORY METHOD");
+	}
+
+	public ExcelExportService() {
+		super();
+		System.out.println("FROM CONSTRUCTOR");
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+		System.out.println("FROM SETTER METHOD");
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
+
+	@Override
+	public String toString() {
+		return "ExcelExportService [fileName=" + fileName + ", mode=" + mode + "]";
+	}
+	
+	
+}
+
+2. XML Config
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean 
+    id="eobj" 
+    class="com.app.service.ExcelExportService"
+    init-method="setup"
+    destroy-method="clean"
+    >
+    
+    	<property name="fileName" value="Sample" />
+    	<property name="mode" value="CSV FORMAT"/>
+    </bean>
+
+</beans>
+
+3. test class
+package com.app.test;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext("beans.xml");
+		Object ob = ac.getBean("eobj");
+		System.out.println(ob);
+		ac.close(); //must be called
+	}
+}
+*************************************************************
+===============LifeCycle Methods -- using interfaces========
+*************************************************************
+1. Spring Bean
+package com.app.service;
+
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+
+public class ExcelExportService implements InitializingBean, DisposableBean {
+
+	private String fileName;
+	private String mode;
+	
+	public void afterPropertiesSet() throws Exception {
+		//lot of code...
+		System.out.println("FROM INIT METHOD");
+	}
+	
+	public void destroy() throws Exception {
+		//some code..
+		System.out.println("FROM DESTORY METHOD");
+	}
+
+	public ExcelExportService() {
+		super();
+		System.out.println("FROM CONSTRUCTOR");
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+		System.out.println("FROM SETTER METHOD");
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
+
+	@Override
+	public String toString() {
+		return "ExcelExportService [fileName=" + fileName + ", mode=" + mode + "]";
+	}
+	
+	
+}
+
+2. Spring XML File
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean 
+    id="eobj" 
+    class="com.app.service.ExcelExportService" >
+    
+    	<property name="fileName" value="Sample" />
+    	<property name="mode" value="CSV FORMAT"/>
+    </bean>
+
+</beans>
+
+3. test class
+package com.app.test;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext("beans.xml");
+		Object ob = ac.getBean("eobj");
+		System.out.println(ob);
+		ac.close();
+	}
+}
+=============================================================
+JSR - 250 : https://jcp.org/en/jsr/detail?id=250
+
+=====LifeCycle Methods using JSR - 250 Annotations ========
+1. Spring Bean
+package com.app.service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+public class ExcelExportService {
+
+	private String fileName;
+	private String mode;
+	
+	@PostConstruct
+	public void setup() throws Exception {
+		//lot of code...
+		System.out.println("FROM INIT METHOD");
+	}
+	
+	@PreDestroy
+	public void clean() throws Exception {
+		//some code..
+		System.out.println("FROM DESTORY METHOD");
+	}
+
+	public ExcelExportService() {
+		super();
+		System.out.println("FROM CONSTRUCTOR");
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+		System.out.println("FROM SETTER METHOD");
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
+
+	@Override
+	public String toString() {
+		return "ExcelExportService [fileName=" + fileName + ", mode=" + mode + "]";
+	}
+	
+	
+}
+
+2. XML Config file
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd
+        
+        ">
+        
+	<context:annotation-config/>
+
+    <bean 
+    id="eobj" 
+    class="com.app.service.ExcelExportService" >
+    
+    	<property name="fileName" value="Sample" />
+    	<property name="mode" value="CSV FORMAT"/>
+    </bean>
+
+</beans>
+
+3. test class
+package com.app.test;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext("beans.xml");
+		Object ob = ac.getBean("eobj");
+		System.out.println(ob);
+		ac.close();
+	}
+}
+
+4. pom.xml
+<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.22</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.annotation</groupId>
+			<artifactId>javax.annotation-api</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+
+	</dependencies>
+===using Annotation Config====================================
+1. Spring Bean
+package com.app.service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import org.springframework.stereotype.Component;
+
+@Component("eobj")
+public class ExcelExportService {
+
+	private String fileName;
+	private String mode;
+	
+	@PostConstruct
+	public void setup() throws Exception {
+		//lot of code...
+		System.out.println("FROM INIT METHOD");
+	}
+	
+	@PreDestroy
+	public void clean() throws Exception {
+		//some code..
+		System.out.println("FROM DESTORY METHOD");
+	}
+
+	
+	@Override
+	public String toString() {
+		return "ExcelExportService [fileName=" + fileName + ", mode=" + mode + "]";
+	}
+	
+	
+}
+
+2. Spring Config class
+package com.app.test;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app")
+public class MyAppConfig {
+
+}
+
+3. test class
+package com.app.test;
+
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+	
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		Object ob = ac.getBean("eobj");
+		System.out.println(ob);
+		ac.close();
+	}
+
+	
+}
+=======================================================
+Q) How many lifecycle methods are supported by Spring F/w?
+A) 2 methods, they are : init and destroy
+
+Q) In how many ways we can configure them?
+A) 3 ways
+  1. XML  <bean init-method="___" destroy-method="____">
+  2. Spring Pre-defined Interfaces
+	  InitializingBean(I) DisposableBean(I)
+  3. JSR-250 Annotations
+
+Q) How can we activate JSR Annotations in XML Config?
+A)
+   <context:annotation-config/>  in XML File
+   also add one dependency in POM.xml
+   <dependency>
+	<groupId>javax.annotation</groupId>
+	<artifactId>javax.annotation-api</artifactId>
+	<version>1.3.2</version>
+  </dependency>
+=============================================================
