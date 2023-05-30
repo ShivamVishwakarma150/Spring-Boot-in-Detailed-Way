@@ -1,0 +1,251 @@
+1. XML Configuration Limitations:
+-> Very Lengthy Config
+-> XML --> Parsed into Java code -> Then executed
+  (Slow in Processing)
+
+2. Annotation Configuration Limitations:
+-> Only Applied for programmer defined classes.
+   [not applied for pre-defined class]
+-> Given only single object configuration.
+
+3. Spring Java Based Configuration :-
+---------------------------------------
+=>***if we want configure one bean (Object) 
+	for pre-defined classes use Java Config.
+=> If we want to configure multiple beans (for one class) then  use Java Config.
+
+--Steps to implement Java Based Configuration -------
+1. Define one public class (with any name)
+2. Add one annotation over class @Configuration
+3. Define one method for one object creation
+4. Add one annotation @Bean
+
+@Configuration
+public class ____ {
+   //1 method = 1 object
+   @Bean
+   public <ClassName> <objectName>() {
+     //...
+   }
+}
+
+*) @Configuration Annotation indicates Spring container input. That contains all Bean Details, to be created.
+*) @Bean --> Creating object (pre-defined, programmer-defined). Re-usable object.
+
+==========Example Java Config Code=======================================
+1. Spring Bean 
+package com.app;
+
+public class DriverManager {
+
+	private String driverClass;
+	private String url;
+
+	public DriverManager() {
+		super();
+	}
+	public String getDriverClass() {
+		return driverClass;
+	}
+	public void setDriverClass(String driverClass) {
+		this.driverClass = driverClass;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	@Override
+	public String toString() {
+		return "DriverManager [driverClass=" + driverClass + ", url=" + url + "]";
+	}
+	
+	
+}
+
+2. Spring Java Configuration
+package com.app;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MyAppConfig {
+
+	//1 method = 1 object
+	@Bean
+	public DriverManager conObj() {
+		DriverManager dm = new DriverManager();
+		dm.setDriverClass("ORACLE");
+		dm.setUrl("JDBC:ORACLE");
+		return dm;
+	}
+}
+
+
+3. Test class
+package com.app;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class MyTest {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		Object ob = ac.getBean("conObj");
+		System.out.println(ob);
+		
+	}
+}
+====FAQs======================================================
+1. What is local variable?
+A. Variable created inside a method, we cant use it outside of that method.
+
+2. Is oa local variable?
+class A{}
+class B{
+  void m1() {
+    A oa = new A();
+  }
+  void m2(){
+    sysout(oa); // not accessable
+  }
+}
+
+3. Can we create a re-usable object using below format?
+class A{}
+class B{
+  A oa = new A();
+  void m1() {
+   // A oa = new A();
+  }
+  void m2(){
+    sysout(oa); // not accessable
+  }
+}
+class C{
+  void m3() {
+    B ob = new B();
+    A a1 =  ob.oa;
+  }
+}
+*) There is no such direct re-usable object is created
+
+4. When should we use Java Configuration?
+A.
+   I) If a class is pre-defined
+  II) To create multiple objects
+
+5. Can we use Java Config to create object 
+	to programmer defined class?
+A. YES. But better use Annotation config.
+   use only for multiple object creation.
+
+6. What is the diff b/w @Bean and @Component?
+A.
+   Both indicates object creation in Spring container
+   @Component can be used only for our classes.
+   @Bean can be used for pre-defined(even programmer-defined).
+
+7. What is the diff b/w @Configuration and @Component?
+A. Generally they are different.
+  @Configuration says our class is not a normal clas.
+  It is a input code to spring container. So, that container
+  takes this class and configure objects based on @Bean annotations.
+
+  @Component - indicates object to container for our classes.
+
+8. Do we need to specify BasePackage for java Config?
+A. No. It is only for our classes.
+
+9. Can we use @Value with properties file in java Config?
+A. No We can not use @Value, but we can read data from
+    properties file.
+
+10. What is Repeatable annotation (JDK 1.8)?
+A. 
+**************************************************************
+*) For multiple Properties file also only one Environment is created. Here Environment interface, impl class : 
+  StandardEnvironment(C)
+
+*) We need to Autowire Environment object in java Config file and use getProperty("key") method to read one key value, which return in String format.
+
+==========Example Java Config + Properties file ===========
+1. Spring Bean
+package com.app;
+
+public class DriverManager {
+
+	private String driverClass;
+	private String url;
+
+	public DriverManager() {
+		super();
+	}
+	public String getDriverClass() {
+		return driverClass;
+	}
+	public void setDriverClass(String driverClass) {
+		this.driverClass = driverClass;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	@Override
+	public String toString() {
+		return "DriverManager [driverClass=" + driverClass + ", url=" + url + "]";
+	}
+
+}
+2. Properties file
+---jdbc.properties---
+my.driver=OracleDriver
+my.url=jdbc:oracle:thin
+
+3. Spring Java Config file
+package com.app;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+
+@Configuration
+@PropertySource("classpath:jdbc.properties")
+public class MyAppConfig {
+	
+	@Autowired
+	private Environment env;
+
+	//1 method = 1 object
+	@Bean
+	public DriverManager conObj() {
+		DriverManager dm = new DriverManager();
+		dm.setDriverClass(env.getProperty("my.driver"));
+		dm.setUrl(env.getProperty("my.url"));
+		return dm;
+	}
+}
+
+4. Test class
+package com.app;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class MyTest {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(MyAppConfig.class);
+		Object ob = ac.getBean("conObj");
+		System.out.println(ob);
+		
+	}
+}
+***********************************************************
