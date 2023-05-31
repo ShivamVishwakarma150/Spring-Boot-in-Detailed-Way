@@ -1,0 +1,99 @@
+Q) What is coupling? How many types are there?
+Q) Why Coupling?
+Q) What is tight coupling?
+Q) What is loose coupling?
+------------------------------------------------------------
+@Autowired : Link Objects (Read object from container and link with current class )
+
+*) If Reference Variable Type is interface then Spring container
+  will search for its implementation class object.
+
+===Example : Autowired Complex Case ====================
+1. Spring Bean
+package com.app.shivam;
+
+public interface IProcess {
+
+	public void getProcesCode() ;
+}
+--------
+package com.app.shivam;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class AdvProcessImpl 
+	implements IProcess {
+
+	@Override
+	public void getProcesCode() {
+		System.out.println("P2");
+	}
+
+}
+---------
+package com.app.shivam;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+@Component
+@Primary
+public class ProcessImpl 
+	implements IProcess {
+
+	@Override
+	public void getProcesCode() {
+		System.out.println("P1");
+	}
+
+}
+---------
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Format {
+	@Autowired
+	private IProcess pob;
+	
+	public void printFormat() {
+		pob.getProcesCode();
+		System.out.println("FROM FORMAT");
+	}
+}
+
+2. Spring config class
+package com.app.shivam;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app.shivam")
+public class AppConfig {
+
+}
+
+3. Test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		Format fob = ac.getBean("format",Format.class);
+		fob.printFormat();
+	}
+}
+
+========================================================
+@Qualifier > @Primary > Name Matching (ref Name = child objName)
+
+*) We can not use same bean name for multiple objects creation
+ If we use then container throws Exception:
+   ConflictingBeanDefinitionException
+
