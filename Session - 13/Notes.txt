@@ -1,0 +1,249 @@
+Setter Injection (SI) : Creating object using default constructor and
+	provide data using set method
+
+Constructor Injection (CI): Creating object and provide data using
+	parameterized constructor.
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LookUp Method Injection (LMI)  Problem Statement:-
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ If Dependency bean is prototype and dependent bean is singleton
+ then expected output may not come.
+
+ If child is Prototype Scope and Parent is singleton scope then
+ expected output may not come.
+
+ If Dependent bean is singleton (Parent is singleton)
+ and Dependency bean is prototype (child is prototype)
+ then Spring container creating first time both object and linked them.
+ When we request to read object 2nd time (getBean) then new child 
+ object is created. But link is not updated with parent (singleton) bean.
+
+
+*** Hint: Independent is prototype, dependent is singleton.
+
+====LMI : Problem Application Code =======================
+1. Spring Bean
+package com.app.shivam.service;
+
+import java.util.Random;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("prototype")
+public class Token {
+
+	private int code;
+
+	public Token() {
+		super();
+		code = Math.abs(new Random().nextInt());
+	}
+
+	@Override
+	public String toString() {
+		return "Token [code=" + code + "]";
+	}
+	
+	
+}
+-----------
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("singleton")
+public class TokenService {
+
+	@Autowired
+	private Token token;
+
+	public Token getToken() {
+		return token;
+	}
+
+	@Override
+	public String toString() {
+		return "TokenService [token=" + token + "]";
+	}
+	
+}
+
+2. Spring Config class
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app.shivam")
+public class AppConfig {
+
+}
+
+3. test class
+package com.app.shivam.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.app.shivam.config.AppConfig;
+import com.app.shivam.service.Token;
+import com.app.shivam.service.TokenService;
+
+public class Test {
+	
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		//reading first time
+		TokenService ts1 = ac.getBean("tokenService",TokenService.class);
+		Token tk1 = ts1.getToken();
+		System.out.println(tk1);
+
+		//reading 2nd time
+		TokenService ts2 = ac.getBean("tokenService",TokenService.class);
+		Token tk2 = ts2.getToken();
+		System.out.println(tk2);
+
+		//reading 3rd time
+		TokenService ts3 = ac.getBean("tokenService",TokenService.class);
+		Token tk3 = ts3.getToken();
+		System.out.println(tk3);
+	}
+
+	public static void main1(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		//reading first time
+		TokenService ts1 = ac.getBean("tokenService",TokenService.class);
+		Token tk1 = ts1.getToken();
+		System.out.println(ts1.hashCode() + " " + tk1.hashCode());
+
+		//reading 2nd time
+		TokenService ts2 = ac.getBean("tokenService",TokenService.class);
+		Token tk2 = ts2.getToken();
+		System.out.println(ts2.hashCode() + " " + tk2.hashCode());
+
+		//reading 3rd time
+		TokenService ts3 = ac.getBean("tokenService",TokenService.class);
+		Token tk3 = ts3.getToken();
+		System.out.println(ts3.hashCode() + " " + tk3.hashCode());
+	}
+}
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LookUp Method Injection (LMI)  Solution Statement:-
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+*) Here, programmer can not handle memory related operations in
+   Spring/Java. It is handled by Spring f/w only.
+
+  But we need to follow below steps in Dependent class/Parent class.
+  (In child class / Dependency class no code changes)
+
+1. Define one method that return child/Dependency class 
+  (with no body , just return null)
+
+2. Add @Lookup Annotation over method
+
+3. Call such method in getter or toString ...(some where)
+
+===LIM : Solution code -- Only changes at parent class ===
+1. Spring Bean code
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("singleton")
+public class TokenService {
+
+	@Autowired
+	private Token token;
+
+	public Token getToken() {
+		token = getMyToken();
+		return token;
+	}
+	
+	@Lookup
+	public Token getMyToken() {
+		//....
+		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "TokenService [token=" + token + "]";
+	}
+	
+	
+}
+=============================================================
+Q) What is Reflection API?
+
+Q) Write a Java code that takes one class name as input
+   and output is
+   No of variables in class
+   No of constructor in class
+   No Methods in class
+   No of Inners in class
+
+Q) What is Annotation and how it works (Annotation Processor class).
+=====================================================================
+Q) What is LMI and When to use?
+A. Lookup Method Injection.
+  If Parent/Dependent class is singleton and child/dependency class is
+  prototype then we need LMI.
+
+Q) Steps to Implement LMI?
+A. Only code changes comes at parent/Dependent class
+
+1. Define one method that return child/Dependency class 
+  (with no body , just return null)
+2. Add @Lookup Annotation over method
+3. Call such method in getter or toString ...(some where)
+
+Q) How LMI concept works internall?
+A. Internally Spring F/w works on memory level that generates some
+   setter method similer code which checks for new child object link
+   using CGLIB : Code Generator Library.
+   This process is present at Lookup Service given by Spring f/w.
+
+Ref Doc (API)
+https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/annotation/Lookup.html
+Ref Doc (HTML)
+https://docs.spring.io/spring-framework/docs/current/reference/html/
+
+=======================================================================
+*) If we apply @Autowired over an interface variable then container
+  checks for its Impl class object and try to inject it.
+
+  ie Create object from independent class to next level dependent class
+  object and link them, known as Spring Container / Spring IOC.
+
+
+*) @Autowired annotation can be used over field/variable, constrcutor
+  and set method.
+
+Ex:
+	@Autowired // Field Injection
+	private Token token;
+
+Ex:
+	@Autowired // setter injection
+	public void setToken(Token token) {
+		this.token = token;
+	}
+
+Ex:
+	@Autowired // Constrcutor Injection
+	public TokenService(Token token) {
+		super();
+		this.token = token;
+	}
+====================================================================
+javabyshivam@gmail.com
