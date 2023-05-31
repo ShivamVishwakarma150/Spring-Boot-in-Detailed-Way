@@ -1,0 +1,298 @@
+
+SpEL (Spring Expression Language):-
+
+=> an Expression is a combination of operators and operands that returns finally one value, once it gets executed.
+
+ex:
+    a + b x 2
+
+=> SpEL expression is created using : operators, variables, class/objects, method calls...etc returns finally one value
+
+Arithmetic  : +, -, *, /, %, ^, div, mod
+Relational  : <, >, ==, !=, <=, >=, lt, gt, eq, ne, le, ge
+Logical     : and, or, not, &&, ||, !
+Conditional : ?:
+
+=> @Value Annotation
+1. HardCoding value : @Value("   ")
+2. Reading data from external resources  : @Value(" ${ } ")
+3. SpEL : Execute one expression : @Value(" #{ } ")
+
+**) SpEL Supports Link objects using:
+	@Value("#{childObjName}")
+======================================================
+1. We must enclose our Expression inside #{  }
+2. To indicate String use single quotes ex:  'hello'
+3. To call instance method we need object/reference
+Ex:
+  @Value(" new java.util.Random().nextInt() ")
+
+  @Component("sob")
+  class Sample {
+     @Value("88")
+     int id;
+  }
+
+ // in some other class 
+ @Value("#{ sob.id % 10}")   ---> equals to sob.getId()
+ @Value("#{ sob.id mod 10}")
+
+4. To call static method first specify that it is a type
+     T(ClassName).methodName()
+
+=======Example : code SpEL  ===========================
+1. Spring Beans
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ModelData {
+
+	@Value("TEST")
+	private String model;
+
+	public ModelData() {
+		super();
+	}
+
+	@Override
+	public String toString() {
+		return "ModelData [model=" + model + "]";
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
+	}
+
+}
+----------------
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Process {
+	
+	//@Value("#{ 2 + 3 }")
+	//@Value("#{ 'Hello ABC'.length()  }")
+	//@Value("#{ new java.util.Random().nextInt() }")
+	//@Value("#{ T(java.lang.Math).abs(-9)}")
+	//@Value(" #{ T(java.lang.Math).abs( new java.util.Random().nextInt() ) }")
+	//@Value(" #{ 'Hello'.length() > 0 ? 55 : 44 }")
+	//@Value(" #{ modelData.model.length() }")
+	@Value(" #{ modelData.model.toLowerCase() }")
+	private String code;
+	
+	//@Value("#{ false }")
+	//@Value(" #{ new java.util.Random().nextInt() > 5 ? true:false}")
+	//@Value(" #{ new java.util.Random().nextInt() > 5 }")
+	//@Value(" #{ new java.util.Random().nextInt() ge 5 }")
+	//@Value(" #{ 5 % 2 > 0 && 2 + 3 le 5  }")
+	@Value(" #{ 5 % 2 > 0 and 2 + 3 le 5  }")
+	private boolean isPresent;
+
+	@Override
+	public String toString() {
+		return "Process [code=" + code + ", isPresent=" + isPresent + "]";
+	}
+
+	
+	
+}
+
+2. Spring Config code
+package com.app.shivam;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app.shivam")
+public class AppConfig {
+
+}
+
+3. test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		Process p = ac.getBean("process",Process.class);
+		System.out.println(p);
+	}
+}
+==============================================================
+Q) Write SpEL for below concepts!
+
+1. String to char[]
+
+@Value(" #{ modelData.model.toCharArray() }")
+private char[] data;
+
+@Value(" #{ 'Hello Users!'.toCharArray() }")
+private char[] data;
+	
+
+2. String to byte[]
+
+@Value(" #{ modelData.model.getBytes() }")
+private byte[] arr;
+
+@Value(" #{ 'Hello Users!'.getBytes() }")
+private char[] data;
+
+3. Any type to Stream
+ 
+@Value("#{modelData.model.lines()}")
+private Stream<String> stream;
+===============================================================
+Circular Dependency:-
+It is handled by Spring F/w only. It takes care of creating objects and linking them in below order.
+
+1. Create objects using default constructor
+2. Call set methods to link Objects.
+ex:
+ class A{  B ob; }
+ class B{ A oa; }
+
+Then container will do
+  A a1 = new A();
+  B b1 = new B();
+  a1.setOb(b1);
+  b1.setOa(a1);
+
+*) If we define toString methods in both classes and we try to print object/reference then it may leads to Error:
+
+========Code======================
+1. Spring Bean
+package com.app.shivam;
+
+public class Employee {
+
+	private String name;
+	
+	private Project pob;
+	
+	public Employee() {
+		super();
+		System.out.println("EMPLOYEE OBJ");
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Project getPob() {
+		return pob;
+	}
+
+	public void setPob(Project pob) {
+		this.pob = pob;
+		System.out.println("EMPLOYEE.setProject ");
+	}
+
+	@Override
+	public String toString() {
+		return "Employee [name=" + name + ", pob=" + pob + "]";
+	}
+
+	
+	
+}
+------------
+package com.app.shivam;
+
+public class Project {
+
+	private String pcode;
+	
+	private Employee eob;
+	
+	
+	public Project() {
+		super();
+		System.out.println("PROJECT OBJ");
+	}
+
+	public String getPcode() {
+		return pcode;
+	}
+
+	public void setPcode(String pcode) {
+		this.pcode = pcode;
+	}
+
+	public Employee getEob() {
+		return eob;
+	}
+
+	public void setEob(Employee eob) {
+		this.eob = eob;
+		System.out.println("PROJECT.setEmployee ");
+	}
+
+	@Override
+	public String toString() {
+		return "Project [pcode=" + pcode + ", eob=" + eob + "]";
+	}
+
+	
+	
+	
+}
+
+2. config.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="e1" class="com.app.shivam.Employee">
+    	<property name="name" value="RAJU"/>
+    	<property name="pob">
+    		<ref bean="p1"/>
+    	</property>
+    </bean>
+
+	<bean id="p1" class="com.app.shivam.Project">
+		<property name="pcode" value="HTED"/>
+		<property name="eob">
+			<ref bean="e1"/>
+		</property>
+	</bean>
+</beans>
+
+3. test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new ClassPathXmlApplicationContext("config.xml");
+		Employee e = ac.getBean("e1",Employee.class);
+		System.out.println(e);
+	}
+}
+
+TASK : Define above Configuration using Spring Annotations @Component and @Autowired.
+=============================================================
+
