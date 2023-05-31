@@ -1,0 +1,283 @@
+
+Spring Scope : (4) 
+Lifetime/ accessible time / how long does it exist in memory.
+1. singleton (default /longest)
+2. prototype (new object on every access from container)
+3. request [Spring WEB] 
+ (Create object on request and maintain until response)
+4. session [Spring WEB] : on login user (per session) create
+		object and destroy on logout.
+
+Note:
+1. Scope names are reserved words and they are case-sensitive singleton, prototype, request, session
+
+2. In case of XML Configuration we need to provide scope at bean tag
+  Like:
+  <bean id="" class="" scope=""> .. </bean>
+
+3. In case of Annotation/ Java Config we should use annotation @Scope("______")
+
+4. For one Bean Configuration , scope must be given only once.
+
+===================XML EXAMPLE -- Spring Bean Scope ==========
+1. Spring Bean
+package com.app.shivam;
+
+public class Token {
+
+	private String code;
+
+	public Token() {
+		super();
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	@Override
+	public String toString() {
+		return "Token [code=" + code + "]";
+	}
+	
+	
+}
+
+2. Spring XML Config File
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<bean 
+		id="t1" 
+		class="com.app.shivam.Token"
+		scope="prototype"
+		>
+		<property name="code" value="SAMPLE"/>
+	</bean>
+</beans>
+
+3. test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new ClassPathXmlApplicationContext("/myconfig/beans.xml");
+		//Reading object from container
+		Token tob1 = ac.getBean("t1",Token.class);
+		System.out.println(tob1.hashCode());
+		
+		//Reading object from container
+		Token tob2 = ac.getBean("t1",Token.class);
+		System.out.println(tob2.hashCode());
+	}
+}
+============================================================
+	Spring Bean Scope Annotation Config
+*************************************************************
+1. Spring Bean
+package com.app.shivam;
+
+import java.util.Random;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component("t1")
+//@Scope("singleton")
+@Scope("prototype")
+public class Token {
+
+	private int code;
+
+	public Token() {
+		super();
+		code = Math.abs( new Random().nextInt() );
+	}
+
+	@Override
+	public String toString() {
+		return "Token [code=" + code + "]";
+	}
+	
+	
+	
+}
+
+2. Spring Config class
+package com.app.shivam;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app.shivam")
+public class AppConfig {
+
+}
+
+3. Test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		Token ta1  = ac.getBean("t1",Token.class);
+		System.out.println(ta1);
+		Token ta2  = ac.getBean("t1",Token.class);
+		System.out.println(ta2);
+	}
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	Spring bean -- Java Config Example
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+1. Spring Bean
+package com.app.shivam;
+
+import java.util.Random;
+
+//@Component("t1")
+//@Scope("singleton")
+//@Scope("prototype")
+public class Token {
+
+	private int code;
+
+	public Token() {
+		super();
+		code = Math.abs( new Random().nextInt() );
+	}
+
+	@Override
+	public String toString() {
+		return "Token [code=" + code + "]";
+	}
+	
+	
+	
+}
+
+2. Spring Config class
+package com.app.shivam;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+
+//@ComponentScan("com.app.shivam")
+@Configuration
+public class AppConfig {
+
+	//1. Bean = 1 Method
+	@Bean
+	@Scope("prototype")
+	public Token t1() {
+		return new Token();
+	}
+	
+}
+
+3. Test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		Token ta1  = ac.getBean("t1",Token.class);
+		System.out.println(ta1);
+		Token ta2  = ac.getBean("t1",Token.class);
+		System.out.println(ta2);
+	}
+}
+*************************FAQs*********************************
+1. What is the default scope in Spring F/w?
+A. singleton
+
+2. Is Spring container EAGER/LAZY by default in Bean Creation?
+A. If the scope is set to singleton then such beans are created
+   while creating spring container (ie EAGER LOADING)
+
+   If the scope is set to prototype then such beans are created
+   after creating spring container, when we try to read object
+   from container (getBean) (ie LAZY LOADING).
+
+3. How can we force container to behave Lazy for singleton beans?
+A. We need to add one annotation @Lazy over Bean Config.
+
+ex:
+@Component("t1")
+@Lazy
+public class Token { ... }
+
+ex:
+<bean id="" class="" scope="" lazy-init="true" > </bean>
+
+4. When should we go for singleton / prototype?
+A. Based on requirement.
+  If we want one object for a config , then use singletion
+   else go for prototype
+Ex:
+  DatabaseCon -- 1 object is fine so goto singleton
+  OTP         -- need different object every time -- prototype
+
+5. When should we go for Lazy?
+A. LAZY creates object on first access (for singleton)
+   To avoid all objects creation while container creation
+   ( a type of memory saving )
+   but finally object is created (on first access)
+Gmail ---Ex
+ InboxService (EAGER/singleton)
+ DraftService (LAZY/Singleton)
+
+6. How can we convert prototype Loading to EAGER?
+A. No. We can not convert Prototype object scope (or)
+   LAZY Loading to EAGER.
+   No Such annotation like EAGER.
+
+7.*** What is load-on-startup in Servlets?
+   (or) Explain Eager and Lazy Loading in Servlets?
+
+8. How can we provide two scopes for a same bean?
+A. We can never provide multiple scopes for a single/same bean.
+
+9. Is Below code valid? how many objects created?
+ (Using Both Java and Annotation Config at a time)
+
+@Component("oa")
+public class A{ 
+  @Value(20)
+  int code;
+}
+-------------
+@Configuration
+public class AppConfig {
+  @Bean
+  public A oa() {
+    A a1 = new A();
+    a1.setCode(10);
+    return a1;
+  }
+}
+
+A. __________________________________
+
+10. Also try above code with Scopes (singleton/prototype)...
+11. Also use Loadings in different way.
+-------------------------------------------------------------------
