@@ -1,0 +1,109 @@
+@Component @Value @ComponentScan
+@Autowired  @Scope
+@Configuration @Bean @PropertySource
+
+Spring Boot:-
+1. AutoConfiguration (Pre-defined configuration code -- Java Config)
+2. No XML Configuration supported
+3. Frontend (Angular/ReactJS) + Backend (Spring Boot)
+   Spring Boot ReST Webservices + Microservices/Spring Cloud
+
+** Spring Cloud:(Coding) To Develop application using Microservices
+** AWS Cloud :(Run) To Deploy application
+
+** Spring boot supports even MVC (Model - View [JSP/Thyemeleaf] - Controller)
+ Model - Data
+ View  - Display / UI/UX
+ Controller - class/request processing code
+
+4. Tools : maven - pom.xml / gradle - build.gradle
+5. Embedded Servers - Tomcat**, Jetty and Undertow
+6. Embedded Databases - H2, HSQL, Derby (Test/Dev Env)
+7. Packing/ build models - .jar / .war
+8. Parent Project (spring-boot-starter-parent) exist for
+   every spring boot application.
+   It takes care of versions of dependecies.
+
+*) JAR : Java Archive ( .class files )
+  A.java , B.java --> compile --> A.class B.class --build-> Sample.jar
+
+   WAR : Web Archive ( .class + HTML/CSS/JS...)
+           (Used for web applications)
+
+9. Maven Plugins: That gives additional task/works can be executed
+      Compiler plugin -- Supports updating JDK/JRE version
+      Build Plugin  -- Supports converting jar/war
+===============================================================
+Spring Boot Application Files:
+1. Starter class:
+ This one creates spring container (ApplicationContext)
+ with all required objects and setup.
+
+ It is a simple main() class. 
+ The actual logic is present in : SpringApplication.run() method
+
+2. Input file : key=val pairs
+=> This is used to provide key:val pairs as input to Spring container
+
+1. application.properties
+server.port=9898
+
+2. application.yml
+server:
+  port: 9898
+
+*) We can add two types of keys,
+ Pre-defined and programmer-defined/user defined
+Pre-defined keys Ref Link:
+https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.web
+
+3. Build File
+-> Parent Project Details
+-> Our Project Details
+-> Properties (Java version, Spring cloud version..etc)
+-> Dependencies (Jars)
+-> plugins (Compiler, Build, SonarQube , JACOCO..etc)
+
+==============================================================
+Required S/w
+JDK : 17/11
+https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+STS : Spring Tool Suite
+> Download and double click to Extract
+https://spring.io/tools
+
+===============First Application Steps =======================
+1. File > new > Spring Starter Project
+2. Provide details
+ Name    : SpringBootFirstApp
+ Version : 1.0
+ package : com.app.shivam
+
+3. Next > select Dependencies (Spring web) > next > finish
+
+*) When we click on finish button STS makes request to 
+ https://start.spring.io/ website that gives spring boot
+ application with setup
+
+Example Req:
+https://start.spring.io/starter.zip?
+name=firstapp
+& groupId=com.app.shivam
+& artifactId=firstapp
+& version=1.0
+& description=Demo+project+for+Spring+Boot
+& packageName=com.app.shivam
+& type=maven-project
+& packaging=jar
+& javaVersion=17
+& language=java
+& bootVersion=2.7.3
+
+===Test application=====================
+1. Create one new application
+2. Choose Dependency : Spring web
+3. application.properties
+   server.port=9696
+4. Open Main class > Right click > Run as > Spring Boot application
+5. Goto Browser and enter URL
+http://localhost:9696/
