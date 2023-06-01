@@ -1,0 +1,112 @@
+Spring F/w : it used to develop web/distributed applications.
+
+*) Configuration (XML/Java/Annotation) code is common for applications
+Some Common Configuration:
+1. Database Connection
+2. Notifications/Alerts
+3. Security/User Operation
+..etc
+
+--Ex Spring XML Configuration Code for Database Connection -----
+<bean id="dbCon" class="DriverManagerDataSource">
+  <property name="driverClassName" value="OracleDriver"/>
+  <property name="url" value="jdbc:oracle:thin.."/>
+  <property name="username" value="shivam"/>
+  <property name="password" value="shivamIT"/>
+</bean>
+===========================================================
+*) Spring Boot : It is defined using Spring F/w. 
+  It reduces common configuration compared to Spring F/w.
+
+=> Pivotal Team has provided one parent project "Spring Boot"
+ which has pre-defined configuration code (AutoConfiguration)
+ in Jars format.
+
+=> We must create one child project and link to parent.
+=> Project must be created using either Maven or Gradle.
+
+
+--Ex Spring Boot Database Connection-------------
+1. Child Project / Spring boot starter project
+2. Maven -- pom.xml / Gradle -- build.gradle
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+
+implementation 'org.springframework.boot:spring-boot-starter-jdbc:2.7.3'
+
+3. application.properties
+driver=Oracle
+url=jdbc:oracle:thin
+username=shivam
+password=shivamIT
+
+
+*) Note: Pre-defined configuration code exist in jar files those naming format looks like:
+   spring-boot-starter-[some name]
+
+Ex:
+spring-boot-starter-mail
+spring-boot-starter-web
+spring-boot-starter-security
+spring-boot-starter-aop
+spring-boot-starter-jdbc
+spring-boot-starter-data-jpa
+..etc
+Ref:
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.build-systems.starters
+
+1. Spring F/w : Web Apps (Spring MVC)
+   Spring Boot : ReSTFul Webservices (Microservices/Spring Cloud)
+
+2. Spring boot provided embedded servers : Tomcat, Jetty, Undertow
+  [netty -- reactive programming -- Spring Webflux]
+
+3. Spring boot provided embedded databases: H2, HSQL, Derby  [not recommended in production] (Dev/Test Env)
+
+4. Spring Boot never support working with XML Configuration (Parsing, executing ... slow) We work using Java and Annotation Configuration.
+
+5. No EJB/.ear in Spring boot.
+
+6. Actuator : Production ready endpoints
+
+7. Scaling (Up/Down) supported
+
+8.** FrontEnd (Angular/ReactJS) + Backend (Spring boot) + Cloud
+  JSON (JACKSON) Global Data format is supported.
+
+9. YAML/Properties both inputs are supported by Spring boot.
+ex:
+application.properties
+------------------------
+spring.datasource.driver-class-name=Oracle
+spring.datasource.url=jdbc:oracle:thin:...
+spring.datasource.username=shivam
+spring.datasource.password=shivamIT
+
+application.yml
+------------------------
+spring:
+  datasource:
+     driver-class-name: Oracle
+     url: dbc:oracle:thin:...
+     username: shivam
+     password: shivamIT
+
+*) Spring boot has provided pre-defined keys set
+https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.mail
+
+Q) .yml or .yaml ?? which one is valid?
+A) Both. in Spring Boot we use .yml only.
+   K8s --> .yaml
+=============================================================
+.jar = java archive  (.class files)
+.war = web archive  (.class + html/css/js ...etc)
+
+Web / Rest in Spring Boot -- JAR ( Code + Embedded Server)
+                          -- WAR (Code --> Run in external server)
+
+*) https://start.spring.io/
+  This website (even used by IDEs) supports creating spring boot
+  application with initial setup.
