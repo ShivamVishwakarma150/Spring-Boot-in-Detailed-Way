@@ -1,0 +1,170 @@
+
+		Spring Core : Scheduling
+        ------------------------
+
+*) Scheduling: Executing a task in a loop over PERIOD of TIME or POINT of TIME.
+
+Ex:
+1. EMI Alerts
+2. Databackups
+3. Bank Statement
+4. Notifications
+5. Payslip Generation
+
+*) PERIOD of TIME : Time gap 
+Ex: 30 mins, 5 days, 2 years..etc
+*) POINT of TIME  : Exact Date/Time
+Ex: 10PM -- Generate Report
+    31st Dec -- Backup.
+
+============================================================
+*) To implement Scheduling in Spring, we need to use 
+1. @EnableScheduling over config class
+2. @Scheduled over method (public void ____() { //code  } )
+** Scheduler methods are executed by container in a loop.
+
+@Scheduled: Takes 3 types of inputs
+a. fixedDelay : 
+ Exact time gap b/w last method finish to next method call/start
+
+b. fixedRate : 
+  Exact time gap b/w last method call to next method call
+
+c. cron *** : POINT of TIME (Linux OS Based Date/Time)
+
+--------Example--------------------------------
+1. Spring Bean
+package com.app.shivam;
+
+import java.util.Date;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProductReportService {
+	
+	//@Scheduled(fixedDelay = 2000) //in milli sec
+	//@Scheduled(fixedDelayString = "2000") //in milli sec
+	@Scheduled(fixedRate = 2000)
+	public void generateReport() {
+		System.out.println("HELLO " + new Date());
+	}
+}
+
+2. Spring Config class
+package com.app.shivam;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+@ComponentScan("com.app.shivam")
+@EnableScheduling
+public class AppConfig {
+
+}
+
+3. Test class
+package com.app.shivam;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		//ProductReportService ps = ac.getBean("productReportService",ProductReportService.class);
+		ProductReportService ps = ac.getBean(ProductReportService.class);
+		
+	}
+}
+
+*) Method execution time may not be same for multiple calls. ie if a method is called multiple time, then it may take different time/gaps to finish execution.
+
+====================================================
+Q) What is the diff b/w fixedDelay and fixedRate?
+A) fixedDelay provides exact time gap to start next call
+   counting from last method finish time. fixedRate includes even task execution time, if method/task execution time is more than rate then wait time is ZERO.
+
+******************************************************************
+    -=-=-=-=-=-=-=-=-=-=-=-= CRON =-=-=-=-=-=-=-=-=-=-=-=-=-=-
+******************************************************************
+It is from Linux OS, indicates task/JOB execution based on
+date/time.
+
+cron = SEC   MIN    HRS   DAY   MONTH   WEEKDAY
+      0-59  0-59   0-23  1-31   1-12     SUN-SAN 1-7 / 0-7
+
+Symbols Like
+ *  = all/any
+ -  = Range
+ ,  = set of possible values
+ ?  = any (used in DAY and WEEKDAY when Month is provided)
+===Expressions========================================================
+1. cron = 0 0 9 * * *
+=> Execute task every day at 9:00:00 AM
+
+2. cron = 0 0 18 * * *
+=> Execute task every day at 6:00:00 PM
+
+3. cron = 0 0 9 10 * *
+=> Execute task on every month 10th day at 9:00:00AM
+
+4. cron = 0 30 * * * *
+=> Execute task on every hour 30th min only.
+  [not 30 mins gap]
+7:55 AM -- App Started
+8:30:00 --1st task executed
+9:30:00 -- 2nd task executed
+10:30:00 ...
+
+5. cron = 10 * * * * *
+=> execute task on Every minute, 10th sec 
+	[it is not 10sec gap, at 10th sec of minute]
+ex:
+  7:56:10
+  7:57:10
+  7:58:10
+  7:59:10
+  8:00:10
+
+6. cron = */10 * * * * * (Symbol 1 indicate period of time)
+for every 10 sec gap
+
+--Example code-------
+package com.app.shivam;
+
+import java.util.Date;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProductReportService {
+	
+	
+	//@Scheduled(cron = "10 * * * * *")
+	@Scheduled(cron = "*/10 * * * * *")
+	public void generateReport() {
+		System.out.println("HELLO " + new Date());
+	}
+}
+---------------------------------------------------
+7. cron = 0  0  9  10 * *     (on 10th of every month)
+   cron = 0  0  9  */10 * *  (For every 10 days gap)
+
+8. cron = 59  59 23  * * *
+=> Execute task every day 11:59:59 PM (1sec before to 12 AM)
+
+9. cron = 0 0 9 * 3 * (wrong format)
+          0 0 9 ? 3 ?
+
+ If month is provided and you want to specify all day/week day
+ then use ? symbol.
+
+Ref Doc:
+https://spring.io/blog/2020/11/10/new-in-spring-5-3-improved-cron-expressions
+
+
+
