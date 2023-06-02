@@ -1,0 +1,289 @@
+Spring Boot Runners:-
+ To execute any Logic only once by Spring Container 
+ on application startup / while starting application.
+
+1. Testing Objects (Created or not?)
+2. Loding Database Scripts( Create, alter..etc)
+3. Start Batch Processing (Ex: CSV/Excel File ---> Database)
+4. Root user creation/Roles setup.
+
+=================================================================
+ctrl + Shift + T 
+
+--API Details -----------
+package: org.springframework.boot
+interface CommandLineRunner 
+method:
+	void run(String... args) throws Exception;
+--------------------------
+Coding Steps:
+1. Define one class and add @Component 
+2. implement CommandLineRunner and override run() method
+3. Define your logic inside run method.
+
+Note:
+1. We can define multiple runners in one application
+2. They are executed in naming order.
+3. We can provide our own order using @Order(int) annotation
+  If no annotation @Order is provided then default value is
+  Integer.MAX_VALUE (2147483647)
+4. If multiple Runners are having same order then again naming
+   rule is applied.
+
+========Code ==============================================
+1. Create application
+> File > new > Spring Starter Project
+Name : 01SpringBootCoreRunnerEx
+Package : com.app.shivam
+> Next > Finish
+
+2. Spring Bean classes
+package com.app.shivam.runner;
+
+//ctrl+shift+O
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+@Component
+@Order(5)
+public class MessageRunner implements CommandLineRunner {
+
+	@Override
+	public void run(String... args) throws Exception {
+		System.out.println("MESSAGE RUNNER.");
+	}
+}
+
+----
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+@Component
+@Order(15)
+public class DatabaseConRunner implements CommandLineRunner {
+
+	@Override
+	public void run(String... args) throws Exception {
+		System.out.println("DATABASE CON RUNNER");
+	}
+}
+---
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+@Component
+@Order(10)
+public class EmailConfigRunner implements CommandLineRunner {
+
+	@Override
+	public void run(String... args) throws Exception {
+		System.out.println("EMAIL CONFIG.");
+	}
+}
+==============================================================
+Ex:
+ARunner  -- @Order(12)
+BRunner  -- @Order(44)
+CRunner  -- @Order(-98)
+DRunner  -- @Order(-101)
+ERunner  --  No External Order value is provided
+FRunner  --  No External Order value is provided
+
+Execution Order of Above Runners:-
+D  C  A  B  E  F
+
+***************************************************************
+1. @Component -- creates object in Container
+2. @Value("${key}") -- reads data from input file (application.properties)
+3. @Autowired -- Read and link object from container to current class
+4. Here no need to add @PropertySource (like Spring Core)
+   to load application.properties file 
+
+--Spring Core Ex----------------
+@PropertySource("classpath:application.properties")
+@ComponentScan("com.app.shivam")
+public class AppConfig {}
+---------------------------------
+
+=========Spring Boot Core Example # 2 (Properties file ) ======
+1. Spring Bean
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DatabaseCon {
+	
+	@Value("${my.db.driver}")
+	private String driver;
+	
+	@Value("${my.db.url}")
+	private String url;
+	
+	@Value("${my.db.usr}")
+	private String user;
+	
+	@Value("${my.db.pwd}")
+	private String password;
+	
+	@Override
+	public String toString() {
+		return "DatabaseCon [driver=" + driver + ", url=" + url + ", user=" + user + ", password=" + password + "]";
+	}
+	
+	
+}
+
+2. application.properties
+#Our own keys
+my.db.driver=Oracle
+my.db.url=jdbc:oracle:thin:XYZ
+my.db.usr=root
+my.db.pwd=sample
+
+3. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TestObjRunner implements CommandLineRunner {
+	
+	@Autowired
+	private DatabaseCon con;
+
+	@Override
+	public void run(String... args) throws Exception {
+		System.out.println(con);
+	}
+}
+===============================================================
+***************************************************************
+		@ConfigurationProperties
+***************************************************************
+===============================================================
+@Value will try to read one key data and if found inject the
+same into one variable, else key not found then container
+throws exception like: IllegalArgumentException: 
+Could not resolve placeholder 'my.db.driver' in value "${my.db.driver}"
+
+-> If we have n variable to load n keys then we should define
+   @Value over n variables.
+
+-> @ConfigurationProperties loads all keys into matching variables
+   at a time by writing this only one time per class
+   with the help of prefix.
+
+================================================================
+*) Note:
+1. @ConfigurationProperties will never throw any exception if keyname/variable name not matching or prefix is not matching or setters not found, all these cases variable holds default value (null/0/0.0/false)
+
+But @Value("${key}") will throw exception if exact key is not matching
+
+2. @Value follows case-sensitive, but not @ConfigurationProperties
+ First priority is given to same case next chance is for nearest
+ case.
+
+ex: variable name password;
+  check first key  my.app.password 
+              else my.app.PASSWORD
+
+====Code========================================================
+1. Spring Bean
+package com.app.shivam;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("my.app")
+public class DatabaseCon {
+
+	private String driver;
+	private String url;
+	private String username;
+	private String password;
+
+	public String getDriver() {
+		return driver;
+	}
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	@Override
+	public String toString() {
+		return "DatabaseCon [driver=" + driver + ", url=" + url + ", username=" + username + ", password=" + password
+				+ "]";
+	}
+	
+	
+}
+
+2. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TestDbConRunner implements CommandLineRunner {
+
+	@Autowired
+	private DatabaseCon con;
+	
+	@Override
+	public void run(String... args) throws Exception {
+		System.out.println(con);
+	}
+
+}
+
+3. application.properties
+my.app.driver=OracleDriver
+my.app.url=jdbc:oracle
+my.app.username=system
+my.app.password=testabc
+#my.app.PASSWORD=shivam
+=========================================================
+
+TASK: EmailConfig (class)
+       host (String)
+       port (int)
+       active (boolean)
+       usr (String)
+
+-> provide data in properties file using syntax: prefix.variable=val
+-> Load them using : @ConfigurationProperties(prefix="___")
+-> Define one runner class to read emailConfig object and print
+
+  
+
