@@ -1,0 +1,308 @@
+YAML Examples:-
+Ref Link: http://mageddo.com/tools/yaml-converter
+
+*) SnakeYAML is a API (JAR). This is used to read/parse YAML file
+  data into Java Format, that is loaded finally into Spring
+  Container Environment.
+
+*) It is not recommended to keep both properties and yaml file.
+In this case properties is loaded with priority.
+
+====Example#1===========================
+1. Spring Bean
+package com.app.shivam;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@ConfigurationProperties("my.app")
+@Component
+public class EmailConfig {
+
+	private String host;
+	private int port;
+	private String username;
+	private String pasword;
+	
+	public String getHost() {
+		return host;
+	}
+	public void setHost(String host) {
+		this.host = host;
+	}
+	public int getPort() {
+		return port;
+	}
+	public void setPort(int port) {
+		this.port = port;
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPasword() {
+		return pasword;
+	}
+	public void setPasword(String pasword) {
+		this.pasword = pasword;
+	}
+	@Override
+	public String toString() {
+		return "EmailConfig [host=" + host + ", port=" + port + ", username=" + username + ", pasword=" + pasword + "]";
+	}
+	
+	
+}
+
+----
+2. application.yml
+> right click on src/main/resources > new > file > enter name
+> finish
+
+> Right click on application.properties > Refactor > Rename (F2)
+> Enter application.yml > finish
+-------application.yml-------------
+my:
+  app:
+    host: smtp.gmail.com
+    port: 885
+    username: sample
+    pasword: ashok
+------------------------------
+
+3. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CheckObjRunner implements CommandLineRunner {
+
+	@Autowired
+	private EmailConfig em;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(em);
+	}
+
+}
+===================================================================
+1. If we define YAML file in invalid format, then container/SnakeYAML will throw exceptions like: ScannerException, ParserException
+
+2. If we define duplicate key with different value in properties file then last combination is loaded. But in YAML file DuplicateKeyException is thrown.
+
+3. If key is present in properties file and setter method not found then variable holds default value. But in YAML file  key is present and setter not exist in code, then IllegalStateException: No setter found for property
+
+====Ex#2=============================================================
+1. Spring Bean
+package com.app.shivam;
+
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@ConfigurationProperties("my.app")
+@Component
+public class EmailConfig {
+
+	private String host;
+	private int port;
+	private String username;
+	private String pasword;
+	
+	private Set<String> protocols;
+	private Map<String,String> headers;
+	
+	private Certificate cob;
+	
+	public String getHost() {
+		return host;
+	}
+	public void setHost(String host) {
+		this.host = host;
+	}
+	public int getPort() {
+		return port;
+	}
+	public void setPort(int port) {
+		this.port = port;
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPasword() {
+		return pasword;
+	}
+	public void setPasword(String pasword) {
+		this.pasword = pasword;
+	}
+	public Set<String> getProtocols() {
+		return protocols;
+	}
+	public void setProtocols(Set<String> protocols) {
+		this.protocols = protocols;
+	}
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+	public void setHeaders(Map<String, String> headers) {
+		this.headers = headers;
+	}
+	public Certificate getCob() {
+		return cob;
+	}
+	public void setCob(Certificate cob) {
+		this.cob = cob;
+	}
+	@Override
+	public String toString() {
+		return "EmailConfig [host=" + host + ", port=" + port + ", username=" + username + ", pasword=" + pasword
+				+ ", protocols=" + protocols + ", headers=" + headers + ", cob=" + cob + "]";
+	}
+	
+	
+	
+	
+}
+----
+package com.app.shivam;
+
+public class Certificate {
+
+	private String provider;
+	private String expExist;
+	
+	public String getProvider() {
+		return provider;
+	}
+	public void setProvider(String provider) {
+		this.provider = provider;
+	}
+	public String getExpExist() {
+		return expExist;
+	}
+	public void setExpExist(String expExist) {
+		this.expExist = expExist;
+	}
+	@Override
+	public String toString() {
+		return "Certificate [provider=" + provider + ", expExist=" + expExist + "]";
+	}
+	
+	
+}
+
+
+2. application.yml
+my:
+  app:
+    cob:
+      provider: GoDaddy
+      expExist: INACTIVE
+    host: smtp.gmail.com
+    port: 885
+#    port: 990
+    username: sample
+    pasword: ashok
+    protocols:
+    - SMTP
+    - SMTPS
+    - SMTP2
+    headers:
+      modified: true
+      version: 3.2A
+      content: JSON
+         
+3. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CheckObjRunner implements CommandLineRunner {
+
+	@Autowired
+	private EmailConfig em;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(em);
+	}
+
+}
+=================================================================
+****************************************************************
+		    Project Lombok API 
+****************************************************************
+=================================================================
+
+=> Java Open Source API, used to generate source code before 
+    you compile the code.
+
+=> We need to add, activate Lombok JAR and use annotations.
+Ref:
+https://projectlombok.org/features/
+
+1. After Creating stater project in pom.xml add this
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+</dependency>
+
+2. Update Maven Project, write sample code, Close IDE
+
+3. Activate Lombok for your IDE
+Goto:
+C:\Users\ADMIN\.m2\repository\org\projectlombok\lombok\1.18.24
+
+> Double click (or execute cmd : java -jar lombok-1.18.24.jar)
+> Click on Specify Location if not found
+> Click on Install/Update
+> Quit Installer
+
+4. Re Open IDE and apply Lombok Annotations
+ex:
+package com.app.shivam;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Setter
+@Getter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+public class Process {
+
+	private String code;
+	private int port;
+	private boolean exist;
+}
+===========================================================
+1. @Setter : generates set methods
+2. @Getter : generates get methods
+3. @ToString : override toString logic 
+4. @EqualsAndHashCode: generates equals and hashCode methods
+5. @NoArgsConstructor : Default/zero param const
+6. @AllArgsConstructor: All variables selected to create one
+		parameterized constrcutor.
+7. @RequiredArgsConstructor + @NonNull : To generate selected
+	parameters constructor.
+8. @Data : This one is used to generate set/get, toString,
+   equals, hashCode and Required Args Constructor.
+===========================================================
