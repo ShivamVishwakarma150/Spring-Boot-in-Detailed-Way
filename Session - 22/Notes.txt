@@ -1,0 +1,261 @@
+MySQL: (server only)
+https://dev.mysql.com/downloads/windows/installer/8.0.html
+SQLYog: (UI / Client)
+https://github.com/webyog/sqlyog-community/wiki/Downloads
+
+Project Lombok: 
+=> It is Open Source , Source Code Generator API.
+=> Setters, Getters, toString, equals, constructor..etc
+=> Lombok Generates one intermediate source code file
+   once it is compiled , Lombok is not required (to run)
+=> Lombok is used while developing application.
+========================================================
+@Setter : This annotation is used to generate set method for variable in class
+
+@Getter : This annotation is used to generate get method for variable in class
+
+@ToString : This method is from Object class that prints default FullClassName@HashCodeinHexaDeciamalFormat Here, it overrides toString logic, that prints current object data.
+
+
+Q) What is the contract between equals() and hashCode()?
+A) While working with Hashing Design Patterns, 
+	(HashMap, Hashtable..etc)
+  to store data first index number is calculated using
+  hash(key) [key-our class type]
+  while retrive/compare equals uses to check hash value.
+
+--Example code---------
+package com.app.shivam;
+
+import org.springframework.stereotype.Component;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Component
+@Setter
+@Getter
+@ToString
+@EqualsAndHashCode
+public class Process {
+	private String code;
+	private Integer port;
+	
+}
+---
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private Process pob;
+	
+	public void run(String... args) throws Exception {
+		pob.setCode("AA");
+		pob.setPort(985);
+		System.out.println(pob);
+		System.out.println(pob.getCode());
+		
+		
+	}
+
+}
+
+@EqualsAndHashCode: It generates(overrides) equals() method and hashCode() method.
+
+*** Objects (JDK 1.7) **** (ctrl+shift+T) --> (ctrl+O)
+
+Q) Who will generate default constructor in java?
+A) Java compiler, if there are zero constructors in code.
+
+*** A good coding standard always provide default/zero param constructor. Even before adding any param. constructors.
+=============================================================
+@NoArgsConstructor : Generates Zero Param constructor.
+@AllArgsConstructor : Generates all params constructor based on variables order.
+Ex:
+@NoArgsConstructor
+@AllArgsConstructor
+public class Process {
+
+	private Integer port;
+	private String code;
+	
+}
+Generated Source Code:
+public class Process {
+
+	private Integer port;
+	private String code;
+	public Process() {
+	   super();
+	}
+	public Process(Integer port, String code) {
+	   super();
+	   this.port = port;
+	   this.code = code;
+	}
+}
+
+-------------------
+@RequiredArgsConstructor:
+  It will generate selected params/args constrcutor.
+  We need to select variables using @NonNull
+Ex:
+@RequiredArgsConstructor
+public class Process {
+
+	@NonNull
+	private Integer port;
+	@NonNull
+	private String code;
+	private Double cost;
+	private String type;
+	
+}
+Generated Source code:
+public class Process {
+	private Integer port;
+	private String code;
+	private Double cost;
+	private String type;
+	public Process(Integer port,String code ){
+	  super();
+	  this.port = port;
+	  this.code = code;
+	}
+}
+
+Note:
+1. If we add @RequiredArgsConstructor without any @NonNull variable then lombok generates a default constructor.
+Ex:
+@RequiredArgsConstructor
+public class Process {
+	private Integer port;
+}
+Generated Source code:
+public class Process {
+	private Integer port;
+	public Process() {
+	   super();
+	}
+}
+2. If we add @AllArgsConstructor over a class which has zero variables then lombok generates a default constructor.
+
+Ex:
+@AllArgsConstructor
+public class Process {
+}
+Generated Source code:
+public class Process {
+	public Process() {
+	   super();
+	}
+}
+
+3. Lombok just generates source code based on annotation definition
+   later compiler validates generated source code.
+
+ex:
+@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class Process {
+	
+}
+Generated Source Code:
+public class Process {
+	public Process() {
+	   super();
+	}
+	public Process() {
+	   super();
+	}
+	public Process() {
+	   super();
+	}
+}
+
+Ex#2
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class Process {
+	@NonNull
+	private String code;
+}
+Generated Source Code:
+public class Process {
+	private String code;
+	public Process(String code) {
+	   super();
+	   this.code = code;
+	}
+	public Process(String code) {
+	   super();
+	   this.code = code;
+	}
+}
+
+https://projectlombok.org/features/Builder
+@Builder
+public class Process {
+	private int id;
+	private String type;
+	private String code;
+}
+Use:
+Process p1 = 
+	Process.builder()
+		.code("AA")
+		.id(88)
+		.type("MODEL")
+		.build();
+=======================================================
+@Data :- This is a combination of set, get, toString,
+      hashcode, equals and RequiredArgsConstructor
+
+Ex:
+@Data
+public class Process {
+	private int id;
+}
+---------------------------------------------------------------
+@Cleanup : Generates close() methods in final blocks
+
+Use: try-with-resource concept.
+try(FIS fis = new FIS()) {
+}
+
+Use: Enhanced try with resource
+FIS fis = new FIS()
+try(fis){
+
+}
+============================================================
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+
+mysql> create database vikashit;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> use vikashit;
+Database changed
+mysql> show tables;
+Empty set (0.01 sec)
+
+mysql>
