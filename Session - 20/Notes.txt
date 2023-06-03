@@ -1,0 +1,273 @@
+
+Check This:
+http://mageddo.com/tools/yaml-converter
+
+@ConfigurationProperties [PART-2]:-
+=> it takes default value if key is not found, setters not exist, prefix is not matched.
+
+=> Variable type can be primitive, Collection, Reference.
+
+-Collection-----------------------------
+List / Array, Set, Map
+
+List/Array, Set ---> prefix.variable[index]=value
+Map/Properties --> Prefix.variable.mapKey=mapVal
+
+------Reference Type----------------------
+ prefix.refvariable.variable = value
+
+*) Here we should not use @Component over child class and @Autowired over HAS-A variable when we are using @ConfigurationProperties.
+
+Why? @ConfigurationProperties creates object based on condition saying that if data is present (at least for one variable) then create object and link.
+
+
+======Ex:2 =======================
+1. Spring Bean
+package com.app.shivam;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("my.app")
+public class MyServiceData {
+
+	private int id;
+	private String code;
+	private boolean active;
+	
+	//private List<String> data; //ArrayList
+	private Set<String> data; //LinkedHashSet
+	//private String[] data; 
+	
+	private Map<String,String> info; //LinkedHashMap
+	
+	private Process pob;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public Set<String> getData() {
+		return data;
+	}
+
+	public void setData(Set<String> data) {
+		this.data = data;
+	}
+
+	public Map<String, String> getInfo() {
+		return info;
+	}
+
+	public void setInfo(Map<String, String> info) {
+		this.info = info;
+	}
+
+	public Process getPob() {
+		return pob;
+	}
+
+	public void setPob(Process pob) {
+		this.pob = pob;
+	}
+
+	@Override
+	public String toString() {
+		return "MyServiceData [id=" + id + ", code=" + code + ", active=" + active + ", data=" + data + ", info=" + info
+				+ ", pob=" + pob + "]";
+	}
+	
+	
+}
+-------------
+package com.app.shivam;
+
+public class Process {
+
+	private int pid;
+	private String pcode;
+	
+	public int getPid() {
+		return pid;
+	}
+	public void setPid(int pid) {
+		this.pid = pid;
+	}
+	public String getPcode() {
+		return pcode;
+	}
+	public void setPcode(String pcode) {
+		this.pcode = pcode;
+	}
+	@Override
+	public String toString() {
+		return "Process [pid=" + pid + ", pcode=" + pcode + "]";
+	}
+	
+	
+}
+
+-------------------
+
+2. application.properties
+my.app.id=20
+my.app.code=MODEL
+my.app.active=true
+
+my.app.data[0]=A
+my.app.data[1]=B
+my.app.data[2]=C
+#my.app.data=A,B,C
+
+my.app.info.C1=M1
+my.app.info.C2=M2
+
+my.app.pob.pid=11
+my.app.pob.pcode=AAA
+
+3. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ReadDataRunner implements CommandLineRunner {
+	@Autowired
+	private MyServiceData ob;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(ob);
+	}
+
+}
+=================================================================
+			YAML (.yml)
+		     YAMALiant Language
+
+*) Yet Another Markup Language
+
+=> YAML (.yml in Spring boot / .yaml ) is used to represent
+   data/input to pre-defined configuration.
+
+=> YAML is better better compared to properties
+   [memory / processing time / readable format ]
+
+---ex: application.properties ------------
+spring.datasource.driver-class-name=Oracle
+spring.datasource.url=jdbc-oracle
+spring.datasource.username=shivam
+spring.datasource.password=shrmaa
+
+--ex : application.yml -------------------
+spring:
+   datasource:
+      driver-class-name: Oracle
+      url: jdbc-oracle
+      username: shivam
+      password: shrmaa
+------------------------------------------
+
+Note:
+1. No Duplicate Levels in YAML file
+2. Every level should end with either :<NextLine> or :<oneSpace><value>
+3. Every new level start (not for 1st line) 
+   must have same space count (indentation) [at least one space]
+
+4. Incase of List/Set/Array , index is represented using - (dash)
+     variable:
+     - value
+     - value
+     - value
+
+5. Incase of Map/Properties, key:<space>value
+    variable:
+      mapKey: mapVal
+
+6. Incase of Reference type, variable:<space>value
+     refVariable:
+       variable: value
+
+7. Replace equals and dot (properties) with colon symbol (yml)
+===========For Above Example YAML File is ===========
+my:
+  app:
+    active: true
+    code: MODEL
+    data:
+    - A
+    - B
+    - C
+    id: 20
+    info:
+      C1: M1
+      C2: M2
+    pob:
+      pid: 10
+      pcode: AAA
+===Example==========================================================
+1. application.properties
+-----------------------------
+spring.datasource.url=jdbc-oracle
+spring.datasource.user=sample
+spring.mail.host=gmail
+spring.mail.port=998
+
+--application.yml-----------
+spring:
+   datasource:
+      url: jdbc-oracle
+      user: sample
+   mail:
+      host: gmail
+      port: 998
+
+2. application.properties
+my.app.id=12
+spring.model.test=OK
+my.app.code=A
+spring.format.code=A
+spring.model.active=true
+my.app.version=3.3
+spring.format.grade=MN
+
+---application.yml--------------
+my:
+  app:
+    id: 12
+    code: A
+    version: 3.3
+spring:
+  model:
+    test: OK
+    active: true
+  format:
+    code: A
+    grade: MN   
+===============================================================
