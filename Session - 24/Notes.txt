@@ -1,0 +1,261 @@
+
+Profiles using YAML :-
+1. Spring Bean
+package com.app.shivam.dbcon;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
+
+@Component
+@Data
+@ConfigurationProperties("my.db")
+public class MyDbConnection {
+
+	private String driver;
+	private String url;
+	private String user;
+	private String pwd;
+	
+}
+
+2. YAML File
+my:
+  db:
+    driver: Oracle
+    pwd: shivam
+    url: jdbc-oracle
+    user: vikash
+---
+spring:
+  config:
+    activate:
+      on-profile:
+      - prod
+      - prodps
+    
+my:
+  db:
+    driver: MySQL
+    pwd: shivam
+    url: jdbc-mysql
+    user: vikash
+---
+spring:
+  config:
+    activate:
+      on-profile:
+      - qa
+      - uat
+  
+my:
+  db:
+    driver: Postgress
+    pwd: shivam
+    url: jdbc-psg
+    user: vikash    
+
+3. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.dbcon.MyDbConnection;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private MyDbConnection con;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(con);
+	}
+
+}
+===============================================================
+@Profile:-
+  To execute a logic (create obj/call method) on a selected
+  environment, we can use this.
+
+> A conditional based execution.
+Ex: I Want to inform spring container that execute below codes
+   only at Prod Environment: EmailConfig, DbBackService ..etc
+
+Case#1 No @Profile annotation : Logic will be executed in all env.
+Case#2 @Profile("default")    : Execute only in dev environment.
+Case#3 @Profile("profileName"): Execute in given profile env.
+	ex: @Profile("prod")
+
+*) Note:
+1. If we did not provide any profile name while running application
+   then Spring Container selected profile "default"
+
+2. So, logics(class/method) having @Profile("default")
+	will be executed.
+
+3. @Profile is independent of properties/yaml.
+  If a specific profile proeprties/yaml file is not present
+  in code/workspace then container selected default one
+  application.properties/application.yml
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+****************  @Profile Example Code *********************
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+1. Spring Beans
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+@Component
+//@Profile("default")
+@Profile({"qa","default","uat"})
+public class DbUserSetupRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		System.out.println("FROM DbUser SETUP RUNNER");
+	}
+
+}
+---------
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+@Component
+//@Profile("prod")
+@Profile({"prod","podsup","uat"})
+public class BackDataServiceRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		System.out.println("FROM BACKUP DATA SERVICE");
+	}
+
+}
+-------
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MessageRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		System.out.println("DEFAULT MESSAGE RUNNER");
+	}
+
+}
+
+
+
+============================================================
+Q) How can we inform container to create selected classes
+   objects only in Prod Environment?
+
+A) use @Profile over Component or Bean.
+Ex#1
+@Component
+@Profile("prod")
+class Sample {
+
+}
+Ex#2
+@Configuration
+class AppConfig {
+  @Bean
+  @Profile("prod")
+  public DbCon dbc() {
+    ..
+  }
+}
+
+=============== @Profile for Object creation ===============
+1. Spring Bean
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+import lombok.ToString;
+
+@ToString
+@Component
+@Profile({"default","qa"})
+public class ExportExcelService {
+	
+	@Value("csv")
+	private String extCode;
+	
+	@Value("#{new java.util.Random().nextInt()}")
+	private Integer formatId;
+	
+}
+-------------
+package com.app.shivam.service;
+
+import lombok.Data;
+
+@Data
+public class PdfExportService {
+
+	private String fileExt;
+	private String ftype;
+	
+}
+-------------------
+2. Java Config Code
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import com.app.shivam.service.PdfExportService;
+
+@Configuration
+public class AppConfig {
+	
+	@Bean
+	@Profile({"default","qa"})
+	public PdfExportService pdf() {
+		PdfExportService p = new PdfExportService();
+		p.setFileExt(".pdf");
+		p.setFtype("Document-NPDF");
+		return p;
+	}
+}
+------------
+3. Runner class
+package com.app.shivam;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.service.ExportExcelService;
+import com.app.shivam.service.PdfExportService;
+
+@Component
+public class TestObjRunner implements CommandLineRunner {
+	
+	@Autowired
+	private ExportExcelService es;
+	
+	@Autowired
+	private PdfExportService pdfs;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(es);
+		System.out.println(pdfs);
+	}
+
+}
