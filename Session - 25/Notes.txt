@@ -1,0 +1,126 @@
+
+--------------------------------------------------------------------
+ctrl+shift+T  > SpringApplication  > ctrl+O > run [select first run method]
+-----------------------------------------------------------------
+MySQL:
+https://dev.mysql.com/downloads/windows/installer/8.0.html
+mysql> show databases
+mysql> create database bootProject;
+mysql> use bootProject;
+mysql> show tables;
+mysql> create table employee(eid int,ename varchar(10),esal double);
+mysql> desc employee;
+mysql> insert into employee values(10,'A',200.0);
+mysql> insert into employee values(11,'B',300.0);
+mysql> insert into employee values(12,'C',400.0);
+mysql> select * from employee;
+mysql> select * from employee order by esal desc limit 2,1;
+
+
+@Component @Value  @Autowired @Qualifier @Primary
+@Configuration @Bean 
+@ConfigurationProperties (Input file)
+application.properties
+application.yml
+--------------------------------------------------------------------
+@SpringBootApplication : @Configuration (Auto+Programme)
+			 @ComponentScan
+
+=> This annotation gives default basePackage using internally @ComponentScan. ie Starter/Main class package is taken as basePackage (your classes can be under same package or subpackage)
+
+=> We can override this in Spring Boot using annotation: @ComponentScan 
+@ComponentScan({"my.app.demo","com.app","com.example.demo"})
+
+=> This annotation also takes care of configuration (programmer and pre-defined).
+ When ever we add any Specific Dependency in pom.xml (classpath) then our parent gives starter and its configuration code to child project.
+========================================================================
+Banner : This is nothing but logo(never shown to end user) printed at console
+ while starting application.
+
+=> We can override this using a file created manually at src/main/resources
+ name is : banner.txt 
+
+ https://devops.datenkollektiv.de/banner.txt/index.html
+
+=> We can disable this banner code using this:
+SpringApplication sa = new SpringApplication(DemoApplication.class);
+sa.setBannerMode(Mode.OFF);
+sa.run(args);
+
+-------------------------------------------------------
+Enum : JDK 1.5 : Set of named constants.
+-------------------------------------------------------
+*) We can calculate time taken by a process using Spring Core
+   "StopWatch" class , methods: start() and stop()
+
+*) We can even use JDK 8 java.time package Duration(C).
+
+package com.app.test;
+
+import java.time.Duration;
+
+import org.springframework.util.StopWatch;
+
+public class Test {
+	
+	public static void main(String[] args) {
+		long startTime = System.nanoTime();
+		System.out.println("START");
+		for (int i = 0; i < Integer.MAX_VALUE; i++) {
+			Math.pow( Math.pow(i+1,2), i+3);
+		}
+		System.out.println("DONE");
+		Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
+		
+		System.out.println(timeTakenToStartup.getSeconds());
+		System.out.println(timeTakenToStartup.getNano());
+	}
+	
+
+	public static void main1(String[] args) {
+		StopWatch sw = new StopWatch();
+		
+		sw.start();
+		System.out.println("START");
+		for (int i = 0; i < Integer.MAX_VALUE; i++) {
+			Math.pow( Math.pow(i+1,2), i+3);
+		}
+		sw.stop();
+		
+		System.out.println("DONE");
+		
+		System.out.println(sw.getTotalTimeSeconds());
+		System.out.println(sw.getTotalTimeMillis());
+		System.out.println(sw.getTotalTimeNanos());
+	}
+}
+
+=============================================================
+*) environment: This is a memory (Object : StandardEnvironment)
+   that holds all key-val pairs of every input (properties, yaml
+   option args --key=val)
+
+*) Spring container type can be standard, servlet, reactive.
+AnnotationConfigApplicationContext
+AnnotationConfigServletWebServerApplicationContext
+AnnotationConfigReactiveWebServerApplicationContext
+
+--sample main class code--------
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootApplication
+public class SampleOneApplication {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = SpringApplication.run(SampleOneApplication.class, args);
+		System.out.println(ac.getClass().getName());
+	}
+
+}
+--------------------------------------------------------------
+*) all our runners (Runner classes) are executed at last
+   after creating spring container.
