@@ -1,0 +1,230 @@
+
+App Environment : A complete setup to run application.(DB,server,config, dep)
+Ex: Dev, QA, UAT(Client test), Prod, PordSup..etc
+
+===================================
+Spring Boot Profiles:-
+If we move our application from one Env. to another Env,
+code remains same (at max), changes comes at input file
+(properties/yaml).
+
+=> In that case use one properties/yaml file for one environment.
+=> File name must be :
+	application-{profilename}.properties
+	application-{profilename}.yml
+
+=> Loading input file based on profilename is taken care by spring container.
+
+Examples:
+application.properties    (default profile)
+application-qa.properties  (qa profile)
+application-prod.properties  (prod profile)
+
+-----------code-----------------------------------
+*** choose Lombok while creating project.
+
+1. Spring Bean
+package com.app.shivam.dbcon;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
+
+@Component
+@Data
+@ConfigurationProperties("my.db")
+public class MyDbConnection {
+
+	private String driver;
+	private String url;
+	private String user;
+	private String pwd;
+	
+}
+
+2. Runner
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.dbcon.MyDbConnection;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private MyDbConnection con;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(con);
+	}
+
+}
+
+3. properties files
+
+--application.properties--
+my.db.driver=Oracle
+my.db.url=jdbc-oracle
+my.db.user=vikash
+my.db.pwd=shivam
+
+--application-qa.properties--
+my.db.driver=MySQL
+my.db.url=jdbc-mysql
+my.db.user=vikash
+my.db.pwd=shivam
+
+--application-prod.properties--
+my.db.driver=Postgress
+my.db.url=jdbc-PSG
+my.db.user=vikash
+my.db.pwd=shivam
+
+
+--------------------We can run in 3 ways-----------------
+1. Using Spring Boot Tab
+> Right click on Main class > Run as > Run Configuration
+> Spring Boot tab > Profiles : Change to any dropdown option
+> Apply > Run
+
+2. Using External Arguments
+> Right click on Main class > Run as > Run Configuration
+> Arguments tab > Under Program Arguments  enter this
+--spring.profiles.active=qa
+> Apply > Run
+
+
+3.*** Build Application ( Code ----> .jar/.war )
+> Right click on Project > Run as > Maven Clean > next time
+> Maven install (Wait for Build success message)
+> Right click on target folder (then refresh)
+> Choose properties > Copy location (or) click explorer symbol to open that location
+> Open that location in cmd prompt
+
+ex: D:\Workspace7AM_SpringBoot\06SpringBootProfilesExOne\target>
+
+> now execute command:  
+	java  -jar  <jarname>.jar  --spring.profiles.active=qa
+        java  -jar  <warname>.war  --spring.profiles.active=qa
+  
+
+*)Note:
+a. If a key is not found in our current profile(ex: prod)
+  then container reads them from default profile(fallback)
+		(or)
+  If duplicate key=val are exist in our profile (ex: prod)
+  just remove or comment them , they are loaded from
+  default profile.
+
+=============================================================
+Q) Which profile is loaded if we did not specify any while running app?
+A. Default profile : application.properties
+
+Q) I want to activate a profile which is not present ?
+  --spring.profiles.active=sample (sample is not exist)
+A. Default profile : application.properties is loaded
+
+Q) If few keys are not found in our current profiles?
+A. (Ex: prod is current profile) Container will try to load
+   keys from default profile for keys which are not found
+   in current profile.
+
+Q) How properties files are provided from outside of our project (or) jar file?
+A) External Config (Spring Cloud Config Server)
+https://cloud.spring.io/spring-cloud-config/reference/html/
+
+===============================================================
+			Profiles using YAML
+===============================================================
+1. using Multiple YAML Files
+    application-{profile}.yml
+
+2. Using Single YAML File (3 dash symbols )
+
+-------application.yml---------
+key: val
+
+---
+key:val
+
+---
+key:val
+
+--------------------------------
+
+
+Q) What is VM/JVM arguments (or -Dkey=val) in Java?
+Q) What is application arguments / command line args 
+	/ main method inputs / String[] ?
+
+Ex: -Dspring.profiles.active=qa
+
+==============code===========================
+// classes are same as before
+
+-YAML Files-
+
+1. application.yml
+my:
+  db:
+    driver: Oracle
+    pwd: shivam
+    url: jdbc-oracle
+    user: vikash
+
+2. application-qa.yml
+my:
+  db:
+    driver: MySQL
+    pwd: shivam
+    url: jdbc-mysql
+    user: vikash
+
+3. application-prod.yml
+my:
+  db:
+    driver: Postgress
+    url: jdbc-PSG
+
+
+--- all in one yaml File---------------
+
+	application.yml
+
+my:
+  db:
+    driver: Oracle
+    pwd: shivam
+    url: jdbc-oracle
+    user: vikash
+---
+spring:
+  profiles: qa
+    
+my:
+  db:
+    driver: MySQL
+    pwd: shivam
+    url: jdbc-mysql
+    user: vikash
+---
+spring:
+  profiles: prod
+  
+my:
+  db:
+    driver: Postgress
+    pwd: shivam
+    url: jdbc-psg
+    user: vikash    
+
+
+Q) Can we define multiple profiles data in single properties file
+  like YAML file?
+A. As of now NO.
+
+=================================================================
