@@ -1,0 +1,141 @@
+			Spring Boot : Data JPA
+
+JPA : ORM Framework (or API), used to perform database operations using OOPs concepts (Object Oriented).
+
+=> We can perform all operations by writing code.
+=> EntityManager : has given methods to perform operations persist [save], merge[update], find[select], remove[delete]
+
+=================================================================
+Data JPA: It will generate code to perform operations.
+=> This is given by Spring boot, it internally generates JPA code only.
+=> Dynamic Proxy : A class created at runtime and object also.
+Dynamic Proxy:-
+https://docs.oracle.com/javase/8/docs/technotes/guides/reflection/proxy.html
+
+=> Here we need to define code files:
+  1. Entity class
+  2. Repository Interface ( class generated at runtime)
+  3. Properties for DB Connection and JPA Config.
+
+--Given interfaces by Spring boot data JPA--
+CrudRepository<T, ID>  [insert , update , delete, select ]
+PagingAndSortingRepository<T, ID>  [Sorting, Pagination ]
+JpaRepository<T,ID>  [JPA based Operations, Example obj, batch..etc]
+
+T= Entity class, ID = PK DataType
+
+SimpleJpaRepository<T, ID> : It is class having internally JPA code
+for above interfaces.
+
+=> SimpleJpaRepository is a template class ie how Database Operations
+  code looks like (Generic code, not for a Specific class)
+=> We need to define one interface that extends any one of one Repository 
+   interface.
+=> Internally Data JPA uses SimpleJpaRepository and ___Repository
+   interface and generates one class  (Proxy)
+
+======================================================================
+Q) Entity v/s DTO ?
+A) Entity : A class mapped with Database table 
+   DTO : a class contains variables set/get , used to pass as object from one method to another method.
+
+Q) What is DAO and DTO ?
+A) DAO : Data Access Object
+  A class that contains code to perform Database Operations
+
+  DTO : A class contains data (variables, set/get ) passed b/w methods
+
+Q) What is Repository?
+A) An interface defined with Type and ID
+  that is used to perform database Operations
+
+Q) What is Dynamic Proxy ?
+https://docs.oracle.com/javase/8/docs/technotes/guides/reflection/proxy.html
+=> A class/code generated at runtime by taking set of interfaces and a template (Format) class also some inputs(T,ID).
+
+-> Learning Order: Enum, Annotations, Generics, Reflection, Proxy
+
+============Code================================
+01. SpringBootDataJpaEx
+ Spring Data JPA, MySQL, Lombok
+
+1. Entity class
+package com.app.shivam.entity;
+
+//ctrl+shift+O
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="student_tab")
+public class Student {
+	@Id
+	@Column(name="sid")
+	private Integer stdId;
+	
+	@Column(name="sname")
+	private String stdName;
+	
+	@Column(name="sfee")
+	private Double stdFee;
+	
+}
+
+2. Repository interfaces
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Student;
+
+public interface StudentRepository 
+	extends JpaRepository<Student, Integer>
+{
+
+}
+
+3. properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot
+spring.datasource.username=root
+spring.datasource.password=rShivam@123
+
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=update
+
+4. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Student;
+import com.app.shivam.repo.StudentRepository;
+
+@Component
+public class TestOprRunner implements CommandLineRunner {
+
+	@Autowired
+	private StudentRepository repo;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(repo.getClass().getName());
+		
+		Student sob = new Student();
+		sob.setStdId(99);
+		sob.setStdName("SAM");
+		sob.setStdFee(20000.0);
+		
+		repo.save(sob); // INSERT OR UPDATE
+		
+	}
+
+}
+==================================================================
