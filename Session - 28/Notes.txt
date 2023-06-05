@@ -1,0 +1,154 @@
+
+Ref This :-
+https://javahungry.blogspot.com/p/interview.html
+Ref This :-
+https://www.youtube.com/c/vikashIT/search?query=java%208
+
+			Spring Boot : Data JPA
+ctrl+shift+T : CrudRepository
+ctrl+O : click on one method
+ctrl + keep mouse over : Select Open Implementation
+
+---------------CrudRepository methods---------------------------
+1. save(obj) : obj
+This method will check given object is present or not based on PK
+inside DB table.
+
+=> SELECT * FROM TABLE WHERE PK_COL = VAL
+
+=> if Record is present --> then update row
+=> Else INSERT ROW.
+
+*) If same object data is present in DB, then save() method does nothing
+   [no update or no insert]
+--------------------------------------------------------------------
+2. saveAll(Iterable) :
+  This method takes multiple objects at a time as a Collection type
+  and performs same operation like save() method.
+
+=================================================================
+
+3. findAll(): Iterable<T>
+  This method is used to fetch all rows from DB table.
+  Gives as Iterable format.
+
+SQL: select * from tablename;
+=================================================================
+
+4. existsById(id): boolean
+It will check given Id (row) present in Db table or not.
+If present then true, else false.
+
+5. count() : long
+This method returns no.of rows present in DB table.
+
+==============code=================================
+1. Application : Dep : Spring Data JPA, MySQL, Lombok
+
+2. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot7am
+    username: root
+    password: root
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+
+3. Entity class
+package com.app.Shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="product_tab")
+public class Product {
+	
+	@Id
+	@Column(name="pid")
+	private Integer prodId;
+	
+	@Column(name="pname")
+	private String prodName;
+	@Column(name="pcost")
+	private Double prodCost;
+	
+}
+
+4. Repository interfaces
+package com.app.Shivam.repo;
+
+import org.springframework.data.repository.CrudRepository;
+
+import com.app.Shivam.entity.Product;
+
+public interface ProductRepository 
+	extends CrudRepository<Product, Integer>{
+
+}
+
+5. Runner classes
+package com.app.Shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.Shivam.entity.Product;
+import com.app.Shivam.repo.ProductRepository;
+
+@Component
+public class TestOperationsRunner implements CommandLineRunner {
+	
+	@Autowired
+	private ProductRepository repo;
+
+	public void run(String... args) throws Exception {
+		//System.out.println(repo.getClass().getName());
+		
+		Product p1 = new Product(10,"P2",300.0);
+		Product p2 = new Product(11,"P3",400.0);
+		Product p3 = new Product(12,"P4",500.0);
+		
+		/*repo.save(p1);
+		repo.save(p2);
+		repo.save(p3);*/
+		repo.saveAll(Arrays.asList(p1,p2,p3));
+		
+		Iterable<Product> data = repo.findAll();
+		//JDK 1.5 forEach Loop
+		for(Product pob:data) {
+			System.out.println(pob);
+		}
+		System.out.println("--------------");
+		//JDK 1.8 Default method + Lambda Expression
+		data.forEach(ob-> System.out.println(ob));
+
+		System.out.println("*********");
+		//JDK 1.8 Default method + Method References
+		data.forEach(System.out::println);
+		
+		System.out.println(repo.existsById(11));//true
+		System.out.println(repo.existsById(55));//false
+		
+		System.out.println(repo.count());//long -- no.of rows
+		
+	}
+}
+========================================================================
