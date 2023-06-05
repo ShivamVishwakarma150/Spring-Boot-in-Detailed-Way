@@ -1,0 +1,242 @@
+
+---------------------------------------------------------------------
+Database : It is a storage type, holds data in tables(Rows/Columns).
+
+JDBC: (Java DataBase Connection):
+=> This is given by Sun Microsystems/ Oracle Corp.
+=> It is used to perform database operations from Java application
+(SELECT, INSERT, UPDATE, DELETE,...)
+=> JDBC API contains interfaces like Connection, Statement,ResultSet..etc
+Doc:
+https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/
+
+=> Here, all are implemented by vendors (Oracle, MySQL,...)
+  and given jars (ojdbc.jar, mysq-connector.jar).
+
+=> If we move one db to another db,
+  Java code is same.
+  Properties needs to be modified (driver class, url, user, password)
+  Some SQL Queries need to be modified.
+  (SQL Query is database dependent).
+
+========================================================================
+JPA [Java Persistency API]:- It is Object Oriented Programming for database Operations.
+=> We do not define any SQL Query. We perform operations over Objects that effects db tables.
+=> This is theory (ORM) : Object Relational Mapping, it is given by Sun/Oracle.
+=> Hibernate with JPA , Eclipse Link, nHibernate..etc vendors.
+
+-ORM--
+*) Perform all Operations over class/object.
+*) One class is equals to one table.
+*) One variable is equals to one column.
+*) One object is equals to one row.
+*) It is Database Independent (no SQL Recommended).
+
+*) Here JPA is a Specification (Standard with some rules/interfaces) given by Sun/Oracle, where implementations are : Hibernate, iBatis, nHibernate, EclipseLink..etc (Vendors)
+
+*) We define Java application using JPA only. 
+  But we need any one Vendor jars/runtime.
+  If we move from one vendor to another code remains same.
+  Only some configuration/properties need to be modified.
+
+==================================================================
+	ORM                JPA                 Hibernate
+	Theory          Standard (Code)    Vendor(Internal Code)
+==================================================================
+Q) What is the main diff b/w JDBC and JPA?
+A) JDBC works on SQL Concept (not Objects), Manual SQLs
+   JPA works on Objects Concepts(ORM), SQLs are generated.
+
+Q) What is the diff b/w ORM, JPA and Hibernate?
+A)  ORM : Theory / Concept
+   JPA : Code / Standard given by Sun/Oracle [Specification]
+   Hibernate : Vendor/Implementation of JPA
+
+Q) Can we write application using hibernate without JPA?
+A) YES. Old Hibernate did not defined over JPA.
+   But problem is if a better vendor came for ORM 
+   then moving to that makes lot of code changes. It is not recommended.
+
+Q) What is the advantage of JPA over JDBC?
+A) No Manual SQL queries for CRUD
+  Schema creation is automated (Both Manual & Automated )
+  No Checked Exceptions (SQLException)
+  Operations on Objects(ORM)
+  JPQL for Custom Queries [Java Persistency Query Language] which is Database Independent.
+  PrimaryKey is must (good even) in JPA
+===================================================================
+JPA (with Hibernate) One Example:-
+1. Entity (class) : A class that is mapped with database table
+2. Configuration File (.xml/.properties/.java)
+3. Operation Code(Test class)
+
+*) Note:
+1. @Entity : Maps java class with table and variables with columns.
+2. @Id : indicates Primary Key column
+3. @Table : Optional, if we did not specify then class name is taken as table name
+4. @Column : Optional, if we did not specify then variable name is taken as column name
+
+@Data
+@Entity
+@Table(name="emptab")
+public class Employee {
+  @Id
+  @Column(name="eid")
+  private Integer empId;
+  @Column(name="ename")
+  private String empName;
+  @Column(name="esal")
+  private Double empSal;
+}
+
+2. Configuration File (.xml/.properties/.java)
+=> contains data in KEY=VALs
+=> Connection keys:  driver class, url, username, password
+=> JPA Keys : show_sql, dialect, hbm2ddl.auto ..etc
+
+
+
+
+dialect: it is a class that generates sqls on operations performed.
+Ex: Oracle10gDialect, MySQL8Dialect,..etc
+
+show_sql : Display the generated SQLs.
+
+hbm2ddl.auto: Handles schema (create/alter/drop)
+  => create : Create new table on app start
+  => create-drop : create new table on app start,
+		  when we stop app delete table.
+  => update : Create new table if not exist, else use same table.
+  => validate: Does nothing. Programmer has to write manual SQls 
+		for table creations.
+
+-------------------------------------------------------------
+3. Operation Code(Test class)
+=> Prepare setup /Environment (Load driver, connection..etc)
+    taken care by  EntityManagerFactory
+=> Create setup for operations (insert, update,delete...)
+   taken care by EntityManager
+=> Transaction Management taken care by EntityTrancation
+     (commit -- save /rollback  -- cancel)
+
+----------------Full Code--------------------------
+1. pom.xml
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.6.11.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.23</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.24</version>
+		</dependency>
+
+	</dependencies>
+
+2. Entity class
+package com.app.shivam;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="emptab")
+public class Employee {
+  @Id
+  @Column(name="eid")
+  private Integer empId;
+  @Column(name="ename")
+  private String empName;
+  @Column(name="esal")
+  private Double empSal;
+}
+
+3. XML Config
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+        http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="AppDB">
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/boot7am" />
+            <property name="javax.persistence.jdbc.user" value="root" />
+            <property name="javax.persistence.jdbc.password" value="root" />
+            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.hbm2ddl.auto" value="create" />
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect" />
+        </properties>
+    </persistence-unit>
+     
+</persistence>
+
+4. Test class
+package com.app.shivam;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
+
+public class TestOperations {
+	public static void main(String[] args) {
+		EntityTransaction tx = null;
+		try {
+			// 1. (Loads Driver, Creates DB Connections, Prepare stmt)
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory("AppDB");
+			System.out.println(emf.getClass().getName());
+
+			// 2. (TODO Operations--insert, update,....)
+			EntityManager em = emf.createEntityManager();
+			System.out.println(em.getClass().getName());
+
+			// 3. create Transaction
+			tx = em.getTransaction();
+			System.out.println(tx.getClass().getName());
+			// 4. Start Transaction
+			tx.begin();
+
+			// 5. Perform operation
+			// save data into DB
+			Employee emp = new Employee();
+			emp.setEmpId(10);
+			emp.setEmpName("ABC");
+			emp.setEmpSal(500.0);
+
+			em.persist(emp); // SQL: INSERT INTO ...
+
+			// 6. commit
+			tx.commit();
+
+			// 7. close
+			emf.close();
+		} catch (Exception e) {
+			// rollback if any problem
+			tx.rollback();
+			e.printStackTrace();
+		}
+	}
+}
+=======================MySQL======================================
+> show databases
+> use boot7am;
+> show tables;
+> select * from emptab;
+================================================================
