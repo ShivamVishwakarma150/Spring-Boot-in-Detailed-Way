@@ -1,0 +1,371 @@
+
+Data Sorting and Pagination:-
+=> PagingAndSortingRepository<T,ID> is given by Spring Boot Data JPA.
+=> This interface extends CrudRepository<T, ID>.
+=> Here 2 methods are given 
+   1. findAll(Sort sort) : Iterable<T>
+   2. findAll(Pageable pageable) : Page<T>
+
+
+SQL Syntax for SORT:
+SELECT COLUMNS FROM TABLE 
+ORDER BY COLUMN TYPE, COLUMN TYPE, COLUMN TYPE .... ;
+
+COLUMN = Column Name, TYPE = ASC/DESC  [Default is ASC]
+---Create Example table----------------------------
+mysql> select * from employee;
++-----+-------+------+------+
+| eid | ename | esal | dept |
++-----+-------+------+------+
+|  10 | ABC   |  200 | DEV  |
+|  11 | XYZ   |  200 | QA   |
+|  12 | MNO   |  200 | BA   |
+|  13 | PQR   |  300 | DEV  |
+|  14 | GGH   |  300 | BA   |
+|  15 | YHU   |  300 | QA   |
+|  16 | UYH   |  400 | DEV  |
+|  17 | RGS   |  400 | BA   |
+|  18 | IJD   |  400 | QA   |
++-----+-------+------+------+
+--------------------------------------------------------
+1. select * from employee order by esal;  //asc
+2. select * from employee order by esal desc;
+3. select * from employee order by esal, dept ;  //both asc
+   select * from employee order by esal desc, dept desc ;
+4. select * from employee order by esal desc, dept asc;
+
+SQL:
+Find Avg Salary of each department and display in desc order
+Fetch only Avg salary more then 300.
+---
+select dept, avg(esal)
+from employee
+group by dept
+having avg(esal)>300
+order by avg(esal) desc;
+-----------------------------------------------------------------
+*) AutoBox and Upcast
+> double d1 = 400;
+> Double d2 = 400;
+=================================================================
+Sort class having by() as static method which is overloaded even
+
+by(String... properties) ; // pass multiple columns (all are ASC)
+by(Direction, String... properties); // pass multiple columns (all are ASC/DESC)
+by(Order...); // pass multiple Order combinations (mixed ASC/DESC)
+
+=> Direction is a enum having two values ASC, DESC.
+
+================Code====================================
+Name : SpringBootDataJpaSorting
+Dep  : Spring Data JPA, Lombok, MySQL
+
+1. Entity class
+package com.app.Shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="employee")
+public class Employee {
+	
+	@Id
+	@Column(name="eid")
+	private Integer empId;
+	@Column(name="ename")
+	private String empName;
+	@Column(name="esal")
+	private Double empSal;
+	@Column(name="edept")
+	private String empDept;
+	
+}
+
+2. Repository Interface
+package com.app.Shivam.repo;
+
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+import com.app.Shivam.entity.Employee;
+
+public interface EmployeeRepository extends PagingAndSortingRepository<Employee, Integer> {
+
+}
+
+3. Runner class-1 for insert data
+package com.app.Shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import com.app.Shivam.entity.Employee;
+import com.app.Shivam.repo.EmployeeRepository;
+
+@Component
+@Order(10)
+public class TestASaveRunner implements CommandLineRunner {
+
+	@Autowired
+	private EmployeeRepository repo;
+	
+	public void run(String... args) throws Exception {
+		
+		repo.saveAll(
+				//List.of(
+				Arrays.asList(
+						new Employee(10, "AAB", 200.0, "DEV"),
+						new Employee(11, "AAB", 200.0, "QA"),
+						new Employee(12, "AAB", 200.0, "BA"),
+						new Employee(13, "AAB", 300.0, "DEV"),
+						new Employee(14, "AAB", 300.0, "QA"),
+						new Employee(15, "AAB", 300.0, "BA"),
+						new Employee(16, "AAB", 400.0, "DEV"),
+						new Employee(17, "AAB", 400.0, "QA"),
+						new Employee(18, "AAB", 400.0, "BA")
+						)
+				);
+		
+		
+		
+	}
+}
+
+4. Runner class-2 to fetch data using sorting
+package com.app.Shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Component;
+
+import com.app.Shivam.repo.EmployeeRepository;
+
+@Component
+public class TestCFetchDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private EmployeeRepository repo;
+	
+	public void run(String... args) throws Exception {
+		//1. select * from employee order by esal ASC
+		//use static method by() present in Sort class.
+		repo.findAll(Sort.by("empSal"))
+		.forEach(System.out::println);;
+		
+		//2. select * from employee order by esal DESC
+		// Use Direction property in by() method.
+		//repo.findAll(Sort.by(Direction.ASC,"empSal"))
+		repo.findAll(Sort.by(Direction.DESC,"empSal"))
+		.forEach(System.out::println);
+		
+		//3. select * from employee order by esal, dept ; //both ASC
+		//3. select * from employee order by esal DESC, dept DESC; //both DESC
+		//repo.findAll(Sort.by("empSal","empDept"))
+		repo.findAll(Sort.by(Direction.DESC,"empSal","empDept"))
+		.forEach(System.out::println);
+		
+		//4. select * from employee order by esal ASC, dept DESC;
+		repo.findAll(Sort.by(Order.asc("empSal"),Order.desc("empDept")))
+		.forEach(System.out::println);
+		
+		
+	}
+
+}
+===========================================================================
+				Pagination
+*) Using findAll() may get all rows from DB table. Internally generates
+  SQL: select * from tablename;
+
+*) Fetching all rows and display at client device may not be good sometime.
+Ex:  In case of heavy/large data.
+
+*) To get data from DB using pagination concept, use method:
+findAll(Pageable pageable) : Page<T>
+
+=> Here Pagebale (I), that takes two inputs pageNum and PageSize
+=> based on that Output is given Page<T> contains data and metadata
+  (isFirst, isLast, hasNext ...etc)
+=> PageRequest(C) is a impl class for Pageable(I) having static method
+	of(int pageNum, int pageSize) return Pageable object.
+
+=> Finally Dialect generates SQL based on Pageable object which looks like
+ ex: select * from employee limit rowIndex,maxRows;
+
+ select * from employee limit 0,4; // starts from 0th row and fetch 4 rows
+======================Example====================================
+1. Entity, Repository, Test Runner-1 are same as above
+2. Test Runner to fetch data based on pagination
+
+package com.app.Shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+import com.app.Shivam.entity.Employee;
+import com.app.Shivam.repo.EmployeeRepository;
+
+@Component
+public class TestDFetchPagRunner implements CommandLineRunner {
+	
+	@Autowired
+	private EmployeeRepository repo;
+	
+	public void run(String... args) throws Exception {
+		//repo.findAll().forEach(System.out::println);
+		
+		//inpput
+		Pageable p = PageRequest.of(44, 4);
+		
+		//output
+		Page<Employee> page = repo.findAll(p);
+		
+		//result
+		page.getContent()//List<T>
+		.forEach(System.out::println);
+		
+		//metadata
+		System.out.println(page.isFirst());
+		System.out.println(page.isLast());
+		System.out.println(page.isEmpty());
+		System.out.println(page.hasNext());
+		System.out.println(page.hasPrevious());
+		System.out.println(page.getTotalPages());
+		System.out.println(page.getTotalElements());
+		System.out.println(page.getSize());
+		System.out.println(page.hasContent());
+	}
+
+}
+
+=======================================================================
+mysql> use boot7am;
+Database changed
+mysql> select * from employee;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  10 | DEV   | AAB   |  200 |
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
+|  15 | BA    | AAB   |  300 |
+|  16 | DEV   | AAB   |  400 |
+|  17 | QA    | AAB   |  400 |
+|  18 | BA    | AAB   |  400 |
++-----+-------+-------+------+
+9 rows in set (0.00 sec)
+
+mysql> select * from employee limit 0,4;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  10 | DEV   | AAB   |  200 |
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
++-----+-------+-------+------+
+4 rows in set (0.00 sec)
+
+mysql> select * from employee limit 3,3;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
+|  15 | BA    | AAB   |  300 |
++-----+-------+-------+------+
+3 rows in set (0.00 sec)
+
+mysql> select * from employee;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  10 | DEV   | AAB   |  200 |
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
+|  15 | BA    | AAB   |  300 |
+|  16 | DEV   | AAB   |  400 |
+|  17 | QA    | AAB   |  400 |
+|  18 | BA    | AAB   |  400 |
++-----+-------+-------+------+
+9 rows in set (0.00 sec)
+
+mysql> select * from employee limit 5,4;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  15 | BA    | AAB   |  300 |
+|  16 | DEV   | AAB   |  400 |
+|  17 | QA    | AAB   |  400 |
+|  18 | BA    | AAB   |  400 |
++-----+-------+-------+------+
+4 rows in set (0.00 sec)
+
+mysql> select * from employee;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  10 | DEV   | AAB   |  200 |
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
+|  15 | BA    | AAB   |  300 |
+|  16 | DEV   | AAB   |  400 |
+|  17 | QA    | AAB   |  400 |
+|  18 | BA    | AAB   |  400 |
++-----+-------+-------+------+
+9 rows in set (0.00 sec)
+
+mysql> select * from employee order by 1,4;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  10 | DEV   | AAB   |  200 |
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
+|  15 | BA    | AAB   |  300 |
+|  16 | DEV   | AAB   |  400 |
+|  17 | QA    | AAB   |  400 |
+|  18 | BA    | AAB   |  400 |
++-----+-------+-------+------+
+9 rows in set (0.00 sec)
+
+mysql> select * from employee limit 1,4;
++-----+-------+-------+------+
+| eid | edept | ename | esal |
++-----+-------+-------+------+
+|  11 | QA    | AAB   |  200 |
+|  12 | BA    | AAB   |  200 |
+|  13 | DEV   | AAB   |  300 |
+|  14 | QA    | AAB   |  300 |
++-----+-------+-------+------+
+4 rows in set (0.00 sec)
+
+mysql>
