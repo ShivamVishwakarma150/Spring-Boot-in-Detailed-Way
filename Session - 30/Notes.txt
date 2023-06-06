@@ -1,0 +1,52 @@
+
+Data Sorting and Pagination:-
+=> PagingAndSortingRepository<T,ID> is given by Spring Boot Data JPA.
+=> This interface extends CrudRepository<T, ID>.
+=> Here 2 methods are given 
+   1. findAll(Sort sort) : Iterable<T>
+   2. findAll(Pageable pageable) : Page<T>
+
+
+SQL Syntax for SORT:
+SELECT COLUMNS FROM TABLE 
+ORDER BY COLUMN TYPE, COLUMN TYPE, COLUMN TYPE .... ;
+
+COLUMN = Column Name, TYPE = ASC/DESC  [Default is ASC]
+---Create Example table----------------------------
+mysql> select * from employee;
++-----+-------+------+------+
+| eid | ename | esal | dept |
++-----+-------+------+------+
+|  10 | ABC   |  200 | DEV  |
+|  11 | XYZ   |  200 | QA   |
+|  12 | MNO   |  200 | BA   |
+|  13 | PQR   |  300 | DEV  |
+|  14 | GGH   |  300 | BA   |
+|  15 | YHU   |  300 | QA   |
+|  16 | UYH   |  400 | DEV  |
+|  17 | RGS   |  400 | BA   |
+|  18 | IJD   |  400 | QA   |
++-----+-------+------+------+
+--------------------------------------------------------
+1. select * from employee order by esal;  //asc
+2. select * from employee order by esal desc;
+3. select * from employee order by esal, dept ;  //both asc
+   select * from employee order by esal desc, dept desc ;
+4. select * from employee order by esal desc, dept asc;
+
+SQL:
+Find Avg Salary of each department and display in desc order
+Fetch only Avg salary more then 300.
+---
+select dept, avg(esal)
+from employee
+group by dept
+having avg(esal)>300
+order by avg(esal) desc;
+-----------------------------------------------------------------
+*) AutoBox and Upcast
+> double d1 = 400;
+> Double d2 = 400;
+=================================================================
+Sort class is given by Spring Boot Data JPA.
+having static method by() [overloaded]
