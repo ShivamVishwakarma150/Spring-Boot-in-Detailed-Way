@@ -1,0 +1,299 @@
+			Spring Boot : Data JPA
+
+CrudRepository Methods:-
+
+JDK 1.8 : Optional<T> : This is used to avoid null problems [NullPointerException only]
+
+=> It is like a wrapper object to the actual data. (or) container object for actual data.
+
+=> Optional returns Actual data if present (isPresent() true) or else it returns empty data.
+================================================================
+6. findById(id):Optional<T>
+ This method is used to fetch one row data from DB based on PK.
+
+SQL: select * from product where id=10;
+
+
+Q) Explain Here what is X and ? Here.
+	<X extends Throwable>
+	Supplier<? extends X> 
+=> Here X can be any subclass of Throwable (direct or indirect)
+=> ? (Any Type of given / wild card character).
+   It can be any sub type of X (or even same type).
+
+
+Q) Explain below line? [JDK 1.5 - Generics]
+public static <T, K, U>
+  Collector<T, ?, Map<K,U>> toMap(
+         Function<? super T, ? extends K> keyMapper,
+         Function<? super T, ? extends U> valueMapper)
+==============================================================
+7. findAllById(idsAsList):Iterable<T>
+  It uses in operator to fetch data using SELECT SQL.
+
+Example SQL:
+select * from product_tab where pid in (11,23,45,67,89);
+
+** All operations (pre-defined methods) are done based on PK(ID) only
+ @Id must be given in Entity class, else No identifier specified for entity
+
+=================================================================
+8.
+deleteById(ID id) : This method is used to delete one row data based on
+	ID given. It internally calls below delete method.
+	First check object is present or not using findById
+	if present call below delete(obj) method
+	else throw exception like: EmptyResultDataAccessException
+
+9.*** DELETE OBJECT IS A STANDARD IN JPA.
+delete(T entity)
+  It is take object as input and try to delete that one.
+
+
+10. deleteAllById(idsAsList)
+  This method calls deleteById(id) in a loop for every id.
+  
+11. deleteAll() it is fetching all rows data using findAll() method
+   passing one by one object to delete(obj) method.
+
+12. deleteAll(listOfObjects):
+  It is also calling delete(obj) in a for each loop.
+================SAMPLE CODE=================================================
+1. Entity class
+package com.app.Shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="product_tab")
+public class Product {
+	
+	@Id
+	@Column(name="pid")
+	private Integer prodId;
+	
+	@Column(name="pname")
+	private String prodName;
+	@Column(name="pcost")
+	private Double prodCost;
+	
+}
+
+2. Repository
+package com.app.Shivam.repo;
+
+import org.springframework.data.repository.CrudRepository;
+
+import com.app.Shivam.entity.Product;
+
+public interface ProductRepository 
+	extends CrudRepository<Product, Integer>{
+
+}
+
+3. Runner class
+package com.app.Shivam.runner;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.Shivam.entity.Product;
+import com.app.Shivam.exception.ProductNotFoundException;
+import com.app.Shivam.repo.ProductRepository;
+
+@Component
+public class TestOperationsRunner implements CommandLineRunner {
+
+	@Autowired
+	private ProductRepository repo;
+
+	public void run(String... args) throws Exception {
+		// System.out.println(repo.getClass().getName());
+
+		Product p1 = new Product(10, "P2", 300.0);
+		Product p2 = new Product(11, "P3", 400.0);
+		Product p3 = new Product(12, "P4", 500.0);
+
+		/*
+		 * repo.save(p1); repo.save(p2); repo.save(p3);
+		 */
+		repo.saveAll(Arrays.asList(p1, p2, p3));
+
+		Iterable<Product> data = repo.findAll();
+		// JDK 1.5 forEach Loop
+		for (Product pob : data) {
+			System.out.println(pob);
+		}
+		System.out.println("--------------");
+		// JDK 1.8 Default method + Lambda Expression
+		data.forEach(ob -> System.out.println(ob));
+
+		System.out.println("*********");
+		// JDK 1.8 Default method + Method References
+		data.forEach(System.out::println);
+
+		System.out.println(repo.existsById(11));// true
+		System.out.println(repo.existsById(55));// false
+
+		System.out.println(repo.count());// long -- no.of rows
+
+		// --------------------------------------------------//
+		// fetch one row based on id
+		Optional<Product> opt = repo.findById(11);
+		if (opt.isPresent()) {
+			Product p = opt.get();
+			System.out.println(p);
+		} else {
+			System.out.println("DATA NOT FOUND");
+		}
+
+		Product p = repo.findById(11)
+				.orElseThrow(() -> new ProductNotFoundException("NOT EXIST"));
+		System.out.println(p);
+
+		//-----------------------------------------------
+		Iterable<Product> list = repo.findAllById(Arrays.asList(11,22,45,56,85,65));
+		list.forEach(System.out::println);
+
+		//---------------------------------------------------------
+		//repo.deleteById(85);
+		//repo.deleteById(99);
+		repo.delete(
+				repo.findById(77).orElseThrow(
+						()->new ProductNotFoundException(
+								String.format(" -- %s NOT HAVING %d --", Product.class.getName(),77 )
+								)
+						)
+				);
+		//--------------------------------------
+		repo.deleteAllById(Arrays.asList(10,11));
+		repo.deleteAll();
+	}
+}
+
+4. Custom Exception
+package com.app.Shivam.exception;
+
+public class ProductNotFoundException extends RuntimeException {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7326311665490135408L;
+
+	public ProductNotFoundException() {
+		super();
+	}
+	
+	public ProductNotFoundException(String message) {
+		super(message);
+	}
+}
+
+5. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot7am
+    username: root
+    password: root
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+======================================================================
+SQL:
+mysql> select * from product_tab order by pid;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  10 |   101 | P1    |
+|  11 |   102 | P2    |
+|  12 |   103 | P3    |
++-----+-------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from product_tab order by pid desc;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  12 |   103 | P3    |
+|  11 |   102 | P2    |
+|  10 |   101 | P1    |
++-----+-------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from product_tab order by pid asc;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  10 |   101 | P1    |
+|  11 |   102 | P2    |
+|  12 |   103 | P3    |
++-----+-------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from product_tab limit 1
+    -> ;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  10 |   101 | P1    |
++-----+-------+-------+
+1 row in set (0.00 sec)
+
+mysql> select * from product_tab limit 2;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  10 |   101 | P1    |
+|  11 |   102 | P2    |
++-----+-------+-------+
+2 rows in set (0.00 sec)
+
+mysql> select * from product_tab limit 4;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  10 |   101 | P1    |
+|  11 |   102 | P2    |
+|  12 |   103 | P3    |
+|  13 |   104 | P4    |
++-----+-------+-------+
+4 rows in set (0.00 sec)
+
+mysql> select * from product_tab limit 4,2;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  14 |   105 | P5    |
++-----+-------+-------+
+1 row in set (0.00 sec)
+
+mysql> select * from product_tab limit 3,2;
++-----+-------+-------+
+| pid | pcost | pname |
++-----+-------+-------+
+|  13 |   104 | P4    |
+|  14 |   105 | P5    |
++-----+-------+-------+
+2 rows in set (0.00 sec)
+
+mysql>
+
