@@ -1,0 +1,233 @@
+
+Spring Boot Data JPA : Custom Query
+1. findBy : It is abstract method, need to define in Repository interface
+		That generates SQL Query for SELECT operation.
+2. @Query : It is used to provide our own Query (JPQL/HQL).
+		It supports both SELECT and NON-SELECT(Update/Delete)
+
+--findBy--
+=> It is used to provide WHERE Condition using reserved words.
+  Ex: Is Equals LessThan, And, Or ..etc
+Syntax:
+  ReturnType  findByVariableKeyword(DataType Params);
+
+=> ReturnType : List<T>, Optional<T>
+
+1. fetch  books having author name exactly 3 characters
+(use underscore 3 times)
+select * from booktab where bname like '___';
+
+2. fetch books having author name starts with A
+select * from booktab where bname like 'A%';
+
+3. fetch books having author name ends with S
+select * from booktab where bname like '%S';
+
+4. fetch books having author name contains R
+select * from booktab where bname like '%R%';
+
+5. Fetch books having author name not AJAY
+select * from booktab where bname not like 'AJAY';
+
+*) Some times findBy method is a not a good approch
+  for complex or lengthy queries.
+SQL:
+select * from book where cost>? and author is not null or btype like ?
+List<Book> findByBookCostGreaterThanAndAuthorIsNotNullOrBookTypeLike(Double cost, String input)
+
+
+==================Example code for findBy ======================
+1. Entity class
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="booktab")
+public class Book {
+	@Id
+	@Column(name="bid")
+	private Integer bookId;
+	
+	@Column(name="bname")
+	private String bookName;
+
+	@Column(name="bauth")
+	private String author;
+	
+	@Column(name="bcost")
+	private Double bookCost;
+	
+	@Column(name="btype")
+	private String bookType;
+	
+}
+
+2. Repository Interface
+package com.app.shivam.repo;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Book;
+
+public interface BookRepository extends JpaRepository<Book, Integer> {
+
+	//findBy -->SELECT + where = !=, > < null, not null, and or...
+	//SQL: select * from book where book_cost=? 
+	List<Book> findByBookCostLessThanEqual(Double bookCost);
+
+	//SQL: select * from book where book_id!=? 
+	//List<Book> findByBookIdNot(Integer bookId);
+	
+	//SQL: select * from book where cost = ? 
+	//List<Book> findByBookCostEqual(Double bookCost);
+
+	//SQL: select * from book where cost >= ? 
+	//List<Book> findByBookCostGreaterThan(Double bookCost);
+	
+	//SQL: select * from book where author is null 
+	List<Book> findByAuthorIsNull();
+	
+	//SQL: select * from book where author is not null 
+	//List<Book> findByAuthorIsNotNull();
+	//List<Book> findByAuthorNotNull();
+	
+	//------------Like Operator---------------------
+	//SQL: Select * from book where author like ?
+	List<Book> findByAuthorLike(String expression);
+	
+	//SQL: Select * from book where author like ? order by bookname DESC
+	List<Book> findByAuthorLikeOrderByBookNameDesc(String expression);
+
+	//SQL: Select * from book where author not like ?
+	//List<Book> findByAuthorNotLike(String expression);
+
+	//SQL: Select * from book where author like 'input%'
+	List<Book> findByAuthorStartingWith(String input);
+	
+	
+	//SQL: Select * from book where author like '%input'
+	List<Book> findByAuthorEndingWith(String input);
+	
+	//SQL: Select * from book where author like '%input%'
+	List<Book> findByAuthorContaining(String input);
+	
+	//SQL: Select * from book where bid between x and y
+	List<Book> findByBookIdBetween(Integer id1,Integer id2);
+	
+	//--------------AND / OR --------------------------
+	//SQL: select * from book where bookId <= ? or bookType like ?
+	List<Book> findByBookIdLessThanEqualOrBookTypeLike(Integer bookId, String input);
+	
+	//SQL: select * from book where bookcost != ? and author not like ?
+	//TASK FOR YOU
+	
+	//-------------single row-----------------------------
+	Optional<Book> findByBookIdIs(Integer id);
+	
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Book;
+import com.app.shivam.repo.BookRepository;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+	@Autowired
+	private BookRepository repo;
+	
+	public void run(String... args) throws Exception {
+		repo.saveAll(
+				Arrays.asList(
+						new Book(101, "SBMS", "shivam", 300.0, "Backend"),
+						new Book(102, "CORE", "shivam", 200.0, "Backend"),
+						new Book(103, "ADV", "vikash", 400.0, "Backend"),
+						new Book(104, "REACT", null, 500.0, "Frontend"),
+						new Book(105, "HTML", "shivam", 600.0, "Frontend"),
+						new Book(106, "CSS", null, 300.0, "Frontend"),
+						new Book(107, "ANGULAR", "vikash", 800.0, "Frontend"),
+						new Book(108, "SQL", "shivam", 200.0, "Database")
+						)
+				);
+		
+		//repo.findByBookCostLessThanEqual(500.0)
+		//repo.findByAuthorIsNull()
+		//repo.findByAuthorLike("A%")
+		//repo.findByAuthorStartingWith("A")
+		
+		//repo.findByAuthorLike("%U")
+		//repo.findByAuthorEndingWith("U")
+		
+		//repo.findByAuthorLike("%R%")
+		//repo.findByAuthorContaining("R")
+		
+		//repo.findByAuthorLike("____")
+		
+		//repo.findByBookIdLessThanEqualOrBookTypeLike(105, "Front%")
+		//repo.findByAuthorLikeOrderByBookNameDesc("A%")
+		repo.findByBookIdBetween(101, 105)
+		.forEach(System.out::println);
+		
+		Optional<Book> opt =  repo.findByBookIdIs(1050);
+		if(opt.isPresent())
+			System.out.println(opt.get());
+		else 
+			System.out.println("No Data Found");
+		
+	}
+
+}
+===================================================================
+@Query("JPQL/HQL") is used to write programmer defined query.
+
+SQL: SQL querys are executed at database, these are database dependent.
+SQL#1 executed at DB1 may or may not gets executed at DB#2.
+
+
+JPQL/HQL : [Java Persistency Query Language / Hibernate Query Language]
+=> Object Oriented Query concept.
+=> This is created using ClassName and Variables names (not table and columns)
+=> Dialect generates equal SQL query at runtime.
+
+Ex:
+SQL: (case insensitive)
+  SELECT EID FROM EMPTAB WHERE ESAL > ?
+JPQL/HQL: (Partially case - sensitive)
+  SELECT empId FROM com.app.shivam.Employee WHERE empSal > ?
+
+=> Java words like variable name, class name are case-sensitive.
+=> SQL words SELECT, FROM, WHERE are case-insensitive.
+
+=========================(INTERNAL FLOW)======================================
+=> We define abstract method
+=> Spring Boot Data JPA generates Hibernate code
+=> Hibernate internally calls Dialect
+=> Dialect has pre-defined(hardcoded) SQL format
+=> Finally SQL query is generated and executed at DB.
+====================================================================
+*) SELECT QUERY CAN RETURN OUTPUT in 3 WAYS (based on columns)
+List<T> : For fetching all columns 
+List<DataType> : For fetching 1 column
+List<Object[]> : For fetching >1 columns (but not all)
