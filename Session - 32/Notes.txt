@@ -1,0 +1,295 @@
+
+JpaRepository:-
+=> This interface internally extends PaginationAndSortingRepository.
+=> This time find() methods returns List<T>.
+  (in CrudRepository it is Iterable<T> type).
+=> It works only/mainly for SQL Database. (Bit faster).
+=> Custom Queries, Data JPA findBy methods.
+=> Find object by Example(C).
+
+========================================================================
+@GeneratedValue : It is used to generate Primary Key value only on save.
+Use : SEQUENCE FOR ORACLE, USE IDENTITY FOR MYSQL.
+USE : AUTO FOR DEFAULT DB BASED SELECTION.
+
+@Temporal with TemporalType: is used to present data and time formats
+default is DATEANDTIME(TIMESTAMP), we can even use DATE, TIME.
+*** Create variable using java.util.Date.
+
+SimpleDateFormat:-
+https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
+--------------------------------------------------------
+*) IDENTITY creates table with auto_increment for PK concept. Starts with 1 and takes +1 for next record.
+========================================================================
+findBy(Example): This method is used to fetch data based on example object
+ (prob obj). It will generate one SQL query dynamic using non-null fields.
+
+*) JDK 1.8 we can define static and default methods in interfaces.
+Example<Student> prob = Example.of(sob);
+repo.findAll(prob).forEach(System.out::println);
+
+======Code==============================================
+1. Entity
+package com.app.shivam.entity;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="stdtab")
+public class Student {
+	@Id
+	@Column(name="sid")
+	//@GeneratedValue(strategy = GenerationType.SEQUENCE) //oracle
+	//@GeneratedValue(strategy = GenerationType.TABLE) //temp table to store next PK val
+	@GeneratedValue(strategy = GenerationType.IDENTITY) //mysql (Auto increment)
+	private Integer stdId;
+	
+	@Column(name="sname")
+	private String stdName;
+	@Column(name="sfee")
+	private Double stdFee;
+	
+	@Column(name="sdoj")
+	//@Temporal(TemporalType.DATE)//stores only date
+	//@Temporal(TemporalType.TIME)//stores only time
+	@Temporal(TemporalType.TIMESTAMP)//stores both and time (default)
+	private Date stdDoj;
+}
+
+2. Repository Interface
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Student;
+
+public interface StudentRepository 
+	extends JpaRepository<Student, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.Example;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Student;
+import com.app.shivam.repo.StudentRepository;
+
+@Component
+public class StudentTestRunner implements CommandLineRunner {
+
+	@Autowired
+	private StudentRepository repo;
+	
+	public void run(String... args) throws Exception {
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM/yy");
+		String s = sdf.format(new Date());
+		System.out.println(s);
+		
+		Student s1 = new Student();
+		s1.setStdName("SAM");
+		s1.setStdFee(400.0);
+		s1.setStdDoj(new Date());
+		repo.save(s1);
+		
+		List<Student> list = repo.findAll();
+		System.out.println(list.getClass().getName());
+		list.forEach(System.out::println);
+		
+		Student sob = new Student();
+		sob.setStdFee(400.0);
+		sob.setStdName("AJAY");
+		Example<Student> prob = Example.of(sob);
+		repo.findAll(prob).forEach(System.out::println);
+	}
+
+}
+
+4. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+====================================================================
+********************************************************************
+		Custom Query in Spring Boot Data JPA
+********************************************************************
+====================================================================
+*) Programmer can define their own query. ie called as Custom Query.
+*) These can be used for SELECT, DELETE and UPDATE.
+	[INSERT NOT SUPPORTED]
+
+*) findBy and @Query are two concepts used for custom queries.
+findBy - only for SELECT (Used for simple SELECT operations)
+@Query - supports both SELECT(default) and NON-SELECT(@Modifying).
+
+*) Define abstract method (any name) in Repository interface
+   dynamic proxy gives implementation.
+
+ case#1
+      List<T> findBy_____(<params>);
+
+ case#2
+     @Query("SELECT ....  FROM ..")
+     List<T> <anyName> (<Params>);
+
+=> findBy__() : 
+1. This is used for select operations with "WHERE" condition.
+2. Here we are creating WHERE condition with our method naming rules.
+3. No need to define any query, only based on method syntax query generated.
+Syntax:
+  <Output>  <methodName>(<params>);
+
+Output: List (or any equal), Optional/T, Object[]
+
+===============================================================
+ Code:
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="booktab")
+public class Book {
+	@Id
+	@Column(name="bid")
+	private Integer bookId;
+	
+	@Column(name="bname")
+	private String bookName;
+
+	@Column(name="bauth")
+	private String author;
+	
+	@Column(name="bcost")
+	private Double bookCost;
+	
+	@Column(name="btype")
+	private String bookType;
+	
+}
+
+2. Repository Interface
+package com.app.shivam.repo;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Book;
+
+public interface BookRepository extends JpaRepository<Book, Integer> {
+
+	/***
+	 * Output findBy<Variable><condition>(DataType param);
+	 * VariableName can be follows same case or camelCase. 
+	 */
+	
+	//SQL: SELECT * FROM BOOK WHERE AUTHOR=?
+	//List<Book> findByauthor(String author);
+	List<Book> findByAuthor(String author);
+	List<Book> findByauthorIs(String author);
+	List<Book> findByAuthorEquals(String author);
+	
+	
+	//SQL: SELECT * FROM BOOK WHERE BOOKTYPE=?
+	//invalid: findBybtype, findbybooktype, findbookbytype
+	//valid : findBybookType, findByBookType
+	List<Book> findByBookType(String bookType);
+	
+	
+	
+	
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Book;
+import com.app.shivam.repo.BookRepository;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+	@Autowired
+	private BookRepository repo;
+	
+	public void run(String... args) throws Exception {
+		repo.saveAll(
+				Arrays.asList(
+						new Book(101, "SBMS", "shivam", 300.0, "Backend"),
+						new Book(102, "CORE", "shivam", 200.0, "Backend"),
+						new Book(103, "ADV", "vikash", 400.0, "Backend"),
+						new Book(104, "REACT", "vikash", 500.0, "Frontend"),
+						new Book(105, "HTML", "shivam", 600.0, "Frontend")
+						)
+				);
+		
+		//repo.findByAuthor("vikash")
+		//repo.findByauthorIs("shivam")
+		repo.findByBookType("Backend");
+		//.forEach(System.out::println);
+		
+	}
+
+}
+
+4. YAML File
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+========================================================================
