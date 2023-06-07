@@ -1,0 +1,203 @@
+
+Custom Query methods:-
+1. findBy : It is one abstract method, need to define in Repository Intrerface.
+         That is one SELECT Query generated at runtime.
+
+2. @Query("JPQL/HQL") : We need to define one Query manually.
+		JPQL/HQL Query is converted into SQL by dialect.
+
+=> @Query supports Both SELECT and NON-SELECT operations.
+=> Based on SELECT Columns , ReturnType of Query method results
+   List<T> (all columns), 
+   List<DataType> (one column) 
+   and List<Object[]> (multiple , but not all columns).
+
+---SQL-----------
+*) It is created using table and column names
+*) Case insensitive.
+
+---JPQL/HQL-------
+Table Name = ClassName
+column Name = variableName
+*) Partially case-sensitive ( Java words - case-sensitive class,variable)
+   (SQL words case-insensitive -- SELECT, WHERE, FROM...etc)
+
+---Examples--------------------------
+1.
+SQL: SELECT * FROM EMPTAB
+
+JPQL/HQL:
+   SELECT e1 FROM com.app.entity.Employee e1  //valid
+   SELECT e1 FROM Employee e1  //valid
+   FROM com.app.entity.Employee e1  //valid (SELECT ALL COLUMNS)
+
+   SELECT * FROM Employee // invalid (* not allowed as all columns)
+
+2.
+sql: SELECT EID,ENAME FROM EMPTAB;
+JPQL/HQL: SELECT empId, empName FROM Employee;
+
+3.
+sql: select ename from emptab;
+jqpl/hql: select empName from Employee;
+===============================================================
+Q) Why cant we apply @Component or equal stereotype for Entity class?
+A) This is not Spring Bean. It is related to Database Table.
+   One Row is converted into one Entity class Object.
+   It is Related to JPA/Hibernate.
+
+Q) What are possible returnTypes in JPQL/HQL Custom queries?
+A) List For multiple rows
+   Optional for Single Row.
+
+ SQL: select * from emptab where eid=?
+       1 row , all columns
+       Optional<T>
+
+=================code==================================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="emptab")
+public class Employee {
+	@Id
+	@Column(name="eid")
+	private Integer empId;
+	
+	@Column(name="ename")
+	private String empName;
+	
+	@Column(name="esal")
+	private Double empSal;
+	
+	@Column(name="edept")
+	private String empDept;
+	
+}
+
+2. Repository
+package com.app.shivam.repo;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.app.shivam.entity.Employee;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer>{
+	//@Query("_________")
+	//ReturnType  abstractMethodName(<Param>)
+	/**
+	 * This abstractMethodName can be any name...
+	 * 
+	 */
+
+	//SQL: 1. fetch one column data
+	@Query("SELECT e.empName FROM Employee e")
+	//@Query("SELECT empName FROM Employee")
+	List<String> getAllEmpNames();
+	
+	//SQL: 2 select all columns
+	@Query("SELECT e FROM Employee e")
+	//@Query("FROM Employee e")
+	List<Employee> fetchAllEmps();
+	
+	//SQL: 3 select multiple columns
+	@Query("SELECT e.empId, e.empName FROM Employee e")
+	List<Object[]> fetchIdAndNames();
+	
+	//SQL:4 Fetch one column and one row data
+	@Query("SELECT e.empName FROM Employee e WHERE e.empId=:id")
+	Optional<String> getEmpNameById(Integer id);
+	
+	//SQL:5 fetch all columns and one row
+	@Query("SELECT e FROM Employee e WHERE e.empId=:id")
+	Optional<Employee> fetchEmployeeById(Integer id);
+	
+	
+	
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Employee;
+import com.app.shivam.repo.EmployeeRepository;
+
+@Component
+public class TestEmployeeASaveRunner implements CommandLineRunner {
+
+	@Autowired
+	private EmployeeRepository repo;
+	
+	public void run(String... args) throws Exception {
+		repo.saveAll(
+				Arrays.asList(
+						 new Employee(101, "AA", 200.0, "DEV"),
+						 new Employee(102, "BA", 500.0, "DEV"),
+						 new Employee(103, "AC", 200.0, "QA"),
+						 new Employee(104, "DD", 400.0, "QA"),
+						 new Employee(105, "EF", 600.0, "DEV")
+						)
+				);
+		
+		
+		//repo.getAllEmpNames().forEach(System.out::println);
+		//repo.fetchAllEmps().forEach(System.out::println);
+		
+		repo.fetchIdAndNames() //returns Object[]
+		.stream()
+		.map(obj -> obj[0] + " : " + obj[1])
+		.forEach(System.out::println);
+		
+		Optional<String> opt =  repo.getEmpNameById(101);
+		if(opt.isPresent()) {
+			System.out.println(opt.get());
+		} else {
+			System.out.println("NO Data");
+		}
+		
+		Employee e =  repo.fetchEmployeeById(1040)
+				.orElseThrow(()-> new RuntimeException("Not Found"));
+		System.out.println(e);
+		
+	}
+
+}
+
+4. YAML File
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+================================================================
