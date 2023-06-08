@@ -1,0 +1,153 @@
+
+
+*)Note:
+If we use Optional as ReturnType and query may return Multiple rows
+output then NonUniqueResultException: query did not return a unique result: 5
+may be raised.
+
+=> List can store any output (1 row or multiple rows).
+=> Optional can store single object(1 row data).
+========================================================================
+Parameters:- Input given to Query at runtime.
+
+1. Positional Parameters (?1,?2..etc)
+ This is given by JPA and used to indicate inputs to Query in order.
+
+2. Named Parameters (:abc, :empId, :myIds, :names ..etc)
+ it is a better way of passing or identify parameters (based on names)
+
+-> Either use @Param or make method param name same as query param name
+  Syntax=>  :name
+
+=> Finally converted to SQL Parameters (? ? ? ? style).
+
+=> no.of parameters present in Query and no.of parameters present in
+   method param must be same(same count). 
+   Else IllegalArgumentException: At least 3 parameter(s) provided 
+   but only 2 parameter(s) present in query.
+
+@Query("SELECT b FROM Book b WHERE b.author like ?1 OR b.bookCost > ?2 OR b.bookType=?3")
+List<Book> getBooksAuthorCost(String author, Double bookCost);
+
+--In MySQL : Result is same-------
+ select * from booktab where bauth like 'r%';
+ select * from booktab where bauth like 'R%';
+-------------------------------------------------------
+Q) Do we need to provide @Repository on Data JPA Repository interface?
+A) Not Required.
+1. In Spring, we need to define interface and implementation class for
+   Repository. On Impl class we need to define @Repository.
+
+2. Here, in Data JPA Dynamic Proxy (Impl class + object)
+   is given by Spring Boot. So directly you use it where you want
+   (@Autowired).
+
+=====Code===================================================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="booktab")
+public class Book {
+	@Id
+	@Column(name="bid")
+	private Integer bookId;
+	
+	@Column(name="bname")
+	private String bookName;
+
+	@Column(name="bauth")
+	private String author;
+	
+	@Column(name="bcost")
+	private Double bookCost;
+	
+	@Column(name="btype")
+	private String bookType;
+	
+}
+
+2. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Book;
+import com.app.shivam.repo.BookRepository;
+
+@Component
+public class TestDataRunner implements CommandLineRunner {
+	@Autowired
+	private BookRepository repo;
+	
+	public void run(String... args) throws Exception {
+		repo.saveAll(
+				Arrays.asList(
+						new Book(101, "SBMS", "shivam", 300.0, "Backend"),
+						new Book(102, "CORE", "shivam", 200.0, "Backend"),
+						new Book(103, "ADV", "vikash", 400.0, "Backend"),
+						new Book(104, "REACT", null, 500.0, "Frontend"),
+						new Book(105, "HTML", "shivam", 600.0, "Frontend"),
+						new Book(106, "CSS", null, 300.0, "Frontend"),
+						new Book(107, "ANGULAR", "vikash", 800.0, "Frontend"),
+						new Book(108, "SQL", "shivam", 200.0, "Database")
+						)
+				);
+		
+		repo.getBooksByAuthor("shivam").forEach(System.out::println);
+		//repo.getBooksAuthorCost("r%", 200.0).forEach(System.out::println);
+		//repo.getBooksIds(Arrays.asList(101,106,108,111,134)).forEach(System.out::println);
+		
+		
+	}
+
+}
+
+3. Repository class
+package com.app.shivam.repo;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.app.shivam.entity.Book;
+
+@Repository
+public interface BookRepository extends JpaRepository<Book, Integer> {
+
+	//SQL: select * from booktab where author=?
+	//@Query("SELECT b FROM Book b WHERE b.author=?1")
+	@Query("SELECT b FROM Book b WHERE b.author = :abc")
+	List<Book> getBooksByAuthor(@Param("abc")String author);
+	
+	//SQL: select * from booktab where author like ? or bcost > ?
+	@Query("SELECT b FROM Book b WHERE b.author like ?1 OR b.bookCost > ?2 OR b.bookType=?3")
+	//@Query("SELECT b FROM Book b WHERE b.bookCost > :bookCost OR b.author like :author")
+	List<Book> getBooksAuthorCost(String author, Double bookCost);
+	
+	//SQL: select * from booktab where bid in (?,?,?)
+	//@Query("SELECT b FROM Book b WHERE b.bookId in (?1)")
+	@Query("SELECT b FROM Book b WHERE b.bookId in (:inputs)")
+	List<Book> getBooksIds(List<Integer> inputs);
+	
+}
+
