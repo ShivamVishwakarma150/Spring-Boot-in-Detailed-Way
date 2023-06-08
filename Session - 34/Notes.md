@@ -536,4 +536,4 @@ A19. The `Optional` class in Java provides several advantages, including:
 <br/>
 
 **Q20. What is the purpose of the `@Transactional` annotation in Spring?** <br/>
-A20. The `@Transactional` annotation in Spring is used to define the boundaries of a transactional method or class. It ensures that the annotated method or all methods within the annotated class are executed within a transactional context. Transactions provide atomicity, consistency, isolation, and durability (ACID) properties to ensure data integrity...
+A20. The `@Transactional` annotation in Spring is used to define the boundaries of a transactional method or class. It ensures that the annotated method or all methods within the annotated class are executed within a transactional context. Transactions provide atomicity, consistency, isolation, and durability (ACID) properties to ensure Data Integrity.
