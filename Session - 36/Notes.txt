@@ -1,0 +1,224 @@
+
+Spring Data JPA : Collections (with Primitives):-
+-----------------------------------------------
+ORM :
+ 1 class = 1 table | Parent table
+ 1 Primitive variable = 1 column
+ 1 collection variable = 1 child table (2/3 columns)
+
+Here we have 2 Types of collections mapping:-
+
+1. Index Based Collection : ( child table - 3 columns)
+ List (Index 0,1,2,3) and Map (Map Key behaves as index)
+2. Non-Index based Collection: ( child table - 2 columns)
+  Set [No index column here]
+
+
+3 columns = Key Column (FK Column / Join Column)
+            Index Column 
+	    Element Column (Data Column)
+
+*)Note:
+1. Table name and column names can be anything (Give some valid names)
+2. Columns need not be in same order always.
+3. Every Child Table is created with FK (Foreign Key ) Column that is connected with PK (Primary Key) column in Parent table.
+4. PK Unique and Not Null, FK allows duplicates and null values too. PK and FK data types must be same. Column names can be any.
+
+5. We must apply @ElementCollection over collection variable (with primitive type). It creates tables with columns.
+
+6. Optional Annotations are:
+@CollectionTable(
+	name="<Child Table Name>",
+	joinColumns = @JoinColumn(name="<FK Col Name>")
+)
+
+@OrderColumn(name="  ") //index column for List
+
+@Column(name="  ") //Element Column
+
+@MapKeyColumn(name="   ")  //index column for Map
+=============================================================
+		Code
+===============================================================
+1. Entity class
+package com.app.shivam.entity;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="prodtab")
+public class Product {
+	@Id
+	@Column(name="pid")
+	private Integer prodId;
+	@Column(name="pcode")
+	private String prodCode;
+	
+	
+	@ElementCollection
+	@CollectionTable(
+			name="product_colors",
+			joinColumns = @JoinColumn(name="pidFk")
+			)
+	@OrderColumn(name="pos") //index
+	@Column(name="data")
+	private List<String> colors;
+	
+	
+	@ElementCollection
+	@CollectionTable(
+			name="product_models",
+			joinColumns = @JoinColumn(name="pidFk")
+	)
+	@Column(name="model")
+	private Set<String> models;
+	
+	
+	@ElementCollection //must 
+	@CollectionTable(
+			name="product_details",//table name
+			joinColumns = @JoinColumn(name="pidFk")//Fk column
+			)
+	@MapKeyColumn(name="code") //index
+	@Column(name="details") //element column
+	private Map<String,String> details;
+	
+	
+}
+
+2. Repository
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Product;
+
+public interface ProductRepository 
+	extends JpaRepository<Product, Integer>
+{
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.repo.ProductRepository;
+
+@Component
+public class ProductDataRunner 
+	implements CommandLineRunner {
+
+	@Autowired
+	private ProductRepository repo;
+	
+	public void run(String... args) throws Exception {
+		
+		Product pob = new  Product();
+		pob.setProdId(10);
+		pob.setProdCode("PEN");
+		
+		pob.setColors(Arrays.asList("RE","GR","BL"));
+		//pob.setColors(List.of("RE","GR","BL"));
+		
+		Set<String> set = new LinkedHashSet<>();
+		set.add("M1");
+		set.add("LA");
+		set.add("SF");
+		
+		pob.setModels(set);
+		
+		Map<String,String> map = new LinkedHashMap<>();
+		map.put("D1", "ABC");
+		map.put("D2", "XYZ");
+		
+		pob.setDetails(map);
+		
+		repo.save(pob);
+		
+		
+		
+	}
+
+}
+
+========Default names are given as =================
+Child Table name will be =  classname_variableName 
+FK column name (Key Column) = className_PKColumnName 
+Element Column Name         = variableName 
+Map Key column (index)      = VariableName_key
+List Key Column (index)     = No Column created
+
+Q) What is Bag in Hibernate /JPA?
+A) A List collection is used and table is created without index
+  is called as bag.
+
+  List => 3 columns (key, index, element)
+  Bag  => 2 Column (List - Index)
+
+Q) Can we add few more columns in Collection with Primtives at child tables?
+A) No, These are pre-defined structure 2/3 columns only.
+
+Q) Does child table contains PK FK columns created for @ElementCollection?
+A) YES FOR List and Map (as Composite PrimaryKey)
+  Combination of (key col,Index col) columns
+  Not for set.[bcoz no duplicate data]
+
+Q) Does Every child table contains FK Column?
+A) YES. Must be connected with Parent table PK column.
+
+Q) Which annotation creates child table and columns?
+A) Element Collection. This one must be given.
+   Else we will get Exception like : MappingException: Could not determine type for
+   Other annotations are used to provide our own names.
+
+==========Task================================
+class User {
+   int uid;
+   String uname;
+   List<String> roles;
+}
+uob = (uid=10,uname="AJAY", roles=[ADMIN,MANAGER] )
+
+=============TASK====================================
+1. Entity class
+Employee(empId,empName,empSal,empDept)
+2. insert data
+10,A,300, DEV
+11,B,400,DEV
+12,C,300, QA
+13,D,400,QA
+3. At Repository interface
+ @Query("SELECT empDept, COUNT(empDept) FROM Employee GROUP BY empDept")
+ List<Object[]> getCountByDept();
+
+ @Query("SELECT min(empSal) From Employee")
+ //@Query("SELECT max(empSal) From Employee")
+ long getMinSal();
+
+ // max, avg, min, count...etc
