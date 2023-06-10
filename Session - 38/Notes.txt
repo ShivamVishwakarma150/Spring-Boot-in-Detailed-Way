@@ -1,0 +1,172 @@
+			Association Mapping (HAS-A)
+
+*) Two tables are connected using PK-FK (One Table PK - Another table FK)
+*) Here we define two Entity classes for two tables.
+*) Always we write the code at PARENT CLASS.
+   CREATE CHILD CLASS VARIABLE IN PARENT CLASS.
+   But FK Column may be created at CHILD/PARENT table based on relation(1...1/1...* /  / ) we choose.
+
+============Coding Steps====================================
+Step#1 Define Entity two classes
+Step#2 Apply HAS-A Relation (Created child class variable in Parent class)
+Step#3 Check for Collection/Non-Collection type
+Step#4 Apply Mapping Annotation and Fk Columns
+Step#5 (output sample)Just draw two tables with sample columns.
+
+#1 In general coding
+List<Product> pob = new ArrayList<Product>();
+
+#2 Recommended in new JDK (1.7) Type Inference 
+List<Product> pob = new ArrayList<>();
+
+#3 Good in JPA
+List<Product> pob; 
+
+=============code======================================
+1. Entity class
+package com.app.shivam.entity;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="producttab")
+public class Product {
+	
+	@Id
+	@Column(name="pid")
+	private Integer prodId;
+	
+	@Column(name="pcode")
+	private String prodCode;
+
+	@OneToMany
+	@JoinColumn(name="pidFk")
+	private List<Model> mobs;
+
+}
+----------
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="modeltab")
+public class Model {
+	@Id
+	@Column(name="mid")
+	private Integer modelId;
+	@Column(name="mcode")
+	private String modelCode;
+	@Column(name="mdata")
+	private String modelData;
+}
+
+2. Repository interfaces
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Model;
+
+public interface ModelRepository 
+	extends JpaRepository<Model, Integer> {
+
+}
+-------------
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Product;
+
+public interface ProductRepository 
+	extends JpaRepository<Product, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Model;
+import com.app.shivam.entity.Product;
+import com.app.shivam.repo.ModelRepository;
+import com.app.shivam.repo.ProductRepository;
+
+@Component
+public class TestDataInsertRunner implements CommandLineRunner {
+
+	@Autowired
+	private ModelRepository repo;
+	
+	@Autowired
+	private ProductRepository prepo;
+	
+	public void run(String... args) throws Exception {
+
+		Model m1 = new Model(1012, "XYZ-A", "4GB-128GB-RED");
+		Model m2 = new Model(1013, "XYZ-B", "6GB-256GB-GREEN");
+		Model m3 = new Model(1014, "MN-C", "12GB-512GB-PINK");
+		Model m4 = new Model(1011, "MN-D", "2GB-64GB-BLACK");
+		
+		Product p1 = new Product(10, "ABCD-XYZ", Arrays.asList(m1,m2));
+		Product p2 = new Product(11, "ABCD-MN", Arrays.asList(m3,m4));
+		
+		repo.save(m1);
+		repo.save(m2);
+		repo.save(m3);
+		repo.save(m4);
+		
+		prepo.save(p1);
+		prepo.save(p2);
+		
+		
+		
+		
+	}
+
+}
+
+4. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+===============================================================
