@@ -1,0 +1,201 @@
+https://www.w3schools.com/sql/sql_join.asp
+https://www.geeksforgeeks.org/sql-join-set-1-inner-left-right-and-full-joins/
+https://www.youtube.com/watch?v=vncBSUNb4NA
+
+		      Association Mapping (HAS-A)
+
+Database Concept: Multiplicity(4)
+1...1 / 1...* / *...1 / *...*
+
+Ex: Car  HAS-A  Engine  (One Car is having one Engine)
+         1...1
+
+    Person  HAS-A Address
+           1...*
+
+
+     Book HAS-A Author
+           *...*
+
+            1...1
+     Product HAS-A GstInfo
+
+          *...1
+     Employee HAS-A Department
+       
+        
+            *...*
+     Student HAS-A Course
+            
+       
+*) Two tables are connected using PK-FK columns Concept.
+*) Hint: FK column is created at Many Side
+*) In case of 1...* or *...1 , FK column is created at many Side.
+   For *...* One extra table is created ie called as JoinTable
+   with 2 FK Columns (JoinColumn, inverseJoinColumn).
+
+-------------------------These are two types------------------------
+	Non-Collection                    Collection
+	 1...1                              1...*
+	 *...1                              *...*
+------------------------------------------------------------------------
+1. Multiplicity is a Database Concept.
+2. It is implemented using HAS-A Relation / Association
+3. It is two types based on child relation.
+   If child is 1 then it is non-collection type
+   If child is * then it is collection type.
+
+4. JPA Annotations are given:
+
+ @ManyToOne + Unique   ==> 1...1     (@OneToOne)
+ @OneToMany            ==> 1...*
+ @ManyToOne            ==> *...1
+ @ManyToMany           ==> *...*
+
+5. To provide FK Column Name : @JoinColumn 
+   To Provide child table : @JoinTable (*...*)
+
+============Coding Steps====================================
+Step#1 Define two classes
+Step#2 Apply HAS-A Relation (Created child class variable in Parent class)
+Step#3 Check for Collection/Non-Collection type
+Step#4 Apply Mapping Annotation and Fk Columns
+Step#5 Just draw two tables with sample columns.
+
+=========================Full Code========================================
+1. Entity class
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="depttab")
+public class Department {
+	@Id
+	@Column(name="did")
+	private Integer deptId;
+	@Column(name="dname")
+	private String deptName;
+	@Column(name="dadmin")
+	private String deptAdmin;
+}
+----
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="emptab")
+public class Employee {
+	@Id
+	@Column(name="eid")
+	private Integer empId;
+	@Column(name="ename")
+	private String empName;
+	@Column(name="esal")
+	private Double empSal;
+	
+	@ManyToOne
+	@JoinColumn(name="didFk")
+	private Department dob;
+	
+	
+}
+
+2. Repository Interfaces
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Department;
+
+public interface DepartmentRepository extends JpaRepository<Department, Integer> {
+
+}
+-----------
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Employee;
+
+public interface EmployeeRepository 
+	extends JpaRepository<Employee, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Department;
+import com.app.shivam.entity.Employee;
+import com.app.shivam.repo.DepartmentRepository;
+import com.app.shivam.repo.EmployeeRepository;
+
+@Component
+public class TestDataInsertRunner implements CommandLineRunner {
+
+	@Autowired
+	private DepartmentRepository drepo;
+	
+	@Autowired
+	private EmployeeRepository erepo;
+	
+	public void run(String... args) throws Exception {
+
+		Department d1 = new Department(1054,"DEV","AJAY");
+		drepo.save(d1);
+		
+		//Department d1 = repo.findById(1053).get();
+		
+		Employee e1 = new Employee(10, "SAM", 500.0, d1);
+		Employee e2 = new Employee(11, "RAM", 600.0, d1);
+		Employee e3 = new Employee(12, "SYED", 700.0, d1);
+		
+		erepo.save(e1);
+		erepo.save(e2);
+		erepo.save(e3);
+		
+	}
+
+}
+
+4. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
