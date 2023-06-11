@@ -1,0 +1,205 @@
+
+JPQL/HQL Joins:- This is implemented to fetch data from class/objects (multiple tables/rows).
+
+=> We do not write ON clause. We do not use child className in Query.
+=> We use childClass Reference variableName. 
+(That behaves like link on clause / child class)
+
+Syntax:
+SELECT <column>
+FROM ParentClass p
+    [Join Type]
+ p.childClsVariable C
+WHERE <condition>
+
+Q) Is Full Outer Join Supported By All DBs?
+A) No. Fetching all records from DB has no meaning.
+================================================================
+Q) Which one is better to use?
+@Query("SELECT e FROM Employee e)  [or] repo.findAll()
+
+A) Always use pre-defined methods first, if no matching found then go for your custom methods. BCoz Our custom method need to be generated as a new method with dynamic code.
+
+=======================*** CODE ***=================================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="emptab")
+public class Employee {
+	@Id
+	@Column(name="eid")
+	private Integer empId;
+	@Column(name="ename")
+	private String empName;
+	@Column(name="esal")
+	private Double empSal;
+	
+	@ManyToOne
+	@JoinColumn(name="didFk")
+	private Department dob;
+	
+	
+}
+---------
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="depttab")
+public class Department {
+	@Id
+	@Column(name="did")
+	private Integer deptId;
+	@Column(name="dname")
+	private String deptName;
+	@Column(name="dadmin")
+	private String deptAdmin;
+}
+
+2. Repository Interfaces
+package com.app.shivam.repo;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.app.shivam.entity.Employee;
+
+public interface EmployeeRepository 
+	extends JpaRepository<Employee, Integer> {
+	
+
+	@Query("SELECT emp.empName, dept.deptName FROM Employee emp INNER JOIN emp.dob as dept")
+	List<Object[]> getEnameDeptNames();
+	
+	//@Query("SELECT emp.empName, dept.deptName FROM Employee emp LEFT OUTER JOIN emp.dob as dept")
+	//@Query("SELECT emp.empName, dept.deptName FROM Employee emp LEFT OUTER JOIN emp.dob as dept WHERE dept IS NOT NULL")
+	@Query("SELECT emp.empName, dept.deptName FROM Employee emp LEFT OUTER JOIN emp.dob as dept WHERE dept IS NULL")
+	List<Object[]> getAllEnamesAndDeptNamesIfExist();
+	
+	//@Query("SELECT emp.empName, dept.deptName FROM Employee emp RIGHT OUTER JOIN emp.dob as dept")
+	@Query("SELECT emp.empName, dept.deptName FROM Employee emp RIGHT OUTER JOIN emp.dob as dept WHERE emp IS NULL")
+	List<Object[]> getAllDeptsAndEnamesIfExist();
+	
+	@Query("SELECT emp.empName, dept.deptName FROM Employee emp FULL JOIN emp.dob as dept")
+	List<Object[]> getAllData();
+	
+	@Query("SELECT emp.empName, dept.deptName FROM Employee emp INNER JOIN emp.dob as dept WHERE dept.deptName=:deptName")
+	List<Object[]> getEnameDeptNames(String deptName);
+	
+}
+----------
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Department;
+
+public interface DepartmentRepository extends JpaRepository<Department, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Department;
+import com.app.shivam.entity.Employee;
+import com.app.shivam.repo.DepartmentRepository;
+import com.app.shivam.repo.EmployeeRepository;
+
+@Component
+public class TestDataInsertRunner implements CommandLineRunner {
+
+	@Autowired
+	private DepartmentRepository drepo;
+	
+	@Autowired
+	private EmployeeRepository erepo;
+	
+	public void run(String... args) throws Exception {
+
+		Department d1 = new Department(1054,"DEV","AJAY");
+		Department d2 = new Department(1055,"QA","SAM");
+		Department d3 = new Department(1056,"BA","KUMAR");
+		drepo.save(d1);
+		drepo.save(d2);
+		drepo.save(d3);
+		
+		Employee e1 = new Employee(10, "SAM", 500.0, d1);
+		Employee e2 = new Employee(11, "RAM", 600.0, d2);
+		Employee e3 = new Employee(12, "SYED", 700.0, d1);
+		Employee e4 = new Employee(13, "AJAY", 700.0, null);
+		
+		erepo.save(e1);
+		erepo.save(e2);
+		erepo.save(e3);
+		erepo.save(e4);
+		
+		List<Object[]> list1 = erepo.getEnameDeptNames();
+		for(Object[] ob:list1) {
+			System.out.println(ob[0]+" --IS WORKING ON DEPT-- "+ob[1]);
+		}
+		
+		List<Object[]> list2 = erepo.getAllEnamesAndDeptNamesIfExist();
+		for(Object[] ob:list2) {
+			System.out.println(ob[0]+" -- ******** -- "+ob[1]);
+		}
+		
+		List<Object[]> list3 = erepo.getAllDeptsAndEnamesIfExist();
+		for(Object[] ob:list3) {
+			System.out.println(ob[0]+" --#######-- "+ob[1]);
+		}
+		
+		//List<Object[]> list4 = erepo.getAllData();
+		List<Object[]> list4 = erepo.getEnameDeptNames("DEV");
+		for(Object[] ob:list4) {
+			System.out.println(ob[0]+" ---------- "+ob[1]);
+		}
+	}
+
+}
+=======****============================================================
+Task: JPQL/HQL [for all other examples]
+
+Q) How can we fetch one row data having multiple columns?
+---DepartmentRepository---
+@Query("SELECT d.deptAdmin,d.deptName FROM Department d WHERE d.deptId=:did")
+Object getSomeData(Integer did);
+
+--Runner class code----
+Object opt = drepo.getSomeData(1054);
+Object[] arr = (Object[])opt;
+System.out.println(arr[0]+"-"+arr[1]);
