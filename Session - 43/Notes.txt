@@ -1,0 +1,202 @@
+
+@Query:-
+=> This annotation supports both SELECT and NON-SELECT Operations.
+=> Here NON-SELECT Operations means "UPDATE and DELETE" only.
+   No INSERT Operation supported.
+
+
+  @Query("_________")   ---> Data JPA takes it as SELECT.
+
+  @Modifying + @Query("_________") --> Data JPA takes it as NON-SELECT.
+
+=> @Modifying indicates Query is either UPDATE or DELETE, else
+   @Query only behaves as SELECT operation.
+
+--------------------------------------------------------------------
+Transaction Management:-
+=> When ever any client(CLI/GUI/App) sends query (UPDATE/DELETE/INSERT)
+  then that will be executed at buffer memory.
+
+=> if commit is called then it will update in Database
+   else if rollback is called then it will cancel those changes.
+
+--sample JDBC Code------------------
+Class.forName("DriverClassName");
+Connection con = DriverManager.getConnection(url,un,pwd);
+con.setAutoCommit(false); //disable AutoCommit
+try{
+   //statements, executeUpdate...
+   
+   con.commit();
+}catch(SQLException e){
+   sysout(e);
+   con.rollback();
+}finally{
+  if(con!=null) {
+    //inside try catch
+    con.close();
+  }
+}
+
+=============JPA/Hibernate===============================
+EntityTransaction tx = null;
+try{
+  tx = em.getTransaction();
+  tx.begin();
+  //some operation
+
+  tx.commit();
+}catch(Exception e) {
+  tx.rollback();
+}
+====================== Spring F/w ===========================
+@Transactional: This annotation checks that all queries/one query is executed successfully or not?
+If they are success then commit, else rollback.
+
+=> We need to apply this annotation manually, over methods.
+=> Here, it is recommended to apply for NON-SELECT operations.
+
+======================== In Spring Boot ===============================
+=> All Database Operations (methods) are given by Spring Boot Data JPA.
+=> But we can define custom NON-SELECT Operations using:
+       @Modifying + @Query and also apply @Transactional.
+
+Q) What annotations are required for custom NON-SELECT 
+   operations using Data JPA? and Why?
+A) 3 Annotations are required.
+  i. @Query : to define our Query(JPQL/HQL).
+  ii. @Modifying: To indicate Query is UPDATE or DELETE
+ iii. @Transactional: Either to commit (on success) or rollback(on failure)
+
+--------------------------------------------------------------------- 
+Usecase#2 of @Transactional
+
+          Acc101         Acc201
+         bal=500         bal=1500
+            -500           +500
+            q1            q2
+        UPDATE             UPDATE
+    
+@Transactional
+methodTx() {
+ UPDATE Account SET bal=bal-500 WHERE ac="Acc101"; //executed
+ UPDATE Account SET bal=bal+500 WHERE ac="Acc201"; //failed
+}
+
+Note:
+1. if we miss writing @Transactional annotation for UPDATE or DELETE then Data JPA says: TransactionRequiredException: Executing an update/delete query
+
+2. If we miss writing @Modifying annotation,
+then data jpa says: QueryExecutionRequestException: Not supported for DML operations
+
+
+------------------------------------------
+@Column(
+            name="pname",
+            unique = true,
+            nullable = false,
+            length = 50,
+            updatable = false,
+            insertable = true
+		)
+--------------------------------------------------
+
+=============EXAMPLE==============================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="product_tab")
+public class Product {
+	
+	@Id
+	@Column(name="pid")
+	private Integer prodId;
+	
+	@Column(name="pname")
+	private String prodName;
+	
+	@Column(name="pcost")
+	private Double prodCost;
+	
+}
+
+2. Repository Interface
+package com.app.shivam.repo;
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.app.shivam.entity.Product;
+
+public interface ProductRepository extends JpaRepository<Product, Integer> {
+
+	@Transactional //we need to define on top of service layer
+	@Modifying
+	@Query("UPDATE Product SET prodName=:pn WHERE prodId=:pid")
+	int updateNameById(String pn, Integer pid);
+	
+	@Transactional //we need to define on top of service layer
+	@Modifying
+	@Query("DELETE Product WHERE prodId=:pid")
+	int removeById(Integer pid);
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.repo.ProductRepository;
+
+@Component
+public final class TestDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private ProductRepository repo;
+	
+	public void run(String... args) throws Exception {
+		repo.save(new Product(101, "AA", 200.0));
+		System.out.println("___________________________");
+		int count = repo.updateNameById("PEN", 101);
+		System.out.println(count);
+		
+		
+		int count2 = repo.removeById(101);
+		System.out.println(count2);
+		
+	}
+
+}
+
+4. YAML file
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
