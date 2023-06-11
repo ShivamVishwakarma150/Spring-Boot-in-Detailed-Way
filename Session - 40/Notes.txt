@@ -1,0 +1,98 @@
+
+https://www.w3schools.com/sql/sql_join.asp
+https://www.geeksforgeeks.org/sql-join-set-1-inner-left-right-and-full-joins/
+https://www.youtube.com/watch?v=vncBSUNb4NA
+
+
+*)SQL Joins:-
+ Fetching data from multiple table using one SQL query.
+ Table must be connected (PK-FK).
+ We need at least two tables to fetch data(at max many).
+
+-> SelfJoin, CrossJoin, EqualJoin
+** Inner Join | Join  (Word Inner is Optional)
+** Outer Join (3)
+   -> LEFT OUTER JOIN  | LEFT JOIN  (Word Outer is Optional)
+   -> RIGHT OUTER JOIN | RIGHT JOIN
+   -> FULL OUTER JOIN  | FULL JOIN  (Few DBs may not support this)
+=======================================================================
+1. Output
+INNER JOIN : Only Connected Rows from both tables are selected.
+LEFT JOIN  : All rows from Leftside table and connected rows  from rightside table are selected.
+RIGHT JOIN  : All rows from Rightside table and connected rows  from leftside table are selected.
+FULL JOIN  : All Rows (Connected and NonConnected) rows from both tables are selected.
+----------------------------------------------------------------------
+2. SQL Syntax | Examples
+
+SELECT <P>.<column>, <C>.<column>
+
+FROM ParentTable <P>
+      [JOIN TYPE]
+     ChildTable <C>
+
+ON <P>.<PK> = <C>.<CK>
+
+WHERE <condition>
+---------------------------------------------
+Examples#
+       prodtab    *...1    vendortab
+    pid pcode vidFk        vid  vname
+
+SELECT p.pcode, v.vname
+FROM prodtab p
+    left outer join
+    vendortab v
+ON p.vidFk = v.vid
+--------------------------------------------------------------
+           1....*
+       book ---------- author
+ bid bname bcost    aid aname bidFk
+
+Q) Fetch Books which are having authors? [Only Connected rows] 
+  Print only Book Name and Author name
+
+SELECT b.bname, a.aname
+FROM book b
+   INNER JOIN
+    author a
+ON b.bid = a.bidFk
+
+
+Q) Fetch All Books and their authors if exist?
+
+Q) Fetch All Authors and their books if exist?
+
+Q) Fetch All Rows from Books and Authors ?
+
+______________________________________________________
+3. JPQL/HQL Syntax | Example
+
+SELECT p.variable, c.variable
+
+FROM ParentClass p
+   [JOIN TYPE]
+ p.hasAVariableName as c   --(ChildClass Reference variable)
+
+WHERE <condition>
+______________________________________________________
+Task:
+          1...*
+   Student ----<> Address
+sid sname     aid loc pincode city sidFk
+
+
+Q) Fetch Students who stay in city HYD?
+
+
+Q) Fetch Students who are not staying in given pincode?
+
+
+Q) Print All City names and Students who are staying in those cities
+   if no student exist just print null.
+** Hint : WHERE a.sidFk IS NULL
+------------------------------------------------------------------
+Q) What is Orphan Row in DB?
+A) A Row exist in Child table and not connected with any parent table row.
+
+Q) Why Full Outer Join is not supported by Databases?
+A) 
