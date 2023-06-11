@@ -1,0 +1,56 @@
+
+Q) What is JDBC Connection ?
+Q) What is setAutoCommit true/false?
+
+1...1
+1...*
+*...1
+*...*
+
+Joins | FetchType | Cascading
+
+Joins: To fetch data from multiple classes(tables) using one query.
+
+*) FetchType :- To fetch data from multiple entities(tables) as EAGER or LAZY format.
+
+EAGER: Fetch Parent class/table data and its connected child class/table data. Using find__ (one Network call) Method.
+
+LAZY : Fetch Only Parent class/table data when find__ method is called Do not fetch child data until it is called externally.
+
+=========================================================
+*) For 1...1 and *...1 default type is EAGER.
+*) For 1...* and *...* default type is LAZY.(BCoz fetching collection)
+
+*) FetchType it is a enum provided by JPA.
+  Inside Package : javax.persistence 
+  with two values: LAZY, EAGER
+
+
+Ex: @OneToMany(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
+==============================================================
+Cascading:- It is used to make a Strong relation between Entities On Performing Operation on Parent Entity, same will be applied to connected child entities.
+
+  ie if we save/persist parent object then by default all its connected child objects are also saved. (same applied for delete/update...).
+
+*) By Default there is No Cascading applied.
+  ie Aggregation is default, we have to perform save/update/delete(ALL) on both parent and child objects.
+
+Ex:
+@OneToMany(cascade = CascadeType.ALL)
+@ManyToMany(cascade = CascadeType.ALL)
+
+Q) What is the default Cascade type?
+A) No Such Default Cascade Value. 
+   There will be no cascading applied by default.
+
+*) We can add both FetchType and Cascade at a type.
+@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+----------------------------------------------------------------
+Hint:
+ 1...* / 1...1   Use Cascasdetype like ALL/PERSIST/DELETE
+ (One parent might have been connected to multiple child)
+  
+ *...1 / *...* Do not use DELETE cascading (we can use PERSIST/MERGE) (One child might have been connected to multiple parent)
+================================================================
+ 
