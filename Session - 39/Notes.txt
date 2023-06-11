@@ -1,0 +1,386 @@
+------------------------------------------------------------
+Q) What is Cascading in JPA/Hibernate?
+Q) What is FetchType in JPA/Hibernate?
+Q) What is the use of SQL Joins?
+---------------------------------------------------------------------
+Many-To-Many:
+ If both sides 1...* is implemented/exist then use many-to-many.
+Ex: 
+   1 Student ------> Learning Many Courses
+   1 Course -------> Taken by Many Students
+
+	  *....*
+   Student ------<> Course
+
+1. It is collection type.
+2. This case 3rd table is created with 2 FK Columns
+   JoinTable -- JoinColumn, inverseJoinColumn
+   FK1-JoinColumn, Fk2-inverseJoinColumn
+
+==========MySQL DB Expected Output============
+mysql> use boot;
+Database changed
+mysql> show tables;
++-------------------+
+| Tables_in_boot    |
++-------------------+
+| coursetab         |
+| modeltab          |
+| producttab        |
+| stdcrstab         |
+| stdtab            |
++-------------------+
+5 rows in set (0.01 sec)
+
+mysql> select * from coursetab;
++-----+------+------------+
+| cid | cfee | cname      |
++-----+------+------------+
+|  50 |  500 | SpringBoot |
+|  51 |  600 | Angular    |
++-----+------+------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from stdtab;
++-----+-----------+-------+
+| sid | smail     | sname |
++-----+-----------+-------+
+|  10 | aj@gm.com | AJAY  |
+|  11 | sa@gm.com | SAM   |
++-----+-----------+-------+
+2 rows in set (0.00 sec)
+
+mysql> select * from stdcrstab;
++--------+--------+
+| sid_fk | cid_fk |
++--------+--------+
+|     10 |     50 |
+|     10 |     51 |
+|     11 |     50 |
+|     11 |     51 |
++--------+--------+
+4 rows in set (0.00 sec)
+=======================Code======================================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="coursetab")
+public class Course {
+	@Id
+	@Column(name="cid")
+	private Integer courseId;
+	@Column(name="cname")
+	private String courseName;
+	@Column(name="cfee")
+	private Double courseFee;
+}
+
+------
+package com.app.shivam.entity;
+
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="stdtab")
+public class Student {
+	@Id
+	@Column(name="sid")
+	private Integer stdId;
+	@Column(name="sname")
+	private String stdName;
+	@Column(name="smail")
+	private String stdEmail;
+	
+	@ManyToMany
+	@JoinTable(
+			name="stdcrstab",
+			joinColumns = @JoinColumn(name="sidFk"),
+			inverseJoinColumns = @JoinColumn(name="cidFk")
+			)
+	private List<Course> cobs;
+	
+	
+}
+
+
+2. Repository Interfaces
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Course;
+
+public interface CourseRepository extends JpaRepository<Course, Integer> {
+
+}
+--------
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Student;
+
+public interface StudentRepository extends JpaRepository<Student, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Course;
+import com.app.shivam.entity.Student;
+import com.app.shivam.repo.CourseRepository;
+import com.app.shivam.repo.StudentRepository;
+
+@Component
+public class TestDataInsertRunner implements CommandLineRunner {
+
+	@Autowired
+	private CourseRepository crepo;
+	
+	@Autowired
+	private StudentRepository srepo;
+	
+	public void run(String... args) throws Exception {
+		Course c1 = new Course(50, "SpringBoot", 500.0);
+		Course c2 = new Course(51, "Angular", 600.0);
+		
+		crepo.save(c1);
+		crepo.save(c2);
+		
+		Student s1 = new Student(10, "AJAY", "aj@gm.com", Arrays.asList(c1,c2));
+		Student s2 = new Student(11, "SAM", "sa@gm.com", Arrays.asList(c1,c2));
+		
+		srepo.save(s1);
+		srepo.save(s2);
+		
+		
+	}
+
+}
+
+4. application.yml
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot7am
+    username: root
+    password: root
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+============================================================
+Q) What is Unique Condition in Database?
+A) By Default any column (even FK column) allows duplicates.
+   To avoid duplicate data we can apply unique condition.
+
+   *** It allows null for multiple rows.(null means no data).
+==============================================================
+***************************************************************
+1...1 / OneToOne
+*) it is a non-collection type
+*) FK column is created at parent table side
+
+
+--MySQL DB Output---------------
+mysql> use boot
+Database changed
+mysql> show tables;
++-------------------+
+| Tables_in_boot    |
++-------------------+
+| roletab           |
+| usertab           |
++-------------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from roletab;
++-----+-------+
+| rid | rcode |
++-----+-------+
+| 503 | ADMIN |
+| 504 | GUEST |
++-----+-------+
+2 rows in set (0.00 sec)
+
+mysql> desc roletab;
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| rid   | int          | NO   | PRI | NULL    |       |
+| rcode | varchar(255) | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+2 rows in set (0.05 sec)
+
+mysql> select * from usertab;
++-----+-------+--------+
+| uid | uname | rid_fk |
++-----+-------+--------+
+|  10 | SYED  |    503 |
+|  11 | SAM   |    504 |
++-----+-------+--------+
+2 rows in set (0.00 sec)
+
+mysql> desc usertab;
++--------+--------------+------+-----+---------+-------+
+| Field  | Type         | Null | Key | Default | Extra |
++--------+--------------+------+-----+---------+-------+
+| uid    | int          | NO   | PRI | NULL    |       |
+| uname  | varchar(255) | YES  |     | NULL    |       |
+| rid_fk | int          | YES  | UNI | NULL    |       |
++--------+--------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+========Code=================================
+1. Entity classes
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="roletab")
+public class Role {
+	@Id
+	@Column(name="rid")
+	private Integer roleId;
+	@Column(name="rcode")
+	private String roleCode;
+}
+-----------------
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="usertab")
+public class User {
+	@Id
+	@Column(name="uid")
+	private Integer userId;
+	@Column(name="uname")
+	private String userName;
+	
+	@ManyToOne
+	//@JoinColumn(name="ridFk",unique = true,nullable = false)
+	@JoinColumn(name="ridFk",unique = true)
+	private Role rob;
+}
+
+2. Repository Interfaces
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Role;
+
+public interface RoleRepository extends JpaRepository<Role, Integer> {
+
+}
+----------
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.User;
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Role;
+import com.app.shivam.entity.User;
+import com.app.shivam.repo.RoleRepository;
+import com.app.shivam.repo.UserRepository;
+
+@Component
+public class TestDataInsertRunner implements CommandLineRunner {
+
+	@Autowired
+	private RoleRepository rrepo;
+	
+	@Autowired
+	private UserRepository repo;
+	
+	public void run(String... args) throws Exception {
+		Role r1 = new Role(503, "ADMIN");
+		Role r2 = new Role(504, "GUEST");
+		
+		rrepo.save(r1);
+		rrepo.save(r2);
+		
+		User u1 = new User(10, "SYED", r1);
+		User u2 = new User(11, "SAM", r2);
+		
+		repo.save(u1);
+		repo.save(u2);
+		
+	}
+
+}
+
