@@ -1,0 +1,73 @@
+
+		      Spring Boot - Web Applications 
+Q) In how many ways browser can make request?
+  a. Enter URL in Addressbar (GET)
+    ex: www.google.com
+ b. HTML Form Submit (GET/POST)
+    ex: Register Form, Login Form, Feedback Form, Comment Form..etc
+ c. Click on HyperLink (<a>) (GET)
+    ex: Read More, logout, View Here, Menubar options..etc
+    <a href="__">___</a>
+
+=> FrontController is concept that dispatch the request to the actual
+   place where it can get details/service.
+=> It is a Servlet named as DispatchServlet. In Spring F/w we need to configure using web.xml, in Spring boot it is Auto-Configured.
+
+=> Controller is a class, that contains request processing methods. For every module we define one controller.
+Project: Gmail
+Modules: User, Inbox, Sent, Draft, Settings, Profile ..etc
+Project: Amazon
+Modules: User, Search, Cart, Payment, Feedback, Returns, ...etc
+
+ex: UserController (addUser,loginUser,viewMyData)
+    PaymentController(checkStatus, tryRepay, validateOtp)
+
+Q) Why HandlerMapper is used in Spring WEB MVC?
+A) It is a map internally. It holds all controller method details. Like for which path ---> where to Go.
+
+=> Controller Method Returns a ViewName which has no location and extension details. To be independent of UI Technologies.
+
+=> ViewResolver helps to find ViewPage by adding location and extension details.
+
+   ViewPage = Prefix + ViewName + Suffix
+             /mypages/  Inbox      .jsp
+** In Spring F/w we need to define one <bean> for ViewResolver.
+   In Spring Boot it is autoconfigured. Just pass prefix and suffix
+   using properties/yaml file.
+---Example--------------
+   spring.mvc.view.prefix=/WEB-INF/mypages/
+   spring.mvc.view.suffix=.jsp
+------------------------
+
+=> View(UI) Page will display final result to EndUser inside a Browser.
+   Our View Page will be executed and output is given as:HTML(CSS, JS)
+   returned back to FC.
+
+=> EL : Expression Language is used to read data from Model(memory).
+   Syntax: ${keyName}.
+   At runtime all expressions are replaced with their data taken from
+   Model is called as Rendering.
+=======================================================================
+SpringBoot WEB Module:-
+=> This module provides all annotations , configurations to work with WebApps
+=> Spring Boot Web MVC provided Embedded Server(No Download + No Install) Apache Tomcat(default), Eclipse Jetty, JBoss Undertow.
+
+=> Application package format is : WAR (Web Archive)
+   Archive = Group of files as one bundle.
+
+**** Even we can use JAR Format also for webapp.
+
+Q) Which option we need to choose for Web Application Packaing?
+A) We can use JAR if we want to work with embedded Server. For external Deployment use : WAR option only.
+
+*) EAR: Enterprise Archive = EJB + WEB APP TYPE (It is removed).
+
+----------------------------------------------------------------
+Port Number: 0-65535 (65536)
+A Logical number assigned by OS, to identify a service.
+At a time two different services can not use same port number.
+=> 0-1024 are called as reserved port numbers.
+=> Http - 80, https-443.
+
+*) Default port number for Spring Boot app is : 8080
+  We can modify using key : server.port=9090
