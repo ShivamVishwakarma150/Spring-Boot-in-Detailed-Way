@@ -1,0 +1,147 @@
+
+JPA : Generators:-
+=> Generate one Primary Key(ID) value on save/INSERT operation.
+=> Generators are two types :
+  a. Pre-defined Generators.
+  b. Custom Generators.
+
+Q) What are Generators in Realtime ?
+A) Ids are given from application after taking end-user data.
+  ex: Student Roll Num, Bank acc No. 
+      Persons Pancard Num, Aadhar ID, ...etc
+
+*) @GeneratedValue annotation is used with GenerationType enum.
+*) SEQUENCE is mostly used for Oracle databases.
+    It is concept at DB, that generates numbers.
+*) IDENTITY is used for MySQL. (Auto-Increment).
+*) TABLE : A table is created (behaves like sequence)
+           and store id value. 
+*) AUTO : Any one option is selected based on DB.
+
+Q) What is custom generator and how can we implement?
+A) Defining our own generator is called as custom generator.
+
+S#1 Define one public class
+S#2 Implement IdentifierGenerator (org.hibernate.id)
+S#3 Override method generate()
+S#4 Define your own logic
+S#5 At Entity class
+   @GeneratedValue(generator = "<anyName>")
+   @GenericGenerator(name="<anyName>",strategy = "GeneratorClassName")
+======Example=================================
+1. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="product_tab")
+public class Product {
+	
+	@Id
+	//@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(generator = "test")
+	@GenericGenerator(name="test",strategy = "com.app.shivam.gen.MyCustomGen")
+	@Column(name="pid")
+	private String prodId;
+	
+	@Column(name="pname")
+	private String prodName;
+	
+	@Column(name="pcost")
+	private Double prodCost;
+	
+}
+
+2. Repository
+package com.app.shivam.repo;
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Product;
+
+public interface ProductRepository extends JpaRepository<Product, Integer> {
+
+	
+}
+
+3. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.repo.ProductRepository;
+
+@Component
+public final class TestDataRunner implements CommandLineRunner {
+
+	@Autowired
+	private ProductRepository repo;
+	
+	public void run(String... args) throws Exception {
+		Product p1 = new Product();
+		p1.setProdName("PEN");
+		p1.setProdCost(200.0);
+		
+		p1 = repo.save(p1);
+		System.out.println(p1.getProdId());
+		
+	}
+
+}
+
+4. Custom generator
+package com.app.shivam.gen;
+
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.IdentifierGenerator;
+
+public class MyCustomGen implements IdentifierGenerator {
+
+	@Override
+	public Serializable generate(SharedSessionContractImplementor session, Object object) 
+			throws HibernateException {
+		
+		String pref="MYPRD-";
+		int random = new Random().nextInt();
+		random = Math.abs(random);
+		
+		String dte = new SimpleDateFormat("ddMMMyy").format(new Date());
+		
+		return pref+dte+":"+random;
+	}
+}
+
+5. yaml file
+spring:
+  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot
+    username: root
+    password: Shivam@123
+    
+  jpa:
+    show-sql: true
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+======================================================================
