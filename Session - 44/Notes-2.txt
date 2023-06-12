@@ -1,0 +1,82 @@
+		      Spring Boot - Web Applications 
+
+MVC : It is a Design Pattern to develop a web application.
+
+M = Model (Data)
+V = View (Display)
+C = Controller ( class / Request Processing Code)
+
+=> Spring has provided WEB MVC Module, to implement Web Applications using any UI(Java UI) [JSP, Thymeleaf, Velocity, JSF,...etc].
+
+------------------------------------------------------------------
+1. Client (Machine) makes request to server.
+  Using s/w Browser. (Enduser means person who operates Client).
+
+2. Request can be made in 3 simple ways from client.
+ a. Enter URL in Addressbar (GET)
+    ex: www.google.com
+ b. HTML Form Submit (GET/POST)
+    ex: Register Form, Login Form, Feedback Form, Comment Form..etc
+ c. Click on HyperLink (<a>) (GET)
+    ex: Read More, logout, View Here, Menubar options..etc
+    <a href="__">___</a>
+
+3. For every request, processing code exist inside a method 
+   [Request processing method] present under a class (Controller)
+
+Ex: UserController (addUser,login, logout, viewProfile) 
+    DashBoardController(addLike, ViewPost)
+
+4. HandlerMapper holds details of controller methods like a Map.
+  [For which request , where to Goooo]
+ +-------------------------------------------------------------+
+         Key                             value
+ +-------------------------------------------------------------+
+   /emp/show + GET             EmployeeController#showData()
+   /product/save + POST        ProductController#saveProd()
+ +-------------------------------------------------------------+
+
+5. FrontController (Dispatcher Servlet) is a pre-defined Servlet.
+   it will dispatch request b/w multiple components.
+
+6. Controller method returns ViewName(A file name without extension
+    and location).
+    ex: Home, Profile, Inbox 
+
+  If data is present stores in Model(Memory--Map)
+
+7. FC uses ViewResolver (prefix, suffix) to get full UI Name.
+
+  ex: pageName = prefix    + viewName + suffix
+               = /mypages/    Home      .jsp
+
+8. FC executes UI page and UI reads data from model using EL
+  (Expression Language). ie called as Data Rendering
+    (Replace expressions with actual data).
+
+ ex: Hello User ${name} --> Hello User Ajay!
+
+9. (UI)That is finally converted into HTML content and given back to
+   Browser by FC as Response.
+
+===========Flow : Request- Response==================
+1. Enduser opens any one browser/client
+2. Browser makes request
+3. Request Goes to FC (FrontController)
+4. FC connecting with HandlerMapper
+  gives Path and httpMethod as input
+5. Gets Controller class and method details
+6. FC will call controller method (execute)
+7. Controller#method will process the request
+8. Controller#method returns ViewName
+   and gives Data(Model) if present.
+
+9. FC uses ViewResolver to find full PageName
+10.  VR adds prefix=Folder of UI Pages
+             suffix = extension of UI pages
+11. FC will get Full page name and executes it.
+12. UI Page reads data from Model (Rendering)
+
+13. UI Page output is given as HTML to FC.
+14. FC returns HTML data as Response back to browser
+15. Browser will display output.
