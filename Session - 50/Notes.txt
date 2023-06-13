@@ -1,0 +1,139 @@
+
+UI(User Interface) / View:-
+*) JSP (Java Server Page)
+ JSP is called as Heavyweight UI Technology.
+ Every JSP File internally converted into Servlet Code,
+ then compiled and object created inside Servlet container.
+
+=> Even if we define static content (ex: <p> hello </p>) 
+   that is converted into Servlet code ( out.write("<p> hello </p>") ),
+   not only dynamic content ( ex: <c:forEach/>).
+=======================================================================
+			  Thymeleaf
+*) Thymeleaf UI is light weight Java UI Engine used to design 
+  Dynamic web pages in web application/pages.
+*) JSP internally servlet (heavy weight) but Thymeleaf is simple 
+  (core) java code so, compared to JSP, Thymeleaf is lightweight 
+  (less memory).
+
+*) it is a simple HTML File which contains static tags[HTML tags]
+   and Thymeleaf Tags[dynamic tags].
+
+=> Only Thymeleaf Tags are converted into Java Code => executed
+   => place result back to Same file (Rendering).
+
+*) https://www.thymeleaf.org/ is a server/namespace[location of tag definition]
+  which gives all pre-defined tags/attributes.
+
+*) prefix "th", indicates Thymeleaf Tags/attributes, only those are
+   processed by Thymeleaf Engine.
+
+*) This file extension is .html only.
+
+---------------------Home.html-------------------------------
+<html xmlns:th="https://www.thymeleaf.org/">
+  <head>
+
+  </head>
+  <body>
+
+
+  </body>
+</html>
+============================================================
+3 symbols mainly:
+$ -- Read data from Model/ModelMap/Map
+@ -- URL/Path/Location
+* -- Only for Forms (Input name binding)
+
+Example Code snippets:-
+th:text="${emp.empName}"  //th:text --> print data
+   (or)
+[[ ${emp.empName} ]]         
+
+<form th:action="@{/employee/save}"
+
+<script type="text/javascript" th:src="@{/myjs/sample.js}"
+
+<tr th:each ="ob:${list}">
+----------------------------------------------------------------
+*) Note: ctrl+shift+T : ThymeleafProperties
+When we add thymeleaf dependency(spring-boot-starter-thymeleaf)
+then by default it gives Auto-Configuration (Detect/Load/Trasilate/execute)
+for Thymeleaf files and also prefix/suffix details.
+
+Default prefix is : /templates/ folder (in classpath)
+Default suffix is : .html
+
+[ProjectName]
+ |
+ |-src/main/resources
+    |- static -----> Images/CSS Files/ Java Script Files
+    |- templates
+       |-Home.html
+====================================================================
+<div th:text="${keyName}">       println
+<span th:text="${keyName}">      print
+
+
+============code================================================
+Name : SpringBootWebAppThymeleafEx
+Dep  : Spring Web, Lombok, Devtools, Thymeleaf
+
+1. Controller class
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/product")
+public class ProductController {
+
+	@GetMapping("/data")
+	public String showData(Model model) {
+		model.addAttribute("prodCode", "SAMPLE ABCD!");
+		return "ProductData";
+	}
+}
+
+2. UI Page: ProductData.html
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title> WEB APP </title>
+		<!--To Link a CSS File -->
+		<link rel="stylesheet" th:href="@{/mycss/design.css}"></link>
+		<!--To Link a JS File -->
+		<script type="text/javascript" th:src="@{/myjs/setup.js}"></script>
+	</head>
+	<body>
+		<!--To Display Image -->
+		<img th:src="@{/images/doctor.png}" width="100" height="150"/>
+		<h2>WELCOME TO SPRING BOOT + THYMELEAF EXAMPLE </h2>
+		
+		<p class="mydesign"> SAMPLE CSS </p>
+		
+		<!--To Read and Print Model Data -->
+		<p> This is product code <span th:text="${prodCode}"></span> </p>
+		<p> This is product code [[${prodCode}]] </p>
+	</body>
+</html>
+
+3. CSS File
+.mydesign{
+			color :green;
+			background-color: yellow
+		}
+
+4. JS File
+alert("WELCOME TO ALL!!!");
+
+5. Place one image under static folder
+
+6. application.properties
+server.port=9090
+
+7. Run app, enter URL
+http://localhost:9090/product/show
