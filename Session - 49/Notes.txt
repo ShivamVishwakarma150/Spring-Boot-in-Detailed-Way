@@ -1,0 +1,198 @@
+
+			Spring Boot Web MVC
+
+*) Rules to work with Controller class:
+1. We must provide annotation @Controller
+  (it is subtype of @Component and support HTTP Protocol).
+
+2. Every Method exist in controller class must be connected with
+   Path and HttpMethod.
+
+ @RequestMapping(value="/path",method=RequestMethod.GET/POST)
+ @GetMapping("/path")
+ @PostMapping("/path")
+
+3. Path(URL) is case-sensitive. ex: /show, /SHOW, /Show are different.
+
+4. No Duplicate Paths are allowed.
+   m1() -- @GetMapping("/show")
+   m2() -- @GetMapping("/show")
+
+IllegalStateException: Ambiguous mapping. Cannot map m2()
+to {GET [/show]}: There is already m1() mapped.
+
+5.*** Same Path can be used with different httpMethod Type combination.
+   m1() -- @GetMapping("/show")
+   m2() -- @PostMapping("/show")
+
+
+6. Multi-Level Path is allowed at method level.
+
+  @GetMapping("/find/name/data")
+  m1() {}
+
+7*** Even only / is valid Path. (ie like welcome page)
+
+        @GetMapping("/")
+	public String showForm() {}
+
+8. Http Protocol default port number is '80'.
+  If we set to server.port=80 in our app, then URL will be:
+     http://localhost:80
+       which is equals to :  http://localhost
+
+
+9. We can provide path at class level (Controller level) which is optional.
+ex:
+@Controller
+@RequestMapping("/emp")
+public class EmployeeController {
+
+}
+
+10.*** We can define multiple controllers in project.
+Ex:
+@Controller
+@RequestMapping("/emp")
+public class EmployeController {}
+
+@Controller
+@RequestMapping("/product")
+public class ProductController {}
+
+** A good approach to define common path at class level.
+
+========Example for Multiple Controllers========================
+1. Name: SpringBootWebMvcMultiControllerEx
+   Dep : Web, Tomcat Embedded Jasper
+
+2. Controllers
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/emp")
+public class EmployeController {
+
+	@GetMapping("/home")
+	public String showEmp() {
+		return "EmpHome";
+	}
+}
+--------------
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/prod")
+public class ProductController {
+
+	@GetMapping("/home")
+	public String showProd() {
+		return "ProdData";
+	}
+}
+
+3. UI Pages
+---------EmpHome.jsp------------
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<pre>
+		<h2>WELCOME TO EMP HOME</h2>
+		</pre>
+	</body>
+</html>
+------------ProdData.jsp-----------
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<pre>
+		<h2>WELCOME TO PRODUCT DATA</h2>
+		</pre>
+	</body>
+</html>
+
+4. application.properties
+#Port number details
+server.port=9090
+#server.port=80
+
+#View Resolver details
+#---prefix must starts with / and ends with /
+spring.mvc.view.prefix=/WEB-INF/pages/
+spring.mvc.view.suffix=.jsp
+
+======================================================================
+Q)*** How can provide multiple paths (or/and) http-methods for single
+   controller method?
+A) By Using @RequestMapping with array format {}.
+ex:
+@RequestMapping(
+	value = {"/login","/home"},
+	method = {
+		RequestMethod.GET,
+		RequestMethod.POST
+	})
+public String showEmp() { .... }
+  
+ 
+But using new Annotations, we can provide only multiple paths with
+one HttpMethod type.
+@GetMapping({"/info","/data"})
+(or)
+@PostMapping({"/info","/data"})
+=================================================================
+Q) *** Can we define one Controller#method without any Path and HttpMethod?
+A) Yes. We can define. But it can never be executed for any request.
+   In general this kind of methods are used to have common code for
+   multiple methods.
+
+Ex: m1(), m2() methods common code is written in m3() method.
+void m3(){ 345}
+
+@GetMapping("/a")
+String m1(){
+1
+2
+m3();
+}
+
+@GetMapping("/b")
+String  m2(){
+m3();
+6
+7
+}
+
+Q)* What if I provide only @Component inplace of @Controller?
+A) Object is created for our class but it can never be executed for any request.
+
+======================================================================
+task:
+1. Define one Student Controller and display HomePage if we enter URL
+  /student/home (GET type)
+
+2. Write UserController and display LoginPage, if we enter /login or
+   /home or / (all GET Type only).
+=======================================================================
+Q) What is DevTools why it is used ?
+A) DevTool is a LiveReload Server, that is used in development environment.
+  It avoids manual re-start for code changes.
+
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-devtools</artifactId>
+	<scope>runtime</scope>
+</dependency>
+
