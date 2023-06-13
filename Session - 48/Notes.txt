@@ -1,0 +1,177 @@
+
+		Spring Boot Web MVC HTML Forms
+		          [Part-1]
+Html Forms:- It is used to take end user input data.
+ Ex: Register Form, Login Form, Comment Form, Payment Form, Feedback Form, ..etc
+
+Form : It is a collection of Inputs (Text, Radio, Checkbox, DropDown..etc)
+
+*** Model : Send data from Controller to View(UI)
+*** Form  : Send data from View(UI) to Controller.
+
+===================================================================
+*) When Enduser enters data and submit the form, Spring container creates one object and set data to that object.
+
+*** Spring container is creating Form object in 4 steps
+1. create object to form class using default constructor.
+2. Read form data from one by one input (req.getParameter)
+3. Parse data if required ( Integer.parseInt)
+4. set data to variable using setter method (obj.setId(10))
+
+*) But, Programmer has to define one class for one FORM.
+
+1. Write one public class with any name
+2. Define variables (no.of inputs = no.of variables)
+   with setters.
+3. Form Input name must match with variable Name
+   <input type="" name="<variableName>" .../>
+   <select        name="<variableName>"   ...
+   <textarea      name="<variableName>" ...
+
+
+*)Note:
+1. Object name will be className first letter lowercase
+2. This Object is called as Model Attribute.
+   it is created for every request and present in container
+   until response committed.
+3. This object we can read inside controller method using 
+  Syntax#1 @ModelAttribute("ObjName") ClassName localVariable
+           @ModelAttribute("employee") Employee emp
+  Syntax#2 @ModelAttribute ClassName ObjName
+           @ModelAttribute Employee employee
+
+============code=============================================
+name : SpringBootWebMVCFormBasicEx
+Dep  : Web, Lombok, Tomcat-Embedded JASPER
+
+1. Bean class
+package com.app.shivam.bean;
+
+import lombok.Data;
+
+@Data
+public class Employee {
+
+	private Integer empId;
+	private String empName;
+	private Double empSal;
+	
+	private String empPwd;
+	private String empDept;
+	private String empAddr;
+}
+
+2. Controller class
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import com.app.shivam.bean.Employee;
+
+@Controller
+public class EmployeeController {
+
+	//1. To display HTML Form inside browser
+	// PATH: show, HTTP method : GET
+	@GetMapping("/show")
+	public String showForm() {
+		return "EmpRegister";
+	}
+	
+	
+	//2. To Read data from HTML FORM (ModelAttribute)
+	// PATH: register, HTTP method : POST
+	@PostMapping("/register")
+	public String readData(
+			@ModelAttribute Employee employee,
+			Model model
+			) 
+	{
+		System.out.println(employee);
+		model.addAttribute("obj",employee);
+		return "EmpData";
+	}
+	
+	
+	
+}
+
+3. UI Pages
+--------EmpRegister.jsp---------------------
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<pre>
+		<h2>WELCOME TO REGISTER FORM </h2>
+		<form action="register" method="POST">
+			ID  : <input type="text" name="empId"/>
+			NAME: <input type="text" name="empName"/>
+			SAL : <input type="text" name="empSal"/>
+			PWD : <input type="password" name="empPwd"/>
+			DEPT: <select name="empDept">
+					<option value="DEV">DEV</option>
+					<option value="QA">QA</option>
+					<option value="BA">BA</option>
+				  </select>
+		    ADDR: <textarea name="empAddr"></textarea>
+			<input type="submit" value="CREATE"/>
+		</form>
+		</pre>
+	</body>
+</html>
+
+
+--------------EmpData.jsp----------------
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<pre>
+		<h2>WELCOME TO DATA  : ${obj} </h2>
+		</pre>
+	</body>
+</html>
+
+4. application.properties
+#Port number details
+server.port=9090
+
+#View Resolver details
+#---prefix must starts with / and ends with /
+spring.mvc.view.prefix=/WEB-INF/pages/
+spring.mvc.view.suffix=.jsp
+
+
+*) Run application and enter URL:
+http://localhost:9090/show
+=====================================================================
+Q) Who will create Form class object when we submit Form?
+A) Spring container (in 4 steps)
+
+Q) Do we need to define Form class in application?
+A) Yes. for 1 Form , we must define 1 class
+
+Q) How can we bind variable name with Form Input?
+A) By using name attribute
+    <input name=""
+    <select name=""
+
+Q) How can we read Form object in controller?
+A) @ModelAttribute
+
+Q) What if we miss data binding (ie variable with Form names)?
+A) No Error/Exception. Data can not be read (variable holds default values)
+
+For POST
+http://localhost:9090/register
+(Data is sent using Request Body -hidden)
+
+For GET (Data is sent using URL)
+http://localhost:9090/register?empId=10&empName=AA&empSal=200&empPwd=ABC&empDept=QA&empAddr=HYD
