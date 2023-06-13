@@ -1,0 +1,93 @@
+
+Http Methods:
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+Http Status Codes:
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
+
+=> Tomcat is given as Embedded Server (Default) runs at port 8080.
+=> This Embedded Tomcat is also called as light weight container service.
+  By default JASPER is not given, it comes with only CATALINA(Servlets).
+  If we want to use JSP then add Tomcat-Embedded-JASPER(JSP->Servlets).
+
+
+========First Web Application using Spring boot + JSP ================
+1. Create one Spring boot application with dependency "Spring Web"
+
+2. For JSP Pages support, add this:
+<dependency>
+    <groupId>org.apache.tomcat.embed</groupId>
+    <artifactId>tomcat-embed-jasper</artifactId>
+</dependency>
+
+
+3. Create Folder System for UI Pages
+> Right click on src > main folder > new > folder option
+> Enter name as "webapp" > finish
+
+|-src
+   |-main
+      |-webapp
+          |-WEB-INF
+	      |-pages
+
+4. Create JSP file under pages folder
+> Right click on pages folder > new > File Option > Enter name
+ex: UserHome.jsp
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<h2>WELCOME TO FIRST APPLICATION! </h2>
+	</body>
+</html>
+
+5. application.properties
+#Port number details
+server.port=9090
+
+#View Resolver details
+#---prefix must starts with / and ends with /
+spring.mvc.view.prefix=/WEB-INF/pages/
+spring.mvc.view.suffix=.jsp
+
+6. *** Controller class *****
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller 
+public class UserController {
+	//@RequestMapping(value = "/home", method = RequestMethod.GET)
+	@GetMapping("/home")
+	public String showHomePage() {
+		return "UserHome";
+	}
+}
+
+7. Run main class and enter URL:
+http://localhost:9090/home
+================================================================
+
+
+Q) Why we need to add @Controller over class instead of @Component?
+A) @Component will inform container to create object. 
+  It will not support any HTTP Operations.  @Controller in simple creating object + HTTP Protocol support.
+
+Q) Who will execute controller method and when?
+A) FC will call/execute our method when request comes.
+  for 1 request -- 1 method call. Container creates object only once.
+
+Q) How can we map/link one java method with Request Details(PATH/HttpMethod)?
+A) We can use annotation @RequestMapping() or Specific annotations like @GetMapping @PostMapping ..etc
+
+======================Got White Label Error Page?===========
+1. Remove spaces at properties file (if added)
+2. Check Folder system
+3. UI/View Page name is case-sensitive
+4. Check did you add Tomcat Embedded JASPER?
+5. Check BasePackage Rule for controller class
+ [must be in same package or subpackage of main class]
+=======================================================
