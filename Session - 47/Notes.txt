@@ -1,0 +1,180 @@
+
+
+Http Methods:
+GET  : Fetch Resource(Data) from Application/Server.
+POST : Create new Resource(Data) at Application/Server.
+PUT  : Update existed Resource(Data) at Application/Server.
+DELETE : Remove existed Resource(Data) at Application/Server.
+
+Q) Can't we use only POST for all Types of Operations?
+A) Yes We can. But Http has set universal rules for providers/consumers to access services over internet.
+
+*) When we are working with WEB MVC, our app supports/uses only GET and POST.
+
+=====================================================================
+	      Model (I) | Map (I) | ModelMap(C) 
+=====================================================================
+*) To send data from controller to View(UI), we can use Model Memory.
+*) This is internally one Map (Model(I) Impl class). 
+   [Stores data in Key=Val].
+*) Key is String type, Value is Object (any thing is fine)
+*) Model Impl class object is used to share data from Controller to View
+  at runtime.
+
+*) Spring container creates this memory and handle it.
+  We can just add data using method addAttribute(key,val)
+  and read data at UI using EL ${key}.
+
+
+*) ModelMap(C) is legacy. It is a class, Loosecoupling rule says
+  "Always work with interface, F/w takes care of Impl class object".
+  In future if a better impl class comes, your code remains same.
+
+*) Here, if we use Model(I) [or] ModelMap(C) [or] Map<String,Object>
+  Then Spring container goes to new impl class [BindingAwareModelMap].
+
+============code====================================================
+Name : SpringBootWebMvcModelEx
+Dep  : Spring web, Lombok, JSTL, Tomcat Embedded JASPER
+
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+		</dependency>
+2. Spring Bean
+package com.app.shivam.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+
+	private Integer userId;
+	private String userName;
+	private String userRole;
+	
+}
+
+3. Controller class
+package com.app.shivam.controller;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.app.shivam.bean.User;
+
+@Controller
+public class UserController {
+	// Path /info , Method: GET
+	@RequestMapping(value = "/info", method = RequestMethod.GET)
+	public String showUserPage(
+			//Model model
+			//ModelMap model
+			Map<String,Object> model
+			) 
+	{
+		System.out.println(model.getClass().getName());
+		
+		//model.addAttribute("uname", "AJAY RAJ");
+		//model.addAttribute("cname", "SBMS");
+		
+		model.put("uname", "AJ");
+		model.put("cname", "SBCDE");
+		return "UserHome";
+	}
+	
+	
+	//Sending one User Object
+	@RequestMapping(value = "/obj",method = RequestMethod.GET)
+	public String showUserOb(Model model) {
+		User user = new User(10,"AJAY RAJ!","TAG-SY");
+		model.addAttribute("obj",user);
+		
+		
+		List<User> list = Arrays.asList(
+				new User(10,"AA","XYZ"),
+				new User(11,"AB","XYZ"),
+				new User(12,"AC","MNO"),
+				new User(13,"AD","MNO")
+				);
+		model.addAttribute("listObj", list);
+		
+		return "UserData";
+	}
+	
+	
+}
+
+4. UI (View Pages)
+-------UserHome.jsp---------------
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<h2>WELCOME TO FIRST APPLICATION! </h2>
+		<p>
+			Hello : ${uname} ! <br/>
+			Your course is : ${cname}.
+		</p>
+	</body>
+</html>
+
+------------UserData.jsp--------------
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<html>
+	<head>
+		<title>WELCOME TO APP</title>
+	</head>
+	<body>
+		<h2>WELCOME TO APPLICATION! </h2>
+		<p>
+			Id  : ${obj.userId} <br/>
+			Name: ${obj.userName} <br/>
+			Role : ${obj.userRole} <br/>
+			Full Data : ${obj}
+		</p>
+		<table border=1>
+			<tr>
+				<th>ID</th>
+				<th>NAME</th>
+				<th>ROLE</th>
+			</tr>
+			<c:forEach var="ob" items="${listObj}">
+				<tr>
+					<td>${ob.userId}</td>
+					<td>${ob.userName}</td>
+					<td>${ob.userRole}</td>
+				</tr>
+			</c:forEach>
+		</table>
+	</body>
+</html>
+
+*) application.properties
+#Port number details
+server.port=9090
+
+#View Resolver details
+#---prefix must starts with / and ends with /
+spring.mvc.view.prefix=/WEB-INF/pages/
+spring.mvc.view.suffix=.jsp
