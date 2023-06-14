@@ -1,0 +1,279 @@
+
+  CrudOperations - Spring Boot WEB MVC + Thymeleaf + Data JPA + MySQL
+
+Recommended Coding Order:-
+1. Entity	    = DB Table (Schema)
+2. Repository	= Curd DB
+3. Service	    = Calculations/Transactions/Exceptions throwing
+4. Controller	= Request processing code
+
+  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  |                          Employee Module                          |
+  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Step#1 Create Project with all required dependencies
+Name : SpringBootWebMvcThymeleafMySQLCrudEx
+Dep  : Spring Web, Lombok, MySQL, Data JPA, Thymeleaf, Devtools
+---------------------------------------------------------------------
+Step#2 application.properties
+# Server details
+server.port=9696
+
+# DB Connection details
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot
+spring.datasource.username=root
+spring.datasource.password=Shivam@123
+
+# JPA Details
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=validate
+
+-------------application.yml----------------
+server:
+  port: 9696
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: root
+    url: jdbc:mysql://localhost:3306/boot
+    username: Shivam@123
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+---------------------------------------------------------------------
+3. Entity class
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.Data;
+
+@Data
+@Table(name="emptab")
+@Entity
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="eid")
+	private Integer empId;
+	
+	@Column(name="ename")
+	private String empName;
+	
+	@Column(name="esal")
+	private Double empSal;
+	
+	@Column(name="ehra")
+	private Double empHra;
+	
+	@Column(name="eta")
+	private Double empTa;
+	
+	@Column(name="edept")
+	private String empDept;
+}
+
+
+4. Repository
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Employee;
+
+public interface EmployeeRepository
+	extends JpaRepository<Employee, Integer>
+{
+
+}
+--------------------------------------------------------
+5. Service Interface
+
+package com.app.shivam.service;
+
+import java.util.List;
+
+import com.app.shivam.entity.Employee;
+
+public interface IEmployeeService {
+
+	Integer saveEmployee(Employee e);
+	void updateEmployee(Employee e);
+	void deleteEmployee(Integer id);
+	Employee getOneEmployee(Integer id);
+	List<Employee> getAllEmployees();
+}
+
+-------------------------------------------------------------
+6. Service Impl
+package com.app.shivam.service.impl;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.app.shivam.entity.Employee;
+import com.app.shivam.repo.EmployeeRepository;
+import com.app.shivam.service.IEmployeeService;
+
+@Service
+public class EmployeeServiceImpl implements IEmployeeService {
+
+	@Autowired
+	private EmployeeRepository repo;
+	
+	public Integer saveEmployee(Employee e) {
+		e = repo.save(e);
+		return e.getEmpId();
+	}
+
+	public void updateEmployee(Employee e) {
+		repo.save(e);
+	}
+
+	public void deleteEmployee(Integer id) {
+		repo.deleteById(id);
+	}
+
+	public Employee getOneEmployee(Integer id) {
+		Optional<Employee> opt = repo.findById(id);
+		return opt.get();
+	}
+
+	public List<Employee> getAllEmployees() {
+		List<Employee> list = repo.findAll();
+		return list;
+	}
+
+}
+------------------------------------------------------------------
+7. Controller and View Pages
+package com.app.shivam.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.app.shivam.entity.Employee;
+import com.app.shivam.service.IEmployeeService;
+
+@Controller
+@RequestMapping("/employee")
+public class EmployeeController {
+	
+	@Autowired
+	private IEmployeeService service;
+
+	/***
+	 * 1. SHOW REGISTER PAGE
+	 * This method is used to display Register Page
+	 * when end-user enters /register with GET Type
+	 */
+	@GetMapping("/register")
+	public String showRegPage() {
+		return "EmployeeRegister";
+	}
+	
+	
+	/**
+	 * 2. ON CLICK FORM SUBMIT, READ DATA (@MODELATTRIBUTE)
+	 * This method is used to read Form data as Model Attribute
+	 * It will make call to service method by passing same form object
+	 * Service method returns PK(ID). 
+	 * Controller returns String message back to UI using Model
+	 * @param employee
+	 * @param model
+	 * @return
+	 */
+	@PostMapping("/save")
+	public String saveFormData(
+			@ModelAttribute Employee employee,
+			Model model
+			) 
+	{
+		Integer id = service.saveEmployee(employee);
+		String message = new StringBuffer().append("EMPLOYEE '")
+				.append(id).append("' CREATED").toString();
+				//"EMPLOYEE '"+id+"' CREATED";
+		
+		model.addAttribute("message", message);
+		return "EmployeeRegister";
+	}
+	
+	//3. Display all rows as a table
+	
+	//4. Delete based on id
+	
+	//5. On Click Edit Link(HyperLink) Show data in Edit Form
+	
+	//6. Update Form data and submit
+}
+--------------------------------------------------------------
+*** EmployeeRegister.html ***
+
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>WELCOME TO EMPLOYEE REGISTER PAGE</title>
+	</head>
+	<body>
+		<h2>EMPLOYEE REGISTER PAGE </h2>
+		<form th:action="@{/employee/save}" method="POST">
+		<pre>
+			Name  : <input type="text" name="empName"/>
+			Salary: <input type="text" name="empSal"/>
+			Dept  : <select name="empDept">
+						<option value="DEV">DEV</option>
+						<option value="QA">QA</option>
+						<option value="BA">BA</option>
+					</select>
+			<button type="submit">Create</button>				
+		</pre>
+		</form>
+		<div th:text="${message}"></div>
+	</body>
+</html>
+
+========================================================================
+*)Note:
+create - creates new table (old table exist? drop it)
+update - create new table (old table exist ? use it)
+validate - just check entity class and db table matchings
+none - do nothing
+create-drop : drop old tables if exist-- create new table --at the end again drop new tables also.
+
+
+Q) Why Strings are immutable ?
+A) 
+
+----------------------------------------------------------------
+Output: DB
+mysql> use boot;
+Database changed
+mysql> show tables;
++-------------------+
+| Tables_in_boot    |
++-------------------+
+| emptab            |
++-------------------+
+
+mysql> select * from emptab;
++-----+-------+------+-------+------+------+
+| eid | edept | ehra | ename | esal | eta  |
++-----+-------+------+-------+------+------+
+|   1 | QA    | NULL | AJAY  | 2000 | NULL |
++-----+-------+------+-------+------+------+
