@@ -1,0 +1,75 @@
+
+		Application Design : Layers Concept
+
+*) Any code in java is : class/interface
+
+Repository	class - Database Operations
+Service		class - For Calculations/Operations
+Controller	class - Request Processing
+Entity		class - To hold DB Data (Row -- Object)
+Util		class - Common Logics
+..etc
+
+*) It is a common approach/method followed by Lot of developers.
+*) Testing/Maintaining(Find Errors and Fix) is easy in this case.
+*) In simple meaning Layer means type of work/code/method.
+   One Layer indicates one type of work.
+
+Q) How many layers required to develop one simple web application
+  using spring boot?
+A) 3 Layers
+   Presentation Layer : PL -- Implemented using Spring boot web mvc
+   				To write display logic, request
+				processing code.
+
+   Service Layers : SL -- to write calculations, Transaction Management
+   			aka : Business Layer
+
+   Data Access Layer : DAL -- To Define Database operations(CRUD)
+   		aka: Repository Layer
+
+*) SpringBoot MVC, Entity, UTIL are not layers.
+   Entity : A class Mapped with Database table
+   Util   : To write common/generic logics
+   MVC    : Used in Presentation Layer.
+
+Q) What are Java relations used in Layers Connection?
+A) In between Layers : HAS-A ( + @Autowired)
+   Within Layers     : IS-A (extends/implements)
+
+======================================================================
+*) This Layers Design is used to develop application using modules concept.
+Ex: Amazon App
+    Search, Cart, Payment, Feedback, Tracking..etc (Modules)
+    Gmail App
+    User(Register, Login), Inbox, Sent ...(Modules)
+    Facebook App
+    ______________________________________________
+*) For One Module, different code files are:
+a. Entity
+b. Repository Interface
+c. Service Interface
+d. Service Impl class
+e. Util class
+f. Controller class
+ex:
+a. EmployeeEntity
+b. EmployeeRepository 
+c. IEmployeeService 
+d. EmployeeServiceImpl
+e. EmployeeUtil
+f. EmployeeController 
+
+--------------------------------------------------------------------
+Struts F/w Design:-
+DTO - Request contains some data (Form-Object) ---> Store as one Object
+	(Data Trasfer Object)
+BO/VO - Business object (DTO-->BO and used at Service)
+
+BO--VO (Used at DAO and JDBC to perform database operations)
+
+Mapper (C) : This one converts DTO-BO-VO.
+--------------------------------------------------------------------
+Simple Task: Module Name : Student
+Can you write code files?
+
