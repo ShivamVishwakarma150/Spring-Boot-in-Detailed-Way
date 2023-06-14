@@ -1,0 +1,132 @@
+
+			Operation#3 DELETE EMPLOYEE
+
+Step#1 Call Delete method in Service 
+	repo.deleteById(id)
+Step#2 Call service Method in Controller 
+      and pass "id"
+
+=> Read data from URL using
+  @RequestParam("key")DataType variableName
+
+--equals to ---------
+String var = request.getParameter("key")
+-------------------------
+=> use redirect concept to execute /all method after delete.
+
+: To view all rows URL:
+http://localhost:9696/employee/all
+
+: To view all rows URL after Delete:
+http://localhost:9696/employee/all?message=Employee 101 Deleted
+
+=> While redirect, to pass data from one Controller method to another controller method use RedirectAttributes. But read data as Optional Request Param.
+   @RequestParam(value="", required=false) DT variable.
+
+===========Handle Exception ================
+Problem: If end user / any enters URL for delete manually
+   ex: http://localhost:9696/employee/delete?id=3
+
+Solution:
+1. define one custom exception.
+-> Exception, checked Exception, unchecked Exception, custom exception.
+
+2. Throw exception at service if employee not found
+
+3. catch that exception at controller and return error message to UI
+  (or redirect URL)
+
+===Code for Delete================================================================
+1. Custom Exception
+package com.app.shivam.exception;
+
+public class EmployeeNotFoundException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	public EmployeeNotFoundException() {
+		super();
+	}
+	
+	public EmployeeNotFoundException(String message) {
+		super(message);
+	}
+
+}
+
+
+2. Service Method delete code
+     public void deleteEmployee(Integer id) {
+		//repo.deleteById(id);
+		/*Optional<Employee> opt = repo.findById(id);
+		if(opt.isPresent()) {
+			repo.delete(opt.get());
+		} else {
+			throw new EmployeeNotFoundException("EMPLOYEE '"+id+"' NOT FOUND");
+		}*/
+		repo.delete(
+				repo.findById(id)
+				.orElseThrow(
+						()->new EmployeeNotFoundException("EMPLOYEE '"+id+"' NOT FOUND"))
+				);
+	}
+
+3. Controller methods ( showData / deleteData) 2 methods
+
+        @GetMapping("/all")
+	public String showData(
+			Model model,
+			@RequestParam(value = "message", required = false) String message
+			) 
+	{
+		List<Employee> list = service.getAllEmployees();
+		model.addAttribute("list", list);
+		model.addAttribute("message", message);
+		return "EmployeeData";
+	}
+
+	@GetMapping("/delete")
+	public String deleteData(
+			@RequestParam("id")Integer empId,
+			RedirectAttributes attributes 
+			) 
+	{
+		String msg = null;
+		try {
+			service.deleteEmployee(empId);
+			msg = "Employee '"+empId+"' Deleted";
+		} catch (EmployeeNotFoundException e) {
+			e.printStackTrace();
+			msg = e.getMessage();
+		}
+		attributes.addAttribute("message", msg);
+		return "redirect:all";
+	}
+
+*) Task: Modify RuntimeException type to Exception in code.
+Error and Exception Pages in Spring Boot app:
+Step#1 create error folder under templates
+Step#2 create <errorcode>.html file under error folder
+
+ [Project]
+  |
+  |-src/main/resources
+     |-templates
+          |-error
+	     |-404.html
+
+ex: 404.html
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>WELCOME TO DATA PAGE</title>
+	</head>
+	<body>
+		<h3> SERVER FAILED TO PROCESS YOUR REQUEST </h3>
+		<img th:src="@{/images/error_image.png}"></img>
+	</body>
+</html>
+Ref for servlets Error and Exception:
+https://www.digitalocean.com/community/tutorials/servlet-exception-and-error-handling-example-tutorial
