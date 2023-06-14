@@ -1,0 +1,168 @@
+
+Thymeleaf:-
+> Light weight (Less Memory)
+> Uses prefix - th
+> Connects to namespace -- xmlns:th="https://www.thymeleaf.org/"
+> Symbols used
+  $ -- Read data from Model
+  @ -- URL (Location)
+  * -- Form Input
+
+
+Bootstrap : It is a CSS API used to design UI page using pre-defined classes. This is given by Twitter.
+Ref Link:
+https://www.w3schools.com/bootstrap4/bootstrap_colors.asp
+
+*)Note:
+1. th:each="ob:${list}"
+ Syntax: th:each="tempvariable:${CollectionName}"
+ Here th:each is like forEach loop.
+ ob is tempvariable, ${} read data from Model
+ list is keyname sent from Controller class
+
+2. th:text="${ob.bookId}"
+  th:text -- print data at Web page
+  ${ob.bookId} --> Reading data from Model
+
+========code======================================================
+Name : SpringBootThymeleafExTwo
+Dep  : Spring Web, Lombok, Devtools, Thymeleaf
+
+1. Bean
+package com.app.shivam.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Book {
+
+	private Integer bookId;
+	private String bookName;
+	private String bookAuth;
+	private Double bookCost;
+}
+
+2. Controller class
+package com.app.shivam.controller;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.app.shivam.bean.Book;
+
+
+@Controller
+@RequestMapping("/book")
+public class BookController {
+
+	//1. display book object at UI
+	@GetMapping("/show")
+	public String showData(Model model) {
+		Book b1 = new Book(101, "Core Java", "shivam", 200.0);
+		model.addAttribute("bob", b1);
+		return "BookData";
+	}
+	
+	
+	//2. display book collection at UI
+	@GetMapping("/list")
+	public String showColl(Model model) {
+		List<Book> list = Arrays.asList(
+				new Book(10, "AA", "XYZ", 200.0),
+				new Book(11, "AB", "XYZ", 300.0),
+				new Book(12, "AC", "XYZ", 400.0),
+				new Book(13, "AD", "MNO", 500.0)
+				);
+		model.addAttribute("list", list);
+		return "BookList";
+	}
+	
+}
+
+3. UI Pages
+--------------------BookData.html-----------------
+<html xmlns:th="https://www.thymeleaf.org/">
+ <head>
+ 	<title> WELCOME </title>
+ </head>
+ <body>
+ 	<h3>DATA IS </h3>
+ 	<span th:text="${bob}"></span> <br/>
+ 	<span th:text="${bob.bookId}"></span> <br/>
+ 	[[${bob}]],[[${bob.bookName}]]
+ </body>
+</html>
+
+
+-----------BookList.html (NO UI Design) ------------------
+<html xmlns:th="https://www.thymeleaf.org/">
+ <head>
+ 	<title> WELCOME </title>
+ </head>
+ <body>
+ 	<h3> BOOKS DETAILS </h3>
+ 	<table>
+ 		<tr>
+ 			<th>ID</th>
+ 			<th>NAME</th>
+ 			<th>AUTHOR</th>
+ 			<th>COST</th>
+ 		</tr>
+ 		<tr th:each="ob:${list}">
+ 			<td th:text="${ob.bookId}"></td>
+ 			<td th:text="${ob.bookName}"></td>
+ 			<td>[[${ob.bookAuth}]]</td>
+ 			<td>[[${ob.bookCost}]]</td>
+ 		</tr>
+ 	</table>
+ </body>
+</html>
+
+----------------BookList.html (Using bootstrap UI)---------------
+<html xmlns:th="https://www.thymeleaf.org/">
+ <head>
+ 	<title> WELCOME </title>
+ 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+ </head>
+ <body>
+  <div class="container">
+ 	<h3 class="bg-info text-white text-center"> BOOKS DETAILS </h3>
+ 	<table class="table table-hover">
+ 		<tr class="bg-primary text-white">
+ 			<th>ID</th>
+ 			<th>NAME</th>
+ 			<th>AUTHOR</th>
+ 			<th>COST</th>
+ 			<th>OPERATIONS</th>
+ 		</tr>
+ 		<tr th:each="ob:${list}">
+ 			<td th:text="${ob.bookId}"></td>
+ 			<td th:text="${ob.bookName}"></td>
+ 			<td>[[${ob.bookAuth}]]</td>
+ 			<td>[[${ob.bookCost}]]</td>
+ 			<td>
+ 				<button class="btn btn-danger">DELETE</button> | 
+ 				<button class="btn btn-info">EDIT</button> 
+ 			</td>
+ 		</tr>
+ 	</table>
+ 	</div>
+ </body>
+</html>
+
+4. application.properties
+server.port=9090
+
+5. Run App and Enter URL:
+http://localhost:9090/book/show
+http://localhost:9090/book/list
+=====================================================================
