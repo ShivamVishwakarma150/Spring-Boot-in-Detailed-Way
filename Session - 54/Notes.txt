@@ -1,0 +1,196 @@
+  CrudOperations - Spring Boot WEB MVC + Thymeleaf + Data JPA + MySQL
+  			     [PART-2]
+
+*) Simple Calculation Added in Service Layer, under save method:
+		double hra = e.getEmpSal() * (12.0/100);
+		double ta = e.getEmpSal() * (4.0/100);
+		e.setEmpHra(hra);
+		e.setEmpTa(ta);
+
+************************************************************************
+		Fecth DB Data to UI (View Page)
+************************************************************************
+  repo               SL                  PL(Controller--> View)
+  findAll()  repo.findAll() ->List  Model.addAttribute   forEach->HTMLTable
+
+Step#1 JpaRepository has given a method findAll() that returns List<T> Call that method in service Layer(DONE)
+
+Step#2 Define one controller method that gets data from service and send to ui using Model memory.
+
+-------EmployeeController-----------------
+	@GetMapping("/all")
+	public String showData(Model model) {
+		List<Employee> list = service.getAllEmployees();
+		model.addAttribute("list", list);
+		return "EmployeeData";
+	}
+
+
+Step#3 At UI Page display List data as HTML table format using th:each [For Each loop]
+
+-----------EmployeeData.html-----------------
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>WELCOME TO DATA PAGE</title>
+	</head>
+	<body>
+		<h2>EMPLOYEE DATA PAGE </h2>
+		<table border="1">
+			<tr>
+				<th>ID</th>
+				<th>NAME</th>
+				<th>SALARY</th>
+				<th>HRA/TA</th>
+				<th>DEPT</th>
+				<th>OPERATIONS</th>
+			</tr>
+			<tr th:each="ob:${list}">
+				<td>[[${ob.empId}]]</td>
+				<td>[[${ob.empName}]]</td>
+				<td>[[${ob.empSal}]]</td>
+				<td>[[${ob.empHra}]] / [[${ob.empTa}]]</td>
+				<td>[[${ob.empDept}]]</td>
+				<td>
+					<a href="#">DELETE </a> | <a href="#"> EDIT</a>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
+
+==========================================================
+URL - Rewriting :-
+ Creating one URL using "static path and dynamic path" is called as
+ URL - Rewriting.
+
+Ex:
+ /employee/delete?id=3
+ /employee/delete?id=2
+ /employee/delete?id=1
+
+Here static path is : /employee/delete?id=
+Dynamic path is : <id>
+
+<a th:href="
+ @{                        ---> Path/URL Starts here
+   /employee/delete        ---> path
+   (id=${ob.empId})        ---> Request Param
+ }                         ---> Path/URL Ends here
+
+">
+   DELETE
+</a>
+
+===================Controller code upto (6th Nov)================
+package com.app.shivam.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.app.shivam.entity.Employee;
+import com.app.shivam.service.IEmployeeService;
+
+@Controller
+@RequestMapping("/employee")
+public class EmployeeController {
+	
+	@Autowired
+	private IEmployeeService service;
+
+	/***
+	 * 1. SHOW REGISTER PAGE
+	 * This method is used to display Register Page
+	 * when end-user enters /register with GET Type
+	 */
+	@GetMapping("/register")
+	public String showRegPage() {
+		return "EmployeeRegister";
+	}
+	
+	
+	/**
+	 * 2. ON CLICK FORM SUBMIT, READ DATA (@MODELATTRIBUTE)
+	 * This method is used to read Form data as Model Attribute
+	 * It will make call to service method by passing same form object
+	 * Service method returns PK(ID). 
+	 * Controller returns String message back to UI using Model
+	 * @param employee
+	 * @param model
+	 * @return
+	 */
+	@PostMapping("/save")
+	public String saveFormData(
+			@ModelAttribute Employee employee,
+			Model model
+			) 
+	{
+		Integer id = service.saveEmployee(employee);
+		String message = new StringBuffer().append("EMPLOYEE '")
+				.append(id).append("' CREATED").toString();
+				//"EMPLOYEE '"+id+"' CREATED";
+		
+		model.addAttribute("message", message);
+		return "EmployeeRegister";
+	}
+	
+	/***
+	 * 3. Display all rows as a table
+	 * This method is executed for request URL /all + GET.
+	 * It will fetch data from Service as List<T>
+	 * Send this data to UI(View) using Model(I)
+	 * In UI use th:each="tempVariable:${collectionName}" to read data 
+	 * and print as HTML Table.
+	 */
+	@GetMapping("/all")
+	public String showData(Model model) {
+		List<Employee> list = service.getAllEmployees();
+		model.addAttribute("list", list);
+		return "EmployeeData";
+	}
+	
+	//4. Delete based on id
+	
+	//5. On Click Edit Link(HyperLink) Show data in Edit Form
+	
+	//6. Update Form data and submit
+}
+
+
+---------------------------Full UI : EmployeeData.html---------------
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>WELCOME TO DATA PAGE</title>
+	</head>
+	<body>
+		<h2>EMPLOYEE DATA PAGE </h2>
+		<table border="1">
+			<tr>
+				<th>ID</th>
+				<th>NAME</th>
+				<th>SALARY</th>
+				<th>HRA/TA</th>
+				<th>DEPT</th>
+				<th>OPERATIONS</th>
+			</tr>
+			<tr th:each="ob:${list}">
+				<td>[[${ob.empId}]]</td>
+				<td>[[${ob.empName}]]</td>
+				<td>[[${ob.empSal}]]</td>
+				<td>[[${ob.empHra}]] / [[${ob.empTa}]]</td>
+				<td>[[${ob.empDept}]]</td>
+				<td>
+					<a th:href="@{/employee/delete(id=${ob.empId})}">DELETE </a> 
+					| <a th:href="@{/employee/edit(id=${ob.empId})}"> EDIT</a>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
+======================================================================
