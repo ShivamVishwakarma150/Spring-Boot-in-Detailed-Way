@@ -197,7 +197,10 @@ public class EmployeeNotFoundException extends Exception {
 }
 ```
 
-Next, let's create the error and exception pages in the Spring Boot app:
+<br/>
+<br/>
+
+# Let's create the error and exception pages in the Spring Boot app:
 
 **Step 1: Create an `error` folder under the `templates` directory**
 Create a new folder named `error` under the `templates` directory. This folder will contain the HTML files for different error codes.
