@@ -1,0 +1,247 @@
+
+		Operation #4 Edit and Update data
+
+Stage#1 Fetch DB Data to Thymeleaf Edit Form (DB to UI)
+Stage#2 Update Form data back to Database. (UI to DB).
+================================================================
+Stage#1 Fetch DB Data to Thymeleaf Edit Form (DB to UI)
+1. For Register Operation at UI, we used HTML Form tags.
+  It is uni-directional ( Form Data ---> Object[ModelAttribute] )
+
+2. But this time We want to fetch data from DB and show/display/fill at Form. We need to Thymeleaf Form.
+
+   <form  .....    th:object="${objectName}">
+
+   <input .... th:field="*{variableName}">
+
+3. At Service Layer use findById(id) method that gets data from db.
+
+==============================================================
+Stage#2 Update Form data back to Database. (UI to DB).
+
+*) it is similer to save operation, just use @ModelAttribute  call service layer update method.
+
+******************************************************************************************************************
+
+Q) What is the use of thymeleaf Form over HTML Form?
+A) HTML Form is uni-directional , Form data can be converted into Object but not reverse.
+
+Q) Why can't we use simple form concept (Thymeleaf Form) for both  register and  edit ?
+A) Yes we can use. But in case of HTML, inputs are static like DropDown, checkboxes ..etc. then use Thymeleaf Form.
+
+=======Dynamic DropDown task==============
+1. Util
+package com.app.shivam.util;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.ui.Model;
+
+import com.app.shivam.entity.Employee;
+
+//after java 8 (static methods and default methods)
+//@Component
+//public class EmployeeUtil {
+public interface EmployeeUtil {
+
+	public static void commonCal(Employee e) {
+		double hra = e.getEmpSal() * (12.0/100);
+		double ta = e.getEmpSal() * (4.0/100);
+		e.setEmpHra(hra);
+		e.setEmpTa(ta);
+	}
+	
+	public static void createDeptList(Model model) {
+		List<String> list = Arrays.asList("DEV","QA","BA","ADMIN","IT");
+		model.addAttribute("deptList", list);
+	}
+}
+
+
+2. Controller
+package com.app.shivam.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.app.shivam.entity.Employee;
+import com.app.shivam.exception.EmployeeNotFoundException;
+import com.app.shivam.service.IEmployeeService;
+import com.app.shivam.util.EmployeeUtil;
+
+@Controller
+@RequestMapping("/employee")
+public class EmployeeController {
+	
+	@Autowired
+	private IEmployeeService service;
+
+	/***
+	 * 1. SHOW REGISTER PAGE
+	 * This method is used to display Register Page
+	 * when end-user enters /register with GET Type
+	 */
+	@GetMapping("/register")
+	public String showRegPage(Model model) {
+		EmployeeUtil.createDeptList(model);
+		return "EmployeeRegister";
+	}
+	
+	
+	/**
+	 * 2. ON CLICK FORM SUBMIT, READ DATA (@MODELATTRIBUTE)
+	 * This method is used to read Form data as Model Attribute
+	 * It will make call to service method by passing same form object
+	 * Service method returns PK(ID). 
+	 * Controller returns String message back to UI using Model
+	 * @param employee
+	 * @param model
+	 * @return
+	 */
+	@PostMapping("/save")
+	public String saveFormData(
+			@ModelAttribute Employee employee,
+			Model model
+			) 
+	{
+		Integer id = service.saveEmployee(employee);
+		String message = new StringBuffer().append("EMPLOYEE '")
+				.append(id).append("' CREATED").toString();
+				//"EMPLOYEE '"+id+"' CREATED";
+		
+		model.addAttribute("message", message);
+		//for dynamic dropdown
+		EmployeeUtil.createDeptList(model);
+		return "EmployeeRegister";
+	}
+	
+	/***
+	 * 3. Display all rows as a table
+	 * This method is executed for request URL /all + GET.
+	 * It will fetch data from Service as List<T>
+	 * Send this data to UI(View) using Model(I)
+	 * In UI use th:each="tempVariable:${collectionName}" to read data 
+	 * and print as HTML Table.
+	 */
+	@GetMapping("/all")
+	public String showData(
+			Model model,
+			@RequestParam(value = "message", required = false) String message
+			) 
+	{
+		List<Employee> list = service.getAllEmployees();
+		model.addAttribute("list", list);
+		model.addAttribute("message", message);
+		return "EmployeeData";
+	}
+	
+	/**
+	 * 4. Delete based on id
+	 * On Click Delete HyperLink, a Request is made by browser looks like 
+	 * /employee/delete?id=someVal.
+	 * Read data using Annotation @RequestParam and call service to delete from db.
+	 * 
+	 * Just redirect to /all with one message (RedirectAttribute)
+	 * that will display all rows with message. 
+	 */
+	@GetMapping("/delete")
+	public String deleteData(
+			@RequestParam("id")Integer empId,
+			RedirectAttributes attributes 
+			) 
+	{
+		String msg = null;
+		try {
+			service.deleteEmployee(empId);
+			msg = "Employee '"+empId+"' Deleted";
+		} catch (EmployeeNotFoundException e) {
+			e.printStackTrace();
+			msg = e.getMessage();
+		}
+		attributes.addAttribute("message", msg);
+		return "redirect:all";
+	}
+	
+	/** 
+	 * 5. On Click Edit Link(HyperLink) Show data in Edit Form.
+	 * When end user clicks on EDIT Link, internal request looks like /edit?empId=10
+	 * Read DB Row using service call, that may return employee object else throw exception
+	 * (if not found).
+	 * If object is present use Model to send that object to Form(UI).
+	 * Else redirect to /all with ErrorMessage(Redirect Attributes).
+	 */
+	@GetMapping("/edit")
+	public String showEdit(
+			@RequestParam("id") Integer empId,
+			Model model,
+			RedirectAttributes attributes
+			) 
+	{
+		String page = null;
+		try {
+			Employee employee = service.getOneEmployee(empId);
+			model.addAttribute("employee", employee);
+			//for dynamic drop down
+			EmployeeUtil.createDeptList(model);
+			page = "EmployeeEdit";
+		} catch (EmployeeNotFoundException e) {
+			e.printStackTrace();
+			attributes.addAttribute("message", e.getMessage());
+			page = "redirect:all";
+		}
+		return page;
+	}
+	
+	
+	//6. Update Form data and submit
+	@PostMapping("/update")
+	public String updateData(
+			@ModelAttribute Employee employee,
+			RedirectAttributes attributes
+			) 
+	{
+		service.updateEmployee(employee);
+		attributes.addAttribute("message", "Employee '"+employee.getEmpId()+"' Updated!");
+		return "redirect:all";
+	}
+	
+	
+	
+	
+}
+
+3. UI Pages
+EmployeeEdit.html
+
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>WELCOME TO EMPLOYEE EDIT PAGE</title>
+	</head>
+	<body>
+		<h2>EMPLOYEE EDIT PAGE </h2>
+		<form th:action="@{/employee/update}" method="POST" th:object="${employee}">
+		<pre>
+			ID    : <input type="text" th:field="*{empId}" readonly="true"/>
+			NAME  : <input type="text" th:field="*{empName}"/>
+			SALARY: <input type="text" th:field="*{empSal}"/>
+			DEPT  : <select th:field="*{empDept}">
+						<option value="">--SELECT--</option>
+						<option th:each="dob:${deptList}" 
+						th:value="${dob}" th:text="${dob}"></option>
+					</select>
+			<button type="submit">UPDATE</button>				
+		</pre>
+		</form>
+	</body>
+</html>
+
