@@ -1,0 +1,204 @@
+
+Bootstrap UI:-
+*) To Design one web page we use CSS (Cascading Style Sheet).
+*) Bootstrap is given by twitter. It is a Pre-defined CSS API.
+   We can directly use them for our HTML Tags.
+   <input   class="<css-className1> <css-className2> <css-className3>"
+   <a       class="<css-className>"
+   <p       class="<css-className>"
+   <body    class="<css-className>"
+   <select  class="<css-className>"
+
+Ref Link:
+https://getbootstrap.com/docs/4.6/components/alerts/
+https://www.w3schools.com/bootstrap4/
+
+*) Bootstrap CSS (CDN) Link:
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"/>
+
+*) th:if="${message}" means do work/task/display if message is present
+  (not null / not empty).
+
+==================EmployeeRegister.html=========================
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+	<title>WELCOME TO EMPLOYEE REGISTER PAGE</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+</head>
+
+<body>
+	<div class="container">
+		<div class="card">
+			<div class="card-header bg-primary text-white text-center">
+				<h2>WELCOME TO EMPLOYEE REGISTER PAGE </h2>
+			</div>
+			<div class="card-body">
+				<form th:action="@{/employee/save}" method="POST">
+					NAME <input type="text" name="empName" class="form-control" />
+					GENDER <br/>
+					<input type="radio" name="empGen" value="Male"/> Male
+					<input type="radio" name="empGen" value="Female"/> Female <br/>
+					SALARY <input type="text" name="empSal" class="form-control" />
+					DOJ <input type="date" name="empDate" class="form-control" />
+					DEPARTMENT <select name="empDept" class="form-control">
+						<option value="">--SELECT--</option>
+						<option th:each="dob:${deptList}" th:value="${dob}" th:text="${dob}"></option>
+					</select>
+					ADDRESS
+					<textarea name="empAddr" class="form-control"></textarea>
+					<button type="submit" class="btn btn-success">Create</button>
+				</form>
+			</div>
+			<div th:if="${message}" class="card-footer bg-info text-white text-center">
+				<b> [[${message}]] </b>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
+
+=============EmployeeData.html===========================
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+	<title>WELCOME TO DATA PAGE</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+</head>
+
+<body>
+	<div class="container">
+		<div class="card">
+			<div class="card-header bg-primary text-white text-center">
+				<h2>WELCOME TO EMPLOYEE DATA PAGE </h2>
+			</div>
+			<div class="card-body">
+				<table class="table table-hover">
+					<tr class="bg-info text-white">
+						<th>ID</th>
+						<th>NAME</th>
+						<th>GENDER</th>
+						<th>DOJ</th>
+						<th>SALARY</th>
+						<th>HRA/TA</th>
+						<th>DEPT</th>
+						<th>ADDRESS</th>
+						<th>OPERATIONS</th>
+					</tr>
+					<tr th:each="ob:${list}">
+						<td>[[${ob.empId}]]</td>
+						<td>[[${ob.empName}]]</td>
+						<td>[[${ob.empGen}]]</td>
+						<td>[[${ob.empDate}]]</td>
+						<td>[[${ob.empSal}]]</td>
+						<td>[[${ob.empHra}]] / [[${ob.empTa}]]</td>
+						<td>[[${ob.empDept}]]</td>
+						<td>[[${ob.empAddr}]]</td>
+						<td>
+							<a class="btn btn-danger" th:href="@{/employee/delete(id=${ob.empId})}">DELETE </a>
+							<a class="btn btn-warning" th:href="@{/employee/edit(id=${ob.empId})}"> EDIT</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div th:if="${message}" class="card-footer bg-success text-white text-center">
+				<b> [[${message}]] </b>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+===========================EmployeeEdit.html========================
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+	<title>WELCOME TO EMPLOYEE EDIT PAGE</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+</head>
+
+<body>
+	<div class="container">
+		<div class="card">
+			<div class="card-header bg-primary text-white text-center">
+				<h2>WELCOME TO EMPLOYEE EDIT PAGE </h2>
+			</div>
+			<div class="card-body">
+				<form th:action="@{/employee/update}" method="POST" th:object="${employee}">
+					ID <input type="text" th:field="*{empId}" class="form-control" readonly="true"/>
+					NAME <input type="text" th:field="*{empName}" class="form-control" />
+					GENDER <br/>
+					<input type="radio" th:field="*{empGen}" value="Male"/> Male
+					<input type="radio" th:field="*{empGen}" value="Female"/> Female <br/>
+					SALARY <input type="text" th:field="*{empSal}" class="form-control" />
+					DOJ <input type="date" th:field="*{empDate}" class="form-control" />
+					DEPARTMENT <select th:field="*{empDept}" class="form-control">
+						<option value="">--SELECT--</option>
+						<option th:each="dob:${deptList}" th:value="${dob}" th:text="${dob}"></option>
+					</select>
+					ADDRESS
+					<textarea th:field="*{empAddr}" class="form-control"></textarea>
+					<button type="submit" class="btn btn-success">UPDATE</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
+===================================================================
+	Pagination using Spring boot Data JPA + Thymeleaf
+===================================================================
+Use PaginingAndSortingRepository method findAll(pageable):Page<T>
+
+Here Pageable means combination of page number and page size.
+We can use @PageableDefault to provide default values from application.
+
+Ex URL:
+http://localhost:9696/employee/all?page=1
+http://localhost:9696/employee/all?page=0&size=5
+
+*) Page numbers are Index numbers. So they starts from zero.
+
+At Data Page:
+
+<nav aria-label="Page navigation example">
+			<ul class="pagination justify-content-center">
+				<li class="page-item"><a class="page-link" th:if="${!page.isFirst()}" th:href="@{/employee/all(page=0)}">First</a></li>
+				<li class="page-item"><a class="page-link" th:if="${page.hasPrevious()}" th:href="@{/employee/all(page=${page.getNumber()-1})}">Previous</a></li>
+				
+				<th:block th:each="i: ${#numbers.sequence(0, page.getTotalPages()- 1)}">
+					<li class="page-item">
+						<a class="page-link" th:href="@{/employee/all(page=${i})}">[[${i+1}]]</a>
+					</li>
+				</th:block>
+				
+				<li class="page-item"><a class="page-link" th:if="${page.hasNext()}" th:href="@{/employee/all(page=${page.getNumber()+1})}">Next</a></li>
+				<li class="page-item"><a class="page-link" th:if="${!page.isLast()}" th:href="@{/employee/all(page=${page.getTotalPages()-1})}">Last</a></li>
+			</ul>
+		</nav>
+*) service interface
+Page<Employee> getAllEmployees(Pageable pageable);
+
+*) service impl
+public Page<Employee> getAllEmployees(Pageable pageable) {
+	Page<Employee> pages = repo.findAll(pageable);
+	return pages;
+}
+
+*) new Controller method 
+//.../all?page=3&size=10
+	@GetMapping("/all")
+	public String showData(
+			Model model,
+			@PageableDefault(page = 0, size = 3) Pageable pageable,
+			@RequestParam(value = "message", required = false) String message
+			) 
+	{
+		//List<Employee> list = service.getAllEmployees();
+		Page<Employee> page = service.getAllEmployees(pageable);
+		model.addAttribute("list", page.getContent());
+		model.addAttribute("page", page);
+		model.addAttribute("message", message);
+		return "EmployeeData";
+	}
