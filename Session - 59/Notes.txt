@@ -1,0 +1,128 @@
+
+				Webservices
+
+*) 3 Layers (PL,SL and DAL) are used to develop application (ie consumer or producer).
+*) Now we are using 4th Layer Integration (IL) Layer. This is used to link applications. 
+
+*) Both Producer and Consumer should contain this layer.
+       
+   Skeleton/API -- Producer (IL) Code
+   Stub/Caller  -- Consumer (IL) Code
+
+========================================================================
+Global Data Format:- (XML/JSON)
+This format of data can be read/processed by any language.
+(ie Java, .Net, PHP, Python, Node..etc)
+
+Serialization: Converting Java Object to other formats 
+Object ---> binary/file/stream/..etc
+-------------------------------------------------------------------
+JSON : JavaScript Object Notation.
+It follow data format like:
+ {
+   "key" : value,
+   "key" : value,
+   ...
+ }
+=> Every key must be quoted, value is quoted for String type.
+-------------------------------------------------------------------
+	Java                            JavaScript
+------------------------------------------------------------------
+   int id = 10				var id = 10
+   String s = "ABC";                    var s = "ABC";
+
+  Emp e = new Emp();                 var e = { "id": 10, "name":"ABC" };
+  e.setId(10);                          //Object Notation
+  e.setName("ABC");
+--------------------------------------------------------------------
+JACKSON API | GSON | JAX-B :-
+These are opensource 3rd party APIs which are used to convert
+		Java Object <---> JSON
+
+1. Primitives Data 
+{
+ "eid" : 10, "ename" : "A", "enabled" : false
+}
+
+2. Array/List/Set
+{
+  "eid" : 10, "ename" : "A",
+  "depts" : [ "DEV", "QA", "HR" ]
+}
+
+3. Map/child class(HAS-A)
+{
+  "eid": 10, "ename" : "A",
+  "project" : {
+                "pid" : "101",
+		"pcode": "AA"
+              }
+}
+
+Q) When should we use YAML and JSON?
+A)
+      JSON                  YAML
+  EndUser data		Programmer Data
+  Trasfer b/w Apps      Input to service
+
+Ex: use YAML - Use Email Service (host,port,un,pwd)
+    use JSON - 200 Products data send it to Order Module.
+
+ 1 Employee = 1 DB Row = 1 JSON object
+
+DevOps - YAML --> input  Ansible / Kubernetes(Runtime Env)
+============================================================
+XML : eXtensible Markup Language 
+
+It is used to represent data in Global Format used for both
+Configuration and Data Transfer.
+
+*) web.xml in Servlets (data given to server)
+*) employees.xml file is used to transfer to another app.
+
+ex:
+<employee>
+ <eid>10</eid>
+ <ename>AJ</ename>
+</employee>
+
+*) JAXB : Java Architecture for XML Binding
+https://en.wikipedia.org/wiki/Jakarta_EE
+
+ This API is used to convert Java Object <--> XML
+
+*) Spring Boot will not support XML as Configuration/Data
+   by default. We have to enable this to use.
+======================================================================
+Webservices 2 Types:
+1. SOAP : Fully dependent XML/XSD/DTD.
+
+=> SOAP is Protocol (like HTTP) with XML Standards.
+=> Slow in processing/ Heavy Code and Configuration.
+=> Maintain / Testing is not easy.
+
+2. ReST : It is a design of Client-Server using HTTP + Global Data.
+
+Re = Representation
+S  = State
+T  = Transfer
+
+=>** Send/receive data in global format. 
+*) ReST API / Restful / ReST ... are same.   
+
+*) API : [Application Programming Interface] 
+	Code defined to provide service.
+ (pre-defined classes/interfaces/enums/annotation)
+-------------------------------------------------------------------
+     Spring Boot ReST/ Restful Webservices using Spring boot
+
+case#1 (Both apps) [BookMyShow --- Paytm] 
+  Consumer Application  -------   Producer Application
+     (Java)                          (.net)
+
+case#2 Fullstack design [Frontend -- Backend]
+     UIApplication ----- Java Application (IL,SL,DAL)
+     Angular/ReactJS
+
+case#3 Microservices Design [1 Application --> n Modules --> n Small Apps]
+   1 Module App ---- 1 Module App ---- 1 Module App.
