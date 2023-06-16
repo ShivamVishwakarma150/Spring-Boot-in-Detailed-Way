@@ -1,0 +1,71 @@
+		    Spring Boot Restful Webservices
+
+=> Webservices is used to link two apps (runs in different server).
+=> Webservices - SOAP (XML Based / Protocol), 
+		ReST(Architecture/Client-Server) [XML/JSON/Text]
+=> ReST - Representation State Transfer 
+=> Two apps: Producer and Consumer.
+ -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+case#1 Restful Webservices
+ Link/Integrate two different applications running in two different
+ servers by using HTTP Protocol and Global Data Format.
+
+ Producer should contain -- Service Provider code / Skelton / API
+ Consumer should contain -- Service Consumer code / Stub  / Caller
+
+*) In This case at Producer Application side, we use @RestController, and at Consumer application side we use RestTemplate(C).
+
+ +----------------------------+----------------------------------------+	
+ |	Controller            |         RestController                 |
+ +----------------------------+----------------------------------------+
+   This is for WEB MVC Apps          This is for RestBased Apps
+
+   It is connected with View        Here, we have no View(UI Concept)
+  (UI/Java based-JSP/Thymeleaf)
+
+   Data is Exchanged using Objects    Data is Exchanged using XML/JSON
+    between UI and Controller             with Consumer Apps.
+    (Model/ModelAttribute..etc)
+
+   It is a full web-app developing   It is like a service Provider
+      concept.                          must be used by a client.
+      						(Any Language)
+ +----------------------------+----------------------------------------+
+Ex of Webservices: Payment Service, OTP service, Card Payments ..etc
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+case#2 Fullstack Application design.
+ 
+Fullstack Application = Frontend Apps + Backend Apps
+
+Frontend Applications are called as Client Apps which are fully dependent 
+on Backend Application. ie Business Logic / Tx and database exist at
+backend only.
+
+Backend Apps are called as Provider which is connected using HTTP 
+Protocol and data in Global Format(XML/JSON). 
+
+Ex Frontend Tech are : Angular/ReactJS, Andriod, iOS,... etc
+
+====================================================================
+case#3 Microservices Design (Backend in new way)
+       [Large Scale Application]
+
+*) Independent deployable components 
+ that supports Auto-Scale, Load Balance, Service Communication,
+ Less DownTime/Zero DownTime.
+
+ Implementing every Module as 1 Project (which are independent)
+ and connect with using Webservices.
+
+Q) Explain these terms?
+ Compile
+ Build
+ Deploy
+ Instance
+ Scale(Horizontal/Vertical)
+ DownTime
+ Load balace
+ IP Address (private/public/elastic)
+ Network/firewall/routing.
+
