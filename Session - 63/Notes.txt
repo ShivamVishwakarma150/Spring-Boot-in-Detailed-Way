@@ -18,7 +18,6 @@
 2. @RequestBody must be used inside Method Parameter.
   Syntax:
 	@RequestBody ClassName objName
-
 3. If any field/variable is missing data from JSON, then it holds
    default value based on datatype (ex: null for String).
 
