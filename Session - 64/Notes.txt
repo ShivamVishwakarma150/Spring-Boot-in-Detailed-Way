@@ -1,0 +1,176 @@
+ 
+Request Parameter:-
+ URL ? key = val & key = val & key = val 
+
+ ex: http://localhost:9090/employee/find?id=10&name=A
+
+---Adv Java / Servlets--------------------
+String val = request.getParameter("key");
+int id = Integer.parseInt(val);
+--------------------------------
+@RequestParam("key")DataType variableName
+		(or)
+@RequestParam DataType key
+
+===========================================================
+PathVariable: Sending data along with URL as Path
+
+.../employee/find/10/A
+
+.../employee/find?id=10&name=A ( Query String)
+.../employee/find?name=A&id=10
+
+1. Clean URLs (NO SYMBOLS LIKE ? and &)
+2. URL LENGTH AND SIZE is reduced
+3. No Overloaded Symbols (NO BURDEN ON SERVER WHILE PARSING URL)
+4. Follows Data/Path sending order.
+
+*) Note:
+1. Path Creation
+	@GetMapping("/employee/find/{id}/{name}")
+
+ Here /employee/find is called as static path
+ and /{id}/{name} dynamic path (Data comes at runtime)
+
+
+2. Data Reading
+@PathVariable("key")DataType variable
+
+
+====================code============================================
+Name : SpringBootRestPathVariableEx
+Dep  : Web, Lombok, Devtools
+
+
+*) Controller code
+package com.app.shivam.rest;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/product")
+public class ProductRestController {
+
+	// Using RequestParam
+	// .../dataa?pid=10&pname=A
+	@GetMapping("/dataa")
+	public ResponseEntity<String> showDataA(
+			@RequestParam("pid") Integer id,
+			@RequestParam("pname") String name
+			)
+	{
+		System.out.println("PID " + id +" PNAME "+ name);
+		return new ResponseEntity<>("PID " + id +" PNAME "+ name,HttpStatus.OK);
+	}
+
+	// Using Pathvariable
+	//.../datab/10/A
+	@GetMapping("/datab/{pid}/{pname}")
+	public ResponseEntity<String> showDataB(
+			@PathVariable("pid") Integer id,
+			@PathVariable("pname") String name
+			) 
+	{
+		System.out.println("PID " + id +" PNAME "+ name);
+		return new ResponseEntity<>("PID " + id +" PNAME "+ name,HttpStatus.OK);
+	}
+}
+
+
+Request URL:
+1.
+http://localhost:9090/product/datab/101/MNO
+Output Id=__ name=___
+2.
+http://localhost:9090/product/datab/222/111
+Output Id=__ name=___
+3.
+http://localhost:9090/product/datab/MNO/888
+Output 
+4.
+http://localhost:9090/product/dataa?pid=10&pname=A
+Output 
+5.
+http://localhost:9090/product/dataa?pname=AB&pid=101
+Output 
+
+Q) Which one is better to use PathVariable or RequestParam?
+A) PathVariable is better over RequestParam.
+  PathVariables are called as clean URL with less size/length.
+  No Processing time required for Query String reading.
+
+*) JAVA EE : Supports only RequestParam, No PathVariable.
+   It exist in Spring Boot apps.
+
+*) In fullstack/Rest based apps PathVariable is used.
+===============================================================
+Still lot of apps are using RequestParam. So, Spring boot even
+supports Request Param also.
+https://www.google.com/search
+? q= sachin+tendulkar
+& sxsrf=ALiCzsZBVp76CI2yhnmxjbUGyPbMNMyotQ%3A1668650417775
+& source=hp
+& ei=sZV1Y6bJLMe3z7sPvtWYqAM
+& iflsig=AJiK0e8AAAAAY3Wjwf8qaKKi4GIF9p
+
+===============================================================
+HeaderParams : These are instructions/Additional Data
+ (Security, Token data, Certificates, Date and Time, Cookies..etc )
+exchanged by both Browser and Server.
+
+*) it is a Key-value pair. Data is sent in String format
+*) There are pre-defined headers:
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
+*) We can even pass our key-val as header params.
+*) To read data use @RequestHeader("key")DataType variableName
+
+=> Authorization Header | Accept Header | Content-Type | Cookies Header
+=======================================================================
+Example:
+package com.app.shivam.rest;
+//ctrl+shift+O
+@RestController
+@RequestMapping("/product")
+public class ProductRestController {
+
+	
+	@PostMapping("/details")
+	public ResponseEntity<String> showHeaders(
+			@RequestHeader("Content-Type")String type,
+			@RequestHeader("Content-Length")String len,
+			@RequestHeader("Authorization")String auth,
+			
+			HttpServletRequest req
+			) 
+	{
+		System.out.println(auth);
+		Enumeration<String> headerNames = req.getHeaderNames();
+		while (headerNames.hasMoreElements()) {
+			String hdr =  headerNames.nextElement();
+			System.out.println(hdr + " " + req.getHeader(hdr));
+		}
+		System.out.println("Data " + type +" - "+ len);
+		return new ResponseEntity<>("CHECK",HttpStatus.OK);
+	}
+	
+
+}
+==============================================================
+Dynamic ReturnType Selection based on workflow (condition)
+Generics (Java 1.5) - wild card character (?)
+
+	public ResponseEntity<?> showInfo() {
+		
+		if(new Random().nextInt() > 0) {
+			return new ResponseEntity<String>("OK",HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Integer>(101,HttpStatus.OK);
+		}
+	}
+=============================================================
