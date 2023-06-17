@@ -1,0 +1,317 @@
+
+		Spring Boot - Exception Handling Process
+
+*) Spring Boot has given one Pre-defined class "BasicErrorController" which takes care of Error and Exception Handling.
+
+=> if any exception is occurred in RestController/Controller and not handled (using try/catch block) then it is taken care by BasicErrorController(C) and method error().
+
+=> This error() method returns some pre-defined response format.
+Ex:
+{
+    "timestamp": "2022-11-21T01:42:22.666+00:00",
+    "status": 500,
+    "error": "Internal Server Error",
+    "trace": "java.lang.RuntimeException: Product Not Found 5586\r\n\tat com.app.shivam.rest.ProductRestController.getProductById(ProductRestController.java:24)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205)\r\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:150)\r\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)\r\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:895)\r\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:808)\r\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\r\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1071)\r\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:964)\r\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)\r\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:898)\r\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:670)\r\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)\r\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:779)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:227)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162)\r\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162)\r\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\r\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162)\r\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\r\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162)\r\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\r\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189)\r\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162)\r\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:197)\r\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:97)\r\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:541)\r\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:135)\r\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92)\r\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:78)\r\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:360)\r\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399)\r\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:65)\r\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:893)\r\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1789)\r\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)\r\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\r\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\r\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n",
+    "message": "Product Not Found 5586",
+    "path": "/product/one/5586"
+}
+
+===Sample code ======================================
+1. RestController code
+package com.app.shivam.rest;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/product")
+public class ProductRestController {
+
+	@GetMapping("/one/{id}")
+	public ResponseEntity<String> getProductById(
+			@PathVariable("id") Integer id
+			) 
+	{
+		if(id==150) 
+		{
+			return new ResponseEntity<>("Product Exist", HttpStatus.OK);
+		}
+		else
+			throw new RuntimeException("Product Not Found " + id);
+	}
+}
+
+2. application.properties
+server.port=9090
+
+3. POSTMAN URL
+GET http://localhost:9090/product/one/158
+GET http://localhost:9090/product/one/150
+====================================================================
+*******************************************************************
+			Custom Exception Handling
+*******************************************************************
+====================================================================
+We can define our own Response Format incase of Any exception occurred in application by using Annotations : @RestControllerAdvice and @ExceptionHandler.
+
+@RestControllerAdvice: Address in Spring 4.3 version
+=> It says this is a global class for exception handling.
+=> It is executed by FC in the place of BasicErrorController.
+
+@ExceptionHandler: Every Exception type is compared with this annotation on given methods, if matched execute, else redirect back to "BasicErrorController".
+
+=> For one exception type, we need to define one Handler method.
+====================================================================
+*) We can even return Custom Error Response class type for JSON/XML output. ie @RestControllerAdvice internally uses @ResponseBody annotation.
+
+-------------case#1-----------------------------------------
+1. RestController
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.exception.ProductNotFoundException;
+import com.app.shivam.service.ProductService;
+
+@RestController
+@RequestMapping("/product")
+public class ProductRestController {
+	
+	
+	
+	@GetMapping("/one/{id}")
+	public ResponseEntity<String> getProductById(
+			@PathVariable("id") Integer id
+			) 
+	{
+		if(id==150) 
+		{
+			return new ResponseEntity<>("Product Exist", HttpStatus.OK);
+		}
+		else
+			throw new ProductNotFoundException("Product Not Found " + id);
+	}
+	
+	
+}
+
+2. Handler class
+package com.app.shivam.handler;
+
+import java.util.Date;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.app.shivam.bean.MyErrorResponse;
+import com.app.shivam.exception.ProductNotFoundException;
+
+@RestControllerAdvice
+public class MyCustomExceptionHandler {
+
+	
+	@ExceptionHandler(ProductNotFoundException.class)
+	public ResponseEntity<String> showCustomErrorMsg(
+			ProductNotFoundException pnfe
+			)
+	{
+		return new ResponseEntity<String>(
+				pnfe.getMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	
+	
+}
+
+----------case#2------------------------------------------
+2. Custom ErrorResponse
+
+1. Entity/Beans
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Product {
+
+	private Integer pid;
+	private String pcode;
+}
+--------------
+package com.app.shivam.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MyErrorResponse {
+
+	private String date;
+	private String status;
+	private int code;
+	private String message;
+}
+
+2. Custom exception class
+package com.app.shivam.exception;
+
+public class ProductNotFoundException 
+	extends RuntimeException
+{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public ProductNotFoundException() {
+		super();
+	}
+	
+	public ProductNotFoundException(String message) {
+		super(message);
+	}
+}
+
+3. Service class
+package com.app.shivam.service;
+
+import org.springframework.stereotype.Service;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.exception.ProductNotFoundException;
+
+@Service
+public class ProductService {
+
+	public Product getOneProductById(Integer id) {
+		if(id==150)
+			return new Product(id, "DUMMY");
+		else 
+			throw new ProductNotFoundException("PRODUCT '"+id+"' NOT EXIST");
+	}
+
+}
+
+4. RestController
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Product;
+import com.app.shivam.exception.ProductNotFoundException;
+import com.app.shivam.service.ProductService;
+
+@RestController
+@RequestMapping("/product")
+public class ProductRestController {
+	
+	@Autowired
+	private ProductService service;
+
+	/*
+	@GetMapping("/one/{id}")
+	public ResponseEntity<String> getProductById(
+			@PathVariable("id") Integer id
+			) 
+	{
+		if(id==150) 
+		{
+			return new ResponseEntity<>("Product Exist", HttpStatus.OK);
+		}
+		else
+			throw new ProductNotFoundException("Product Not Found " + id);
+	}*/
+	
+	@GetMapping("/one/{id}")
+	public ResponseEntity<Product> getProductById(
+			@PathVariable("id") Integer id
+			) 
+	{
+		ResponseEntity<Product> response =  null; 
+		try {
+			Product pob = service.getOneProductById(id);
+			response = new ResponseEntity<Product>(pob,HttpStatus.OK);
+		} catch (ProductNotFoundException pnfe) {
+			pnfe.printStackTrace();
+			throw pnfe;//call handler
+		}
+		return response;
+	}
+}
+
+5. RestController advice
+package com.app.shivam.handler;
+
+import java.util.Date;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.app.shivam.bean.MyErrorResponse;
+import com.app.shivam.exception.ProductNotFoundException;
+
+@RestControllerAdvice
+public class MyCustomExceptionHandler {
+
+	/*
+	@ExceptionHandler(ProductNotFoundException.class)
+	public ResponseEntity<String> showCustomErrorMsg(
+			ProductNotFoundException pnfe
+			)
+	{
+		return new ResponseEntity<String>(
+				pnfe.getMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	*/
+	@ExceptionHandler(ProductNotFoundException.class)
+	public ResponseEntity<MyErrorResponse> showCustomErrorMsg(
+			ProductNotFoundException pnfe
+			)
+	{
+		return new ResponseEntity<MyErrorResponse>(
+				new MyErrorResponse(
+						new Date().toString(), 
+						"EXCEPTION IN PROCESS", 
+						500, 
+						pnfe.getMessage()),
+				HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+}
+
+
+==================================================================
+Q) How do you handle exceptions in your RestApplications?
+A) Here Service Layer thro exception based on some conditions. Cached by RestController and re-thrown to GlobalHandler. Global Exception Handler compares exception type and returns Custom Error Message with status code.
+
+Request->FC->HM->RestController->call service -> call Repo
+-> No Data -> Service throw exception -> catch in RestController -> throw exception obj -> Exception Handler -> compare type -> Return custom message.
