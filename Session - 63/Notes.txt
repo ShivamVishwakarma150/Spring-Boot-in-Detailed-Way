@@ -1,0 +1,225 @@
+
+			Global Data Formats (XML/JSON)
+
+@RequestBody: It takes data (XML/JSON) from Http Request Body Section
+ and converts into one Object Format.
+
++--------------------------------------+
+| POST  |   /employee/create | HTTP 1.1|
++--------------------------------------+
+|                                      |
+|  Content-Type: application/json      |
++--------------------------------------+
+|                                      |
+| { "empId" : 101, .... }              |
++--------------------------------------+
+
+1. We have to use NON-GET types request to send data using Body.
+2. @RequestBody must be used inside Method Parameter.
+  Syntax:
+	@RequestBody ClassName objName
+
+3. If any field/variable is missing data from JSON, then it holds
+   default value based on datatype (ex: null for String).
+
+4. Sending additional keys in JSON (Request) which are not present 
+	in Entity, then those are ignored.
+ex:
+{
+    "empId": 10,
+    "empName": "A",
+    "empSal": 300.0,
+    "empDept" : "DEV"
+}
+Here empDept is ignored , it is not exist in Employee.
+
+5. JSON Keys can be sent/receive in any order.
+
+6. Invalid JSON Request, leads to 400-Bad Request.
+Ex:
+{
+    "empId": 10,
+    "empSal": 300.0,
+    "empName": "A"
+ 
+7. If XML Dependency (jackson-dataformat-xml) is not added, 
+   and trying to send XML as Input/Request Body with 
+   Content-type: application/xml
+   then FC returns 415 Unsupported MediaType.
+
+8. To work with XML conversions, add  below dependency
+<dependency>
+	<groupId>com.fasterxml.jackson.dataformat</groupId>
+	<artifactId>jackson-dataformat-xml</artifactId>
+</dependency>
+
+=============Code=======================================
+Name : SpringBootRestMediaTypeOutputEx
+Dep  : Web, Lombok, Devtools
+
+1. Entity
+package com.app.shivam.entity;
+
+import lombok.Data;
+
+@Data
+public class Employee {
+
+	private Integer empId;
+	private String empName;
+	private Double empSal;
+	
+}
+
+2. RestController
+package com.app.shivam.rest;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Employee;
+
+@RestController
+@RequestMapping("/employee")
+public class EmployeeRestController {
+
+	@PostMapping("/create")
+	public ResponseEntity<String> createEmployee(
+			@RequestBody Employee employee
+			) 
+	{
+		String s = employee.toString();
+		ResponseEntity<String> response = new ResponseEntity<>(s,HttpStatus.OK);
+		return response;
+	}
+}
+
+3. Run Application and Make Request using POSTMAN.
+
+==========Complex Inputs========================================
+1. Entity classes
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Address {
+
+	private String hno;
+	private String loc;
+}
+-----------------
+package com.app.shivam.entity;
+
+import java.util.List;
+import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Employee {
+
+	private Integer empId;
+	private String empName;
+	private Double empSal;
+	
+	private Address addr;//HAS-A
+	
+	private List<String> projects;
+	private Map<String,Integer> codes;
+	
+}
+
+2. Controller code
+package com.app.shivam.rest;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Address;
+import com.app.shivam.entity.Employee;
+
+@RestController
+@RequestMapping("/employee")
+public class EmployeeRestController {
+	
+	@GetMapping("/find")
+	public ResponseEntity<Employee> getOneEmployee() {
+		Employee employee = new Employee(101, "AAAA", 500.0, 
+				new Address("A/44","HYD"), List.of("M1","M2"), 
+				Map.of("A1",10,"A2",20));
+		return new ResponseEntity<>(employee,HttpStatus.OK);
+	}
+
+	@PostMapping("/create")
+	public ResponseEntity<String> createEmployee(
+			@RequestBody Employee employee
+			) 
+	{
+		String s = employee.toString();
+		ResponseEntity<String> response = new ResponseEntity<>(s,HttpStatus.OK);
+		return response;
+	}
+}
+
+3. POSTMAN Request
+URL: http://localhost:9090/employee/create
+Method: POST
+
+Body (raw/JSON)
+{
+    "empId": 10,
+    "empSal": 300.0,
+    "empName": "A",
+    "addr" : {
+        "hno": "7-A/77-B",
+        "loc" : "AMPT, HYD"
+    },
+    "projects" : ["P1","P2","P3"],
+    "codes" : { "C1": 10, "C2": 20, "C3": 30 }
+}
+
+Body (raw/XML)
+<Employee>
+    <empId>101</empId>
+    <empName>AAAA</empName>
+    <empSal>500.0</empSal>
+    <addr>
+        <hno>AB/44</hno>
+        <loc>HYD</loc>
+    </addr>
+    <projects>
+        <projects>M1</projects>
+        <projects>M2</projects>
+    </projects>
+    <codes>
+        <A2>20</A2>
+        <A1>10</A1>
+    </codes>
+</Employee>
+=================================================================
+Task:
+ Student (sid,sname,sgen,course, langs:List, qualif:Map<String,Double>)
+ Course (cid,cname,cfee)
+ send Input JSON/XML
+ Get output JSON/XML
