@@ -1,0 +1,174 @@
+ 
+*) ReturnType in RestController # Methods
+=> Here standard ReturnType is ResponseEntity.
+=> It is a combination of Status Code + Header Params + Response Body.
+=> ResponseEntity<T> , Here T = DataType of Body.
+=> Allowed or possible T types are:
+	String, ClassType, Collection, Object (Not recommended)
+	even ? (wild card char) if type is decided at runtime.
+
+=> We can even return direct type without ResponseEntity<>.
+   In this case we can not provide our Status code and Headers,
+   that is considered only as body.
+========================================================================
+Q) What is MultiValueMap and how it is different from Map?
+A) MultiValueMap is a Map internally. 
+   But Key is SimpleType (Primitive) and Value is List(CollectionType)
+
+*) Http Headers are MultiValueMaps. ie one key can have multiple values
+Ex:
+  Accept = application/xml,application/json,*/*
+
+*) In Spring REST HttpHeaders(C) is a MultiValueMap internally.
+
+Q) When should we use ResponseEntity<> and Direct Return Type?
+A)
+  If we want to return our own headers/Http status along with Body,
+  then use ResponseEntity.
+  Else Just return Direct class/String/Collection type that indicates
+  only body.
+
+Q) Can we create ResponseEntity object without HttpStatus?
+A) Status is must in case of ResponseEntity object.
+   it can never be null/empty.
+Q) Can we create ResponseEntity object without Body?
+A) Body can be null / empty
+Q) Can we create ResponseEntity object without Headers?
+A) Custom headers can be null / empty
+======================Sample code==========================================
+
+Name : SpringBootRestReturnTypeEx
+Dep  : Web, Lombok, Devtools
+
+1. Entity
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Book {
+
+	private Integer bookId;
+	private String bookName;
+	private Double bookCost;
+}
+
+2. RestController
+package com.app.shivam.rest;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+
+@RestController
+@RequestMapping("/book")
+public class BookRestController {
+	
+	
+	@GetMapping("/a")
+	public String justBody() {
+		return "Hello Book Data!";
+	}
+	
+	@GetMapping("/b")
+	public Book justBook() {
+		return new Book(10,"AA",200.0);
+	}
+
+	@GetMapping("/data")
+	public ResponseEntity<String> showInfo() {
+		//1. passing Http Status
+		//ResponseEntity<String> response = new ResponseEntity<>(HttpStatus.OK);
+		
+		//2. passing Body + Http Status
+		//String body = "WELCOME TO APP";
+		//ResponseEntity<String> response = new ResponseEntity<>(body, HttpStatus.OK);
+		
+		//3. Passing  headers + status
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("MyAppOne", "ACTIVATED-CLIENT");
+		//ResponseEntity<String> response = new ResponseEntity<>(headers, HttpStatus.OK);
+		
+		//4. Passing body + headers + status
+		String body = "WELCOME TO APP";
+		ResponseEntity<String> response = 
+				new ResponseEntity<>(body, headers, HttpStatus.OK);
+		
+		return response;
+	}
+}
+==================================================================
+Usecase# ResponseEntity with custom Headers HttpStatus and Body.
+
+*) Entity class
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Book {
+
+	private Integer bookId;
+	private String bookName;
+	private Double bookCost;
+}
+
+*) REstController
+package com.app.shivam.rest;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+
+@RestController
+@RequestMapping("/book")
+public class BookRestController {
+	
+	//Path variable id --> Book (200,book,found=yes), String(400,Sorry No Book found, found=no)
+	@GetMapping("/obj/{id}")
+	public ResponseEntity<?> findBookById(@PathVariable Integer id) 
+	{
+		ResponseEntity<?> response = null;
+		HttpHeaders headers = new HttpHeaders();
+		
+	
+		if(id == 501) {
+			headers.add("found", "yes");
+			
+			response = new ResponseEntity<Book>(
+					new Book(id, "DUMMY", 500.0),   //body 
+					headers,  //headers
+					HttpStatus.OK); //http status
+		} else {
+			
+			headers.add("found", "no");
+			response = new ResponseEntity<String>(
+					"Sorry! No Book Found",   //body 
+					headers,  //headers
+					HttpStatus.BAD_REQUEST); //http status
+		}
+		
+		return response;
+	}
+	
+}	
+===================================================================
