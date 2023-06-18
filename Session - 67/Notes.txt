@@ -1,0 +1,271 @@
+
+		Spring Boot ReST : Client Application
+
+*) Sometimes, our application (implemented using Spring Boot) wants to connect with other applications (implemented using Java/.net/Python..etc). ie our application is Consumer.
+
+*) In this case use Http Client : "RestTemplate"(C).
+  [It is a class, that supports HTTP Protocol]
+
+=> RestTemplate:
+1. it is a class 
+2. Supports all HTTP Methods (GET/POST/PUT/DELETE)
+3. Supports Request Body and Headers creation
+4. Reads Response into ResponseEntity or DirectType(String, Employee).
+5. Auto-type conversion of global Data (JSON/XML-->Object)
+
+Q) What is var-args and how they are different arrays?
+A) ... (3 dots) indicates var-args (Varying Length Arguments)
+   we can pass data of same type multiple values without creating as an array
+   Just comma separated values.
+
+   Array once created fixed in size, var-args size not fixed.
+
+   -> var-args must be the last parameter in method
+   -> only 1 var-args type is allowed for 1 method
+   -> JDK 1.5 version (Java 5)
+   -> Arrays can be any number and any order as parameter for a method
+
+Q) What is mean by : java.net.ConnectException: Connection refused: connect?
+A) If Producer application is down/ not started then we see this.
+
+
+=======================GET OPERATIONS =============================
+1. Producer Code
+Name : 07SpringBootRestProducerEx
+Dep  : Spring web, Lombok, Devtools
+
+*) Bean class
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Book {
+
+	private Integer bid;
+	private String bname;
+	private String bauth;
+	private Double bcost;
+}
+
+*) RestController
+package com.app.shivam.rest;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+
+@RestController
+@RequestMapping("/v1/api/book")
+public class BookRestController {
+
+	@GetMapping("/showA")
+	public ResponseEntity<String> showMsg1() {
+		//return new ResponseEntity<String>("WELCOME",HttpStatus.OK);
+		return ResponseEntity.ok("WELCOME TO FIRST CALL TYPE - GET");
+	}
+	
+	@GetMapping("/showB/{id}/{name}")
+	public ResponseEntity<String> showMsg2(
+			@PathVariable("id") Integer id,
+			@PathVariable("name") String name
+			) 
+	{
+		return ResponseEntity.ok("WELCOME TO FIRST CALL TYPE - GET ==> " +id +"-"+name);
+	}
+	
+	@GetMapping("/showC")
+	public ResponseEntity<Book> showMsg3() {
+		return ResponseEntity.ok(new Book(101, "ABC", "RAJ", 500.0));
+	}
+
+	//try return type List<Book>
+	
+}
+
+----------------------------------
+2. Consumer Code
+
+Name : 07SpringBootRestConsumerEx
+Dep  : Spring web, lombok
+
+==application.properties==
+server.port=9696
+
+==Runner classes======
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class GetTestARunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		//1. Create URL
+		//String url = "http://localhost:8080/v1/api/book/showA";
+		String url = "http://localhost:8080/v1/api/book/showC";
+		
+		//2. Create Request Headers
+		//3. Create Request Body
+		
+		// 2+3
+
+		//4. Create RestTemplate object
+		RestTemplate template = new RestTemplate();
+		
+		//5. Make HTTP call and Get Response back
+		ResponseEntity<String> response = template.getForEntity(url, String.class); //URL, ResponseFormat.class
+		
+		//6. print details
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+		
+	}
+
+}
+-----------------------------------------
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+//@Component
+public class GetTestARunner2 implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		//1. Create URL
+		String url = "http://localhost:8080/v1/api/book/showB/{id}/{name}";
+		
+		//2. Create Request Headers
+		//3. Create Request Body
+		
+		// 2+3
+
+		//4. Create RestTemplate object
+		RestTemplate template = new RestTemplate();
+		
+		//5. Make HTTP call and Get Response back
+		ResponseEntity<String> response = 
+				template.getForEntity(
+						url, 
+						String.class,
+						101, "ABC"  //path variables
+						); 
+		
+		//6. print details
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+		
+	}
+
+}
+========================================================================
+POST METHOD CALL:
+
+To make POST Request we need to pass URL, RequestEntity(Body+Headers)
+along with ResponseType to a method postForEntity().
+
+--API--
+postForEntity(
+  url : String,
+  requestEntity:HttpEntity,
+  responseType:K.class
+) ResponseEntity<K>
+
+HttpEntity = HttpHeaders + Body
+
+--Sample code---
+HttpHeaders headers = new HttpHeaders(); 
+headers.setContentType(MediaType.APPLICATION_JSON);
+
+===============================CODE=============================
+1. Producer code
+package com.app.shivam.rest;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+
+@RestController
+@RequestMapping("/v1/api/book")
+public class BookRestController {
+
+
+	@PostMapping("/showD")
+	public ResponseEntity<String> showMgs4(
+			@RequestBody Book book
+			) 
+	{
+		return ResponseEntity.ok("Data given is " + book);
+	}
+	
+}
+
+
+2. Consumer code (Runner class)
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class PostTestARunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		//1. Create URL
+		String url = "http://localhost:8080/v1/api/book/showD";
+		
+		//2. Create Request Headers
+		HttpHeaders headers = new HttpHeaders(); 
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		//3. Create Request Body
+		String body = "{\"bid\" : 101,\"bname\" : \"ABC\", \"bauth\":\"AJ\", \"bcost\":500.0}";
+		
+		// 2+3 Combine Both Body and Headers
+		HttpEntity<String> requestEntity = new HttpEntity<>(body,headers);
+		
+		//4. Create RestTemplate object
+		RestTemplate template = new RestTemplate();
+		
+		//5. Make HTTP call and Get Response back
+		ResponseEntity<String> response = 
+				template.postForEntity(url, requestEntity, String.class);
+				
+		//6. print details
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+		
+	}
+
+}
+=====================================================================
