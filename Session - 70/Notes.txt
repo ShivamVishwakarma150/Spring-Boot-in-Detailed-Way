@@ -1,0 +1,115 @@
+
+		Spring Boot ReST -- Backend Application
+
+*) Spring Bean Validator API
+=> Validating input at backend application using annotations.
+=> To use this option we must add Spring Bean Validator (Hibernate Validator API)
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+
+=> These annotation are given in as : Validation API (javax.validation)
+
+@NotNull : Do not allow null values
+
+ sname = null //rejected
+ sname =""  //accepted
+ sname="  " //accepted
+
+@NotEmpty : Do not allow null or empty values
+ sname = null //rejected
+ sname =""  //rejected
+ sname="  " //accepted
+
+@NotBlank : Do not allow null/empty string/white space chars
+ sname = null //rejected
+ sname =""  //rejected
+ sname="  " //rejected
+
+@Size : To specify min/max size for input (For String type)
+
+@Min : For numbers (int/double)
+@Max : For numbers (int/double)
+
+@Pattern : We can given String Pattern Inputformat (RegExp)
+
+@Past  : Date type only
+@Future : Date type only
+ex:
+@Past(message="DOB is invalid")
+Date dob;
+@Future(message="Product is invalid")
+Date exp;
+
+@AssertTrue : used for boolean types (expecting true only)
+ex: 
+@AssertTrue
+boolean readTermsAndConditions;
+
+@AssertFalse: Expected input value is false only.
+
+@Email : To validate Email Pattern
+----------------
+@Valid : This annotation activates validation-api and executes above
+	annotations in order.
+
+If validation is failed then FC returns error code 400 (Bad Request).
+Here,
+
+=======================================================================
+1. At Entity class
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="stdtab")
+public class Student {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="sid")
+	private Integer stdId;
+
+	@Column(name="sname")
+	//@NotNull(message = "Name can not be null")
+	//@NotEmpty(message="STUDENT NAME CAN NOT BE EMPTY")
+	@NotBlank(message="STUDENT NAME CAN NOT BE EMPTY")
+	@Size(min = 2,max = 6,message = "NAME MUST BE 2-6 CHARS ONLY")
+	@Pattern(regexp = "[A-Za-z]{2,6}",message = "Only A-Z/a-z are allowed")
+	private String stdName;
+	
+	@Column(name="sgen")
+	@NotBlank(message="STUDENT GENDER CAN NOT BE EMPTY")
+	private String stdGen;
+	
+	@Column(name="scourse")
+	@NotBlank(message="STUDENT COURSE MUST BE SELECTED")
+	private String stdCourse;
+	
+	@Column(name="saddr")
+	@Pattern(regexp = "[A-Za-z0-9\\.\\-\\?]{10,250}",message = "INVALID ADDRESS DETAILS")
+	private String stdAddr; 
+}
+
+2. At RestController
+Old Code:
+@RequestBody Student student
+
+New Code:
+@RequestBody @Valid Student student
+
+
+*) Patterns in Java:
+https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
