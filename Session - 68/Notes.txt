@@ -1,0 +1,223 @@
+
+			RestTemplate (Http Client)
+
+*) RestTemplate has given one generic method : exchange() that supports all Http Method call : GET, POST, PUT..etc
+
+exchange(
+  url,
+  HttpMethod,
+  HttpEntity(request),
+  ResponseType.class,
+  pathVariables...
+): ResponseEntity<T>
+
+*) Just Replace below lines of code in consumer application
+Old Line:
+ResponseEntity<String> response = template.postForEntity(url, requestEntity, String.class);
+New Line:
+ResponseEntity<String> response = template.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+Old Line:
+ResponseEntity<String> response = template.getForEntity(url,String.class,101, "ABC" ); 
+New Line:
+ResponseEntity<String> response = template.exchange(url, HttpMethod.GET, null, String.class, 101,"ABC"); 
+
+*) There are no direct methods for put() and delete() that returns ResponseEntity<>. In that case we use exchange() method.
+
+
+====================exchange() method code============================
+1. Producer Application
+
+*) RestController code
+package com.app.shivam.rest;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+
+@RestController
+@RequestMapping("/v1/api/book")
+public class BookRestController {
+
+	//-------PUT/DELETE EXAMPLES
+	
+	@PutMapping("/showE")
+	public ResponseEntity<String> showMgs5(
+			@RequestBody Book book
+			) 
+	{
+		return ResponseEntity.ok("Data FROM PUT is " + book);
+	}
+	
+	@DeleteMapping("/showF/{id}")
+	public ResponseEntity<String> showMsg6(
+			@PathVariable("id") Integer id
+			) 
+	{
+		return ResponseEntity.ok("DELETE MAPPING " + id);
+	}
+	
+}
+=====================================================================
+2. Consumer Application
+
+*) Runner class code
+package com.app.shivam.runner;
+
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+//@Component
+public class PutTestARunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		String url = "http://localhost:8080/v1/api/book/showE";
+		
+		String body = "{\"bid\" : 101,\"bname\" : \"ABC\", \"bauth\":\"AJ\", \"bcost\":500.0}";
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		HttpEntity<String> requestEntity = new HttpEntity<String>(body, headers);
+		
+		RestTemplate rt = new RestTemplate();
+		//This method makes request , but returns no body (void)
+		//rt.put(url, requestEntity);
+		ResponseEntity<String> response = rt.exchange(url, HttpMethod.PUT, requestEntity, String.class);
+		
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+		
+	}
+
+}
+---------------------------------------------------------------
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class DeleteTestARunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		// URL
+		String url = "http://localhost:8080/v1/api/book/showF/{id}";
+		
+		// Body, Headers => RequestEntity
+		// RestTemplate
+		RestTemplate rt = new RestTemplate();
+		// make call
+		//rt.delete(url, 101);
+		ResponseEntity<String> response = rt.exchange(url, HttpMethod.DELETE, null, String.class, 101);
+		
+		// Print Response
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+	}
+
+}
+=======================================================================
+*) Implicit Type Conversion:-
+By Default any type of Response Content can be stored in String (Text/JSON/XML/HTML/..etc). But we can even store JSON/XML into a Specific type (like Employee.class, in place of String.class) In that case RestTemplate compares key names and if matched then type conversion is done internally (Response Body --> JSON/XML--> Object)
+
+
+*) Producer Code (Method only)
+@GetMapping("/showC")
+public ResponseEntity<Book> showMsg3() {
+   return ResponseEntity.ok(new Book(101, "ABC", "RAJ", 500.0));
+}
+
+(Entity class)
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Book {
+
+	private Integer bid;
+	private String bname;
+	private String bauth;
+	private Double bcost;
+}
+
+
+*) Consumer code:
+--Runner class-------
+package com.app.shivam.runner;
+
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.app.shivam.entity.BookAtConsumer;
+
+@Component
+public class GetTestBRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		String url = "http://localhost:8080/v1/api/book/showC";
+		RestTemplate template = new RestTemplate();
+		
+		//ResponseEntity<BookAtConsumer> response = template.getForEntity(url, BookAtConsumer.class); 
+		ResponseEntity<BookAtConsumer> response = template.exchange(url, HttpMethod.GET, null, BookAtConsumer.class); 
+		
+
+		System.out.println(response.getBody());
+		System.out.println(response.getHeaders());
+		System.out.println(response.getStatusCode().name());
+		System.out.println(response.getStatusCode().value());
+		
+	}
+
+}
+
+--------Entity class---------
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class BookAtConsumer {
+
+	private Integer bid;
+	private String bname;
+	private String bauth;
+	private Double bcost;
+}
+
+*) Note: class name at consumer need not to be same as producer. But variable names must match (should have set/get methods)
+====================================================================
