@@ -1,0 +1,73 @@
+
+Frontend Application (Angular/ReactJS)
+*) Node 
+Goto : https://nodejs.org/en/download/
+Click on Download Link (OS BASED LINK)
+--check using these-------
+C:\Users\user> node -v
+C:\Users\user> npm -v
+C:\Users\user> npx -v
+
+*) VS Code Editor
+Link: https://code.visualstudio.com/download
+Download and Install (Next > Next > Finish)
+
+> File > open Folder .. > new folder ex: FrontEndApps > Open
+===============================================================
+*) Angular Setup
+Ref This: https://angular.io/guide/setup-local
+
+Only one time: 
+> npm install -g @angular/cli
+> ng version
+================================================================
+*) Application Creation
+> Open VS Code Editor
+> Terminal > new Terminal > Switch to Cmd Prompt
+
+> type cmd:
+   ng new student-ang-app
+   (Add Routing) y
+   (Choose CSS) y
+
+> Start Application
+   cd student-ang-app
+   ng serve --open
+
+> open app.component.html
+> remove all lines of code and  paste below code
+
+	<h3>WELCOME TO ANGULAR APPLICATION</h3>
+	<router-outlet></router-outlet>
+
+
+http://localhost:4200/
+
+> Come back to terminal and press cltr+C to stop app.
+=================================================================
+ReactJS Setup:
+	npm uninstall -g create-react-app
+	npx clear-npx-cache
+	npm i create-react-app
+
+Ref:
+https://reactjs.org/docs/create-a-new-react-app.html#create-react-app
+	npx create-react-app@latest student-rjs-app
+	cd student-rjs-app
+	npm start
+
+http://localhost:3000/
+
+> open App.js and Modify code as:
+import "./App.css";
+
+function App() {
+  return (
+    <div className="App">
+      <h3>WELCOME TO APP</h3>
+    </div>
+  );
+}
+
+export default App;
+======================================================================
