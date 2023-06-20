@@ -1,0 +1,79 @@
+			 Date : 02-12-2022
+		    Spring Boot and Microservices
+			7AM | Mr. Raghu | (ASHOK IT)
+  ---------------------------------------------------------------------
+*) AT Rest Controller class level:
+@CrossOrigin({
+	"http://localhost:3000/",
+	"http://localhost:4200/"
+})
+-------------------------------------------------------------------
+ReactJS using TypeScript:
+https://www.typescriptlang.org/docs/handbook/react.html
+
+HOC
+Hooks
+LifeCycleMethods
+Redux
+Testing
+------------------------------------------------------------------------
+
+===================================================================
+*) Web page is a collection of  Components (ex: header, NavBar,
+   Body, Side Panel, Footer..etc)
+
+*) A Component is a logical part (or) one part of web page.
+
+*) ReactJS : Two types components.
+  A. class component : Stateful components (Data/Dynamic data)
+  B. Functional component : Statless components (no Dynamic Data or no State)
+
+*) React Hooks are a new addition in React 16.8.
+ They let you use state and other React features without writing a class.
+
+*) in Functional component we do not use this keyword.
+======================================================================
+1. useState() : This is used to store State object (JSON/String..etc)
+const [variable, setVariable] = useState(__);
+Ex:
+const [student, setStudent] = useState(initialFormState);
+
+2. useNavigate(): This is part of routing. To move from one component to
+	another component use this. 
+
+const navigate = useNavigate();
+Ex:
+ navigate("path")
+
+3. useParams(): To read path parameters (Dynamic values from URL)
+ If URL contains n-path params we can read all of them even.
+
+Name of param must be same as <Route> Config
+
+Syntax:
+const { paramname1, paramname2,... } = useParams();
+Ex:
+const { id } = useParams();
+=====================================================================
+useEffect(callBackFun,dependencies) :
+  This one is used to execute function based on dependencies modified.
+
+useEffect(() => {
+    StudentService.getOneStudent(id).then((response) =>
+      setStudent(response.data)
+    );
+  }, [id, setStudent]);
+
+//when id is modified allow setStudent to execute.
+
+*) Try to use one/single component for both EDIT and REGISTER.
+
+
+Q) What is the difference between Route path / and * in ReactJS?
+A) Default Home Page is indicated using /
+  <Route path="/" element={<StudentListComponent />}></Route>
+    
+    If No Path is matched (for request URL)
+  <Route path="*" element={<NotFoundComponent />}></Route>
+
+========================================================================
