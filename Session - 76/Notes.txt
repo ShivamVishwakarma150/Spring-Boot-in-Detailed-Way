@@ -1,0 +1,47 @@
+			Connection Pooling
+
+Pool  : Group of Objects of sametype (one class type)
+	Ex: Student Pool (Student class Objects)
+	    Connection Pool (Database Connections class objects)
+
+Cache : Group of Objects of different types 
+	(employeeobjs, productsobjs..etc)
+
+*) Connection Pool : It is a group of Database Connection objects created while starting application.
+
+=> One Connection reads a Statement(Query) from Server, send to DB executes it and finally returns response/output back to server.
+
+=> If more no.of Statements(Query) comes from server to DB. Then it will process one by one, which is time consuming.
+
+=> In this case CP, reduces wait time by processing statements in parallel.
+
+=> Spring Boot supports Vendors like ***HikariCP, TomcatCP, Apache-DBCP2.x .etc...
+
+=> When ever we add Spring Boot Data JPA/Spring Boot JDBC dependency then it internally provides HikariCP dependency with Configuration too.
+
+Like:
+<dependency>
+	<groupId>com.zaxxer</groupId>
+	<artifactId>HikariCP</artifactId>
+</dependency>
+
+=> Spring Boot has given all configurations to connection pool
+	using class: HikariConfig
+
+=> We can provide our custom values for properties using keys with prefix
+   spring.datasource.hikari.<keyName>=<value>
+
+# To provide custom connection pool name
+spring.datasource.hikari.pool-name=HikariCP-Test
+# Provide timeout for a connection request
+spring.datasource.hikari.connection-timeout=10000
+# Max Pool size
+spring.datasource.hikari.maximum-pool-size=20
+# Min No work/idle connections
+spring.datasource.hikari.minimum-idle=15
+# Check Connection by executing a query at startup
+spring.datasource.hikari.connection-init-sql=select * from stdtab
+# ENable Autocommit
+spring.datasource.hikari.auto-commit=false
+# How long idle connection need be kept..
+spring.datasource.hikari.idle-timeout=5000
