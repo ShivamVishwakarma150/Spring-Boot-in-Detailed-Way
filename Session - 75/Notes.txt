@@ -1,0 +1,132 @@
+
+POSTMAN : 
+>> It is tool used to Test our application, by making HTTP Request.
+>> Here, we need to enter detail manually Method Type, URL, Headers, Body, Type..etc
+
+-------------------------------------------------------------------------
+Swagger : (Programmer one time configuration)
+
+>> Open Source API used to document all Endpoint details.
+ie Need not to enter details manually. Just enter data.
+>> For this we need to code one time configuration
+----------------------------------------------------------------------
+Open API: (NO Configuration)
+>> Open Source API used to document all Endpoint details.
+ie Need not to enter details manually. Just enter data.
+>> we need not to code any configuration
+
+
+===Swagger Configuration Steps===================================
+1. Add Two Dependencies, they are Swagger-configuration and Swagger-ui
+
+springfox-swagger2
+springfox-swagger-ui
+
+
+Spring Boot 2.7.x
+NullPointerException: Cannot invoke "org.springframework.web.servlet.mvc.condition.PatternsRequestCondition.toString()" because the return value of "springfox.documentation.spi.service.contexts.Orderings.patternsCondition(springfox.documentation.RequestHandler)" is null
+
+Add in properties file
+spring.mvc.pathmatch.matching-strategy=ANT_PATH_MATCHER
+
+Spring Boot 2.6.x (or before)
+No Exception
+
+http://localhost:9690/swagger-ui.html
+
+
+-> Full Document(webpage) displayed at UI
+Docket(DocumentationType.SWAGGER_2)
+
+-> Find RestControllers from given basePackage
+.select()
+.apis(RequestHandlerSelectors.basePackage("com.app.shivam.rest"))
+
+--> Starts with common path /v1/api/_________
+
+.paths(PathSelectors.regex("/v1/api.*"))
+
+-> URLs starts with / (must or not?)
+.pathMapping("/")
+
+-> Metadata to display at Document.
+.apiInfo(apiInfo());
+
+--------Coding steps--------------------------------
+1. pom.xml
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>2.9.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>2.9.2</version>
+		</dependency>
+
+2. Swagger Config class
+package com.app.shivam.config;
+
+import java.util.Collections;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig {
+	@Bean
+	public Docket createDocket() {
+		return new Docket(DocumentationType.SWAGGER_2)
+				.select()
+				.apis(RequestHandlerSelectors.basePackage("com.app.shivam.rest"))
+				//.paths(PathSelectors.any())
+				.paths(PathSelectors.regex("/v1/api.*"))
+				.build()
+				.pathMapping("/")
+				.apiInfo(apiInfo());
+	}
+
+	private ApiInfo apiInfo() {
+		return new ApiInfo("STUDENT APP", 
+				"SAMPLE APP", 
+				"3.2GA", 
+				"http://sample.com", 
+				new Contact("shivam", "http://github.com/javabyshivam", "javabyshivam@gmail.com"), 
+				"APACHE", 
+				"http://apache.com", 
+				Collections.emptyList());
+	}
+}
+
+
+3. Properties file
+spring.mvc.pathmatch.matching-strategy=ANT_PATH_MATCHER
+
+4. Run App and Enter URL:
+http://localhost:9690/swagger-ui.html
+===============================================================
+OPEN API:
+Step#1 Add Below Dependency
+<dependency>
+  <groupId>org.springdoc</groupId>
+  <artifactId>springdoc-openapi-ui</artifactId>
+  <version>1.6.13</version>
+</dependency>
+
+Step#2
+Annotation at Starter class:
+@OpenAPIDefinition
+
+Step#3 Enter URL:
+http://localhost:9690/swagger-ui/index.html
