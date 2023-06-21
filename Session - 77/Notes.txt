@@ -1,0 +1,207 @@
+Unit Test: Testing A part of Application/ Module which is implemented by a Programmer.
+
+Jenkins(CI/CD) --> Read Source Code from Github --> Download Jars -> Compile -> Unit Test --> Build(.jar/.war) --> Deploy(server)
+
+*) Test application using code.
+*) JUnit [Test F/w] and Mockito [Mocking F/w]
+  JUnit-5 is used to check our actual code working or not?
+  But it may have some dependencies which are un-implemented
+  those can be mocked using Mocking F/w Mockito-4.
+
+Mocking can be done over - DB Connection, Server Setup, Request, Response,Container Runtime, collection, class/object..etc
+==============================================================
+JUnit contains Test Methods, which are implemented using:
+JUnit Annotations : @Test, @BeforeEach, @AfterEach, @Ignore,..etc
+JUnit Assert API : assetEquals, assertTrue, assertNotNull
+  (assert -- expected)
+
+** JUnit will compare Expected Result with actual output and says TEST PASS or FAIL.
+====================Basic JUnit Example===========================================
+1) pom.xml
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.8.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>4.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>4.5.1</version>
+		</dependency>
+	</dependencies>
+
+2. src/main/java  (Application code)
+package com.app.shivam;
+
+public class MathService {
+
+	public int add(int a, int b) {
+		return a + b;
+	}
+
+	public boolean isEven(int a) {
+		return a % 2 == 0;
+	}
+}
+
+3. src/test/java (JUnit test case)
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class MathServiceTest {
+	
+	MathService ms = null;
+	int expected ;
+	
+	@BeforeEach
+	public void setup() {
+		ms = new MathService();
+		expected = 30;
+	}
+
+	@Test
+	public void testAdd() {
+		int actual = ms.add(10, 20);
+		assertEquals(expected, actual);
+		boolean result = ms.isEven(51);
+		assertTrue(result);
+	}
+	
+	@AfterEach
+	public void clean() {
+		ms = null;
+	}
+}
+=====================================================================
+*) Mocking will not do Test, it creates Environment. 
+  Dummy objects, Dummy Logic, Dummy Request..etc 
+*) @Mock : Create Dummy object for given classes.
+   @InjectMocks: Will find all required objects for current clas object
+     and inject.
+
+*) By using Mocking we can define dummy implementation to a method.
+ Sample code
+
+   when(methodCall()).thenReturn(output)
+   when(methodCall()).thenThrow(exceptionObj)
+
+*) Mocking Environment is activated using 
+	@ExtendWith(MockitoExtension.class)
+
+----------SAMPLE CODE---------------------------------
+*) src/main/java
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class Repository {
+
+	public List<String> getData() throws SQLException {
+		return null;
+	}
+}
+------------------
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Service {
+
+	private Repository repo;
+
+	public Service(Repository repo) {
+		this.repo = repo;
+	}
+
+	public List<String> getDataByLen() {
+		try {
+			return repo.getData().stream()
+					.filter(d -> d.length() < 5)
+					.collect(Collectors.toList());
+		} catch (SQLException e) {
+			return Arrays.asList();
+		}
+		
+	}
+}
+
+===src/test/java======================
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+//Activate JUnit with Mock
+@ExtendWith(MockitoExtension.class)
+public class ServiceTest {
+
+	// One dummy object is created by Mockito
+	@Mock
+	private Repository repository;
+
+	// it will find all dependencies and inject them (like Autowired)
+	@InjectMocks
+	private Service service;
+
+	@Test
+	public void testSuccess() {
+		try {
+			// dummy implement given using Mocking
+			when(repository.getData()).thenReturn(Arrays.asList("A", "B", "shivam", "12345", "1234"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		// Test using JUnit
+		List<String> actual = service.getDataByLen();
+		assertNotNull(actual);
+		assertEquals(3, actual.size());
+	}
+
+	@Test
+	public void testException() {
+		try {
+			// dummy implement given using Mocking
+			when(repository.getData()).thenThrow(new SQLException("CONNECTION ISSUE"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		// Test using JUnit
+		List<String> actual = service.getDataByLen();
+		assertNotNull(actual);
+		assertEquals(0, actual.size());
+	}
+
+}
+==================================================================
