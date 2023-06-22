@@ -1,0 +1,294 @@
+
+			Spring Boot Unit Testing
+
+MvcResult: It is a Wrapper Type class object that holds details of
+  " Request + Response + Exception (if raised) "
+
+*) Here, Request --> MockHttpServletRequestBuilder.
+         Response --> MockHttpServletResponseBuilder
+	 Exception -> Throwable type.
+
+*) Once we get Response after executing request, always result
+   -> http status
+   -> content-type
+   -> content-size
+   -> other ouput(messages, list empty or not?)
+
+==================test class full code=========================
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@TestPropertySource("classpath:application.properties")
+public class SpringBootRestCrudMySqlExApplicationTests {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	/**
+	 * Test save Operation
+	 */
+	@Test
+	// @Disabled -- Skip the test method
+	@DisplayName("TESTING STUDENT SAVE OPERATIONS")
+	@Order(1)
+	public void testCreateStudent() throws Exception {
+		// 1. CREATE MOCKED REQUEST
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.post("http://localhost:9690/v1/api/student/create").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"stdName\":\"AJAY\",\"stdGen\":\"Male\",\"stdCourse\":\"JAVA\",\"stdAddr\":\"HYD IND\"}");
+
+		// 2. EXECUTE IT AND READ RESULT(REQUEST + RESPONSE + EXCEPTION)
+		MvcResult result = mockMvc.perform(request).andReturn();
+
+		// 3. READ RESPONSE FROM RESULT
+		MockHttpServletResponse response = result.getResponse();
+
+		// 4. ASSERT RESULT USING JUNIT
+		assertEquals(HttpStatus.CREATED.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+		if (!response.getContentAsString().contains("CREATED")) {
+			fail("STUDENT NOT CREATED!!");
+		}
+
+	}
+
+	// This is short format
+	/*
+	 * @Test
+	 * 
+	 * @DisplayName("TESTING STUDENT SAVE OPERATIONS IN SHORT")
+	 * 
+	 * @Order(1) public void testCreateStudentShort() throws Exception {
+	 * 
+	 * mockMvc.perform( post("http://localhost:9690/v1/api/student/create")
+	 * .contentType(MediaType.APPLICATION_JSON)
+	 * .content("{\"stdName\":\"AJAY\",\"stdGen\":\"Male\",\"stdCourse\":\"JAVA\",\"stdAddr\":\"HYD IND\"}"
+	 * )) .andExpect( status().isCreated() );
+	 * 
+	 * 
+	 * }
+	 */
+
+	@Test
+	@Order(2)
+	@DisplayName("GET ALL STUDENTS")
+	public void testGetAllStudents() throws Exception {
+		// 1. create request
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("http://localhost:9690/v1/api/student/all");
+
+		// 2. execute it
+		MvcResult result = mockMvc.perform(request).andReturn();
+
+		// 3. read response
+		MockHttpServletResponse response = result.getResponse();
+
+		// 4. assert result
+		assertEquals(HttpStatus.OK.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+
+	}
+
+	@Test
+	@Order(3)
+	@DisplayName("GET ONE STUDENT BY ID")
+	public void testGetOneStudent() throws Exception {
+		// 1. create request
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(
+				"http://localhost:9690/v1/api/student/find/{id}",1);
+
+		// 2. execute it
+		MvcResult result = mockMvc.perform(request).andReturn();
+
+		// 3. read response
+		MockHttpServletResponse response = result.getResponse();
+
+		// 4. assert result
+		assertEquals(HttpStatus.OK.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+		assertEquals(MediaType.APPLICATION_JSON_VALUE, response.getContentType());
+	}
+
+	@Test
+	@DisplayName("TESTING STUDENT UPDATE OPERATIONS")
+	@Order(4)
+	public void testupdateStudent() throws Exception {
+		// 1. CREATE MOCKED REQUEST
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.put("http://localhost:9690/v1/api/student/modify")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"stdId\":1,\"stdName\":\"AA\",\"stdGen\":\"Male\",\"stdCourse\":\"JAVA\",\"stdAddr\":\"HYD IND\"}");
+
+		// 2. EXECUTE IT AND READ RESULT(REQUEST + RESPONSE + EXCEPTION)
+		MvcResult result = mockMvc.perform(request).andReturn();
+
+		// 3. READ RESPONSE FROM RESULT
+		MockHttpServletResponse response = result.getResponse();
+
+		// 4. ASSERT RESULT USING JUNIT
+		assertEquals(HttpStatus.OK.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+		if (!response.getContentAsString().contains("UPDATED")) {
+			fail("STUDENT NOT UPDATED!!");
+		}
+
+	}
+	
+	
+	@Test
+	@Order(5)
+	@DisplayName("TEST DELETE STUDENT BY ID")
+	public void testDeleteStudent() throws Exception {
+		// 1. create request
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete(
+				"http://localhost:9690/v1/api/student/remove/{id}",1);
+
+		// 2. execute it
+		MvcResult result = mockMvc.perform(request).andReturn();
+
+		// 3. read response
+		MockHttpServletResponse response = result.getResponse();
+
+		// 4. assert result
+		assertEquals(HttpStatus.OK.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+	}
+}
+=======================================================================
+Embedded Database: NO DOWNLOAD AND NO INSTALL REQUIRED
+These are In-Memory databases, used for Dev/Testing purpose only. Not recommended to use in Production.
+
+3 DBs are given by Spring Boot
+1) H2
+2) Apache Derby
+3) HSQL(Hyper SQL)
+
+*) These DBs are created when application started and destoryed
+   once application are stopped. 
+
+*) We need to choose H2 Dependency (Do not choose any other Mysql/Oracle..etc)
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+*) NO Connection or Pooling configuration required.
+  (driver class, url, username..etc not required).
+  Those are all present in class : H2ConsoleProperties
+   and H2ConsoleAutoConfiguration
+
+*) We can modify default by adding our custom properties.
+Defaults are:
+ H2 console available at '/h2-console'. 
+ Database available at 'jdbc:h2:mem:ccec3847-fe26-4651-bea5-d31209382c9d'
+
+---application.properties--------
+server.port=9090
+
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+spring.datasource.url=jdbc:h2:mem:testdb
+-------------------------------------
+
+>> After starting app : URL http://localhost:9090/h2-console
+>> Default ddl-auto is : create-drop (Create all tables when we start app and destroy them when we stop server)
+
+==============code=============================================
+Name : SpringBootRestH2Ex
+Dep : Web, Lombok, Devtools, Data JPA, H2
+
+*) properties file
+server.port=9090
+
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+spring.datasource.url=jdbc:h2:mem:testdb
+
+*) Entity class
+package com.app.shivam.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import lombok.Data;
+
+@Data
+@Entity
+public class Book {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Integer bid;
+	private String bname;
+	private String bauth;
+}
+
+*) repo
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Book;
+
+public interface BookRepository extends JpaRepository<Book, Integer>{
+
+}
+
+*) RestController
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Book;
+import com.app.shivam.repo.BookRepository;
+
+@RestController
+@RequestMapping("/book")
+public class BookRestController {
+
+	@Autowired
+	private BookRepository repo;
+	
+	@PostMapping("/create")
+	public String createBook(@RequestBody Book book) {
+		repo.save(book);
+		return "BOOK CREATED";
+	}
+}
+
+*) POSTMAN REQUEST
+POST   http://localhost:9090/book/create  
+	BODY
+		(*) raw  [JSON]
+{
+    "bname" : "JAVA",
+    "bauth" : "TEST"
+}
+
+*) Enter URL: http://localhost:9090/h2-console
+Modify JDBC URL as : jdbc:h2:mem:testdb
