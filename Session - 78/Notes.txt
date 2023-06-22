@@ -1,0 +1,141 @@
+
+JUnit 5.x: Testing API / assert our results / PASS/FAIL
+
+Mockito 4.x: Mocking API / Create Supported Environment / 
+	Dummy Objs, container, server, request..etc
+==========================================================================
+		Spring Boot Rest - Unit Testing
+
+*) Spring Boot provides by default all required dependencies(JARs) for Unit testing using starter:
+
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-test</artifactId>
+</dependency>
+
+*) This starter provides all required jars for JUnit and Mockito setup with Spring Boot Rest testing Environment.
+
+*) Spring Boot test F/w is used to create a Mock Request and execute with application by creating Mocked Container setup, check finally response with assertAPI.
+  (This request is not coming from actual client/browser)
+
+=======================2 steps====================================
+1. Create Test Environment using Mocking.
+
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+=> Activates Server/Container setup to start application (Like Main class work)
+
+@AutoConfigureMockMvc
+=> Activates MVC/HTTP protocol and annotations @RequestBody, @RestController
+
+@TestPropertySource("classpath:application.properties")
+=> Load External Properties file (with any name)
+*) Even if we do not provide, default application.properties is loaded.
+
+2. Test each Rest Method using Mock Request.
+=> Here A Request is created of Type HttpServletRequest
+   by using Builder pattern with Mocking type.
+
+=> here we need to provide HttpMethod (POST), URL, Headers and Body.
+Ex#1
+	MockHttpServletRequestBuilder request = 
+		MockMvcRequestBuilders.post("/product/create")
+		.contentType("application/json")
+		.content("{\"pname\":\"A\",\"cost\":200}");
+
+Ex#2
+    MockHttpServletRequestBuilder request = 
+               MockMvcRequestBuilders.get("/product/all")
+	       .accept("application/xml");
+
+*) To execute request we need container (ApplicationContext) for that
+   we use MockMvc Which is internally Mocked "webAppContextSetup"
+
+======================================================================
+*) under src/test/java , one default class is given , just modify that as
+
+
+
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@TestPropertySource("classpath:application.properties")
+public class SpringBootRestCrudMySqlExApplicationTests {
+
+	@Autowired
+	private MockMvc mockMvc;
+	
+	/** 
+	 * Test save Operation
+	 */
+	@Test
+	@Disabled
+	@DisplayName("TESTING STUDENT SAVE OPERATIONS")
+	@Order(1)
+	public void testCreateStudent() 
+		throws Exception
+	{
+		//1. CREATE MOCKED REQUEST
+		MockHttpServletRequestBuilder request =
+				MockMvcRequestBuilders.post("http://localhost:9690/v1/api/student/create")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("{\"stdName\":\"AJAY\",\"stdGen\":\"Male\",\"stdCourse\":\"JAVA\",\"stdAddr\":\"HYD IND\"}");
+		
+		//2. EXECUTE IT AND READ RESULT(REQUEST + RESPONSE + EXCEPTION)
+		MvcResult result = mockMvc.perform(request).andReturn();
+		
+		//3. READ RESPONSE FROM RESULT
+		MockHttpServletResponse response = result.getResponse();
+		
+		//4. ASSERT RESULT USING JUNIT
+		assertEquals(HttpStatus.CREATED.value(), response.getStatus());
+		assertNotNull(response.getContentAsString());
+		if(! response.getContentAsString().contains("CREATED")) {
+			fail("STUDENT NOT CREATED!!");
+		}
+		
+	}
+	
+	//This is short format
+	@Test
+	@DisplayName("TESTING STUDENT SAVE OPERATIONS IN SHORT")
+	@Order(1)
+	public void testCreateStudentShort() 
+		throws Exception
+	{
+		
+		mockMvc.perform(
+				post("http://localhost:9690/v1/api/student/create")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"stdName\":\"AJAY\",\"stdGen\":\"Male\",\"stdCourse\":\"JAVA\",\"stdAddr\":\"HYD IND\"}"))
+		.andExpect(
+				status().isCreated()			
+				);
+		
+		
+	}
+
+}
