@@ -1,0 +1,210 @@
+
+TASK:
+Q) Write a Program to reverse given String in multiple ways.
+
+*) Spring Bean Scope:-
+ Scope: Life time of object present in memory/ How Long Object exist in memory.
+ 
+ Spring Bean Scope : When Bean(Object) is created, How long it is present in container.
+
+1. singleton (default) : for every bean this is default scope. One Object is created per configuration. It returns single object even if we access it multiple times.
+
+2. prototype : Every time new object when we access then object.
+
+3. request : (Web App Only) Container creates new object when a new request comes to server, maintained until response.
+
+4. session : (Web App Only) Container creates object when new session is created [Login-Logout] and object is removed when session is destroyed (ses.invalidate()).
+
+*) Spring XML Configuration:
+  <bean  id="" class=""  scope="_______"> </bean>
+
+*) Spring AnnotationConfiguration:
+ @Component
+ @Scope("____")
+ class ____{
+ 
+ }
+
+*) Spring Java Configuration:
+@Configuration
+public class ____{
+   @Bean
+   @Scope("___")
+   public  <className>  <obj>(){}
+}
+======================Full Code====================================
+XML Based:
+1. pom.xml
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.23</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.24</version>
+		</dependency>
+	</dependencies>
+
+2. Spring Bean
+package com.app.shivam.bean;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+//@Data
+@Getter
+@Setter
+@ToString
+public class Product {
+
+	private Integer pid;
+	private String pcode;
+	
+	
+}
+
+3. Spring Config File(config.xml)
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<bean 
+	id="pobj" 
+	class="com.app.shivam.bean.Product"
+	scope="singleton"
+	>
+		<property name="pid" value="101"/>
+		<property name="pcode" value="ABC"/>
+	</bean>
+	
+</beans>
+
+4. test class
+package com.app.shivam.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.app.shivam.bean.Product;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new ClassPathXmlApplicationContext("config.xml");
+		Product p1 = ac.getBean("pobj", Product.class);
+		Product p2 = ac.getBean("pobj", Product.class);
+
+		System.out.println(p1.hashCode());
+		System.out.println(p2.hashCode());
+		
+		System.out.println(p1 == p2);
+
+	}
+}
+=====================Java/Annotation config example==========
+1. Spring Bean
+package com.app.shivam.bean;
+
+import java.util.Random;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import lombok.ToString;
+
+@ToString
+@Component("tok")
+@Scope("prototype")
+public class Token {
+
+	private int token;
+
+	public Token() {
+		super();
+		token = new Random().nextInt(9999);
+		System.out.println("TOKEN IS CREATED");
+	}
+	
+}
+
+2. Spring Config class
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan("com.app.shivam")
+public class AppConfig {
+
+}
+
+3. test class
+package com.app.shivam.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.app.shivam.bean.Token;
+import com.app.shivam.config.AppConfig;
+
+public class Test {
+
+	public static void main(String[] args) {
+		ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+		Token t1 = ac.getBean("tok", Token.class);
+		System.out.println(t1);
+		
+		Token t2 = ac.getBean("tok", Token.class);
+		System.out.println(t2);
+		
+		Token t3 = ac.getBean("tok", Token.class);
+		System.out.println(t3);
+	}
+}
+
+=================================================================
+Q) Can two objects have same hashcode in Java?
+A) Yes Possible, if hashCode() and equals() method is overridden and if both objects are having same data.
+
+Q) Which one is default scope in Spring ?
+A) singleton.
+
+Q) How can we get every time new object from container ?
+A) prototype scope must be used.
+
+===============================================================
+Q) What is EAGER and LAZY Loading in Containers/servers?
+A)
+  While creating container at same time object is created
+  ie called as EAGER LOADING.
+
+  After creating container, on first request/access container creates new object, ie called as LAZY LOADING.
+=====================================================
+*) If we make Object creation Lazy, app startup time is less. Even started with less memory.
+
+*) Singleton scope is Default Eager Loading and Prototype Scope default is lazy loading.
+
+*) We can make Eager to Lazy using @Lazy annotation.
+  For XML <bean   lazy-init="true">
+
+==Ex==
+@Component("tok")
+@Lazy
+public class Token { }
+======
+
+*) **** We can not make Lazy to Eager.
+=======================================================================
+
+
