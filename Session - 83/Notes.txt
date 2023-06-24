@@ -1,0 +1,84 @@
+
+Q) What is down time of a Server/Project?
+A) 
+
+Q) What is Blue Green deployment? k8s
+A) 
+
+Ref:
+https://www.atlassian.com/microservices/microservices-architecture/microservices-vs-monolith
+			   Microservices
+
+*) Monolithic Application: Creating Application as a single unit
+	[one deployable component]
+
+  1 Project = all modules together.
+
+*) Microservices : it is a Design. 
+       Small Independent services as Application.
+       Creating Independent Deployable components.
+       One Module/Service = as 1 Project/Application
+
+===========================================================
+Compile : .java --> .class
+Build   : .class --> .jar/.war
+Deploy  : Place WAR under server and starter server
+Instance : A Running server with project (successfully)
+Load     : No.of Request (Incoming Request ) to server
+Load Factor : No.of Request / Total Capacity
+		0 < LF < 1
+Test      : Executing JUnit test cases
+Docker Image : OS Independent S/w can be run at VM/Server
+Jenkins : (CI) Pull Code from Git --> Compile --> Build --> Store at Nexus/JFrog
+          (CD) Create Docker Images --> Run at Server --> Code Quality--> Release to production  
+	  		--> Moniter
+
+Scalability : Done for Increasing performance of app.
+1. Horizontal Scaling : Creating multiple server instances of same type
+			application (Run our project multiple times)
+2. Vertical Scaling  : Increasing the configuration of System
+	N/w , Storage, Processor, RAM...etc
+
+Load Balancer :- Incase of Multiple instances exist (ie Horizontal Scaling )
+	for application then we need one Application Load Balancer 
+	for our Cluster to handle/distribute request.
+	
+==============================================================
+Advantages of a monolithic architecture:
+1. Development – When an application is built with one code base, 
+			it is easier to develop.
+
+2. Easy deployment – One executable file makes deployment easier.
+
+3. Performance – In a centralized code base and repository, 
+	one API can often perform the same function.
+
+4. Simplified testing – Since a monolithic application is a single, 
+	centralized unit, end-to-end testing can be performed
+	
+5. Easy debugging – With all code located in one place, it’s easier to follow a request and find an issue.
+	(Checking the code for issues)
+
+------------------------------------------------------------
+Disadvantages of a monolithic architecture:-
+1. Slower development speed – A large, monolithic application makes development more complex and slower.
+
+2. Scalability – You can’t scale individual components.
+
+3. Reliability – If there’s an error in any module,
+	it could affect the entire application’s availability.
+
+ Exception in one module may effect other modules to stop/in valid output
+ ..etc
+
+4. Barrier to technology adoption – Any changes in the framework or 
+	language affects the entire application, making changes often 
+	expensive and time-consuming.
+(It is not easy to add new modules as size of application grows slowly
+  and time consuming for development and deployment)
+
+5. Lack of flexibility – A monolith is constrained by the technologies already used in the monolith.
+  [Using different new technologies/ enhancements are not easy]
+
+6. Deployment – A small change to a monolithic application 
+	requires the redeployment of the entire monolith.
