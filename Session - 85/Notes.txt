@@ -1,0 +1,54 @@
+
+			Spring Cloud (Microservices)
+
+*) Microservices is a design/Theory, for this coding is "Spring Cloud".
+
+*) Cloud Computing v/s Spring Cloud
+Cloud Computing: Run Applications by taking services for rental
+	(PaaS, IaaS, SaaS) --Ex: AWS, MS-Azure, GCP..etc
+
+Spring Cloud : Develop application using Microservices concept.
+
+*) Netflix is Vendor who gave APIs (JARs) to implement Microservices design.
+
+--Components---  
+1. Microservice : One Module/ One service in Project (Spring ReST is used)
+2. Register and Discovery : (Netflix Eureka Server)
+	Here, all Microservices Instance details are stored
+	(serviceId, instanceId, HOST, IP, PORT, Load Factor..etc)
+
+3. Config Server : To store all Microservices common properties
+	at a external place (Github) and connect with all MS# apps.
+
+4. Communication Client : (RestTemplate)
+    Open Feign or Feign Client is used to make request from one MS# to
+    another MS# (It is also called as Client Side Load Balancer).
+   
+5. Admin Dashboard : Visual dashboard for all MS# which are registered
+	with eureka (Health, Beans, Info, cache details, ..etc)
+  It internall uses Actuator.
+
+6. ELK : Elasticsearch Logstash Kibana : 
+	To read .log file data and display at UI. So, that we can
+	search all Log details in easy way.
+
+7. Distributed Tracking: (MS2-->MS4-->MS7-->MS4-->MS2)
+  Finding execution path of a request that has multiple MS# involved
+  (Which class/methods are executed, how much time taken?)
+
+Tool: Zipkin Server, Sleuth
+
+8. Continioues Data Flow (Message Queue): [Apache Kafka]
+  Producer sending data and consumer is reading data in continioues manner.
+
+Ex: Swiggy Tracking, Ola/Uber cab status..etc
+
+9. Circuite Breaker: 
+  Avoid executing application for a period of time if app is throwing
+  exceptions in Continioues manner.
+
+10. API Gateway : Entry-Exit point to MS# apps.
+   -> Dynamic Routing : Choose MS# based on Load Details
+   -> Load Balancer : Maintain Load Details based on serviceIds
+   -> Security : JWT(JSON Web Token), OAuth2.x
+
