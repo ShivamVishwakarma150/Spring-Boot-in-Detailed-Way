@@ -1,0 +1,108 @@
+
+Microservices : It is a Design, De-Coupled Architecture.
+		Independent Deployable Components.
+		One Big Application --> Small Apps and developed/Linked.
+
+Spring Cloud : API given by Pivotal Team + Vendor(Netflix)
+	         This is Next level app to Spring Boot.
+		 It is used to develop apps using Microservices.
+
+
+*) Our Small Apps are implemented using Spring Boot REST only.
+*) We need even other concepts like:
+   Register and Discovery, Log Aggregator, Monitor/Dashboard, 
+   Gateway, LoadBalancer, Continuous data Flow, Security,
+   Distributed Tracing,  Dynamic Routing..etc
+=======================================================================
+*) Register and Discovery Server:-
+ Register is a Storage Area for Audit details of all services.
+
+Here Register stores all MS# details, like: ServiceName, InstanceId, IP, PORT, Load Details (no.of Instances..etc)
+
+   +----------------- EXAMPLE REGISTER -------------------------+
+   | serviceId    InstanceId       IP       PORT        LF      |
+   +------------------------------------------------------------+
+   |  CART-SER    CART-SER-5410  192.168.0.1 8061       0/200   |
+   |  CART-SER    CART-SER-5411  192.168.0.2 8061       0/200   |
+   |  CART-SER    CART-SER-5412  192.168.0.3 8061       0/200   |
+   |  PYMT-SER    PYMT-SER-5412  192.168.1.4 8161       0/200   |
+   |  PYMT-SER    PYMT-SER-5412  192.168.1.5 8161       0/200   |
+   +------------------------------------------------------------+
+
+LF = Load Factor  = Current No.of Request / Max No.of Request
+
+*) Above Register is a List<ServiceInstance>. Here one ServiceInstance
+   means one Line.
+
+*) Spring Cloud + netflix, provided one Register Server "Eureka Server".
+*) Every MS# application is implemented using Spring REST and also
+	with Eureka Client + Register=true/fetch=true
+=========================================================================
+				TASK:#1
+> Create one Eureka Server
+> Define one MS# application
+> Register with Eureka Server
+
+=========================STEPS + CODE==================================
+Name: SpringCloudEurekaServer
+Dep : Eureka Server
+
+> At main class: @EnableEurekaServer
+> application.properties
+# RECOMANDED PORT NUMBER
+server.port=8761
+
+# DISABLE SELF REGISTER
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+----------------------MS# app---------------------
+Name : SpringCloudCartService
+Dep  : Spring Web, Eureka Discovery Client
+
+*) At main class: @EnableEurekaClient
+*) application.properties
+#PORT
+server.port=8081
+
+# ServiceId (app Name)
+spring.application.name=CART-SERVICE
+
+#Provide eureka location
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+# Register with Eureka
+eureka.client.register-with-eureka=true
+# Enable Fetching other MS# Details
+eureka.client.fetch-registry=true
+==========================================================
+
+*) Execution Order:
+1. Run Eureka Server
+2. Run MS# application
+3. Enter URL : http://localhost:8761
+4. Check Instance Running and click on Link (then modify)
+   http://localhost:8081/v1/api/cart/show
+
+=================================================================
+
+*) Spring Boot  : Data JPA, Web, Email, Cache, Connection Pooling, REST..etc
+*) Spring Cloud : Eureka Server, Config Server, gateway, Feign Client..etc
+
+*)Note:
+1. Every MS# need to be register with Eureka Server.
+2. For That every MS# should contain Eureka Client Dependency,
+   annotation: @EnableEurekaClient and key 
+      eureka.client.register-with-eureka=true
+3. ** Spring Cloud is a Parent for all MS# even for Eureka Server.
+  it has given key: eureka.client.register-with-eureka=true (as default)
+  that reduces in every MS#.
+4. But, Eureka Server even gets same true value. Which means 
+	"Register Eureka Server with Eureka Server"
+   So, to remove this: eureka.client.register-with-eureka=false
+   at Eureka Server.
+
+5.*** If we do not provide eureka.client.register-with-eureka=false
+   at Eureka, It will do Self Register which is Memory waste.
+
+ 
