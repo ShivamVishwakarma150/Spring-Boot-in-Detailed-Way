@@ -1,0 +1,50 @@
+
+Ref:
+https://www.atlassian.com/microservices/microservices-architecture/microservices-vs-monolith
+
+Microservices:-
+One Big Application is implemented as small projects and connected finally
+using Web services.
+
+Service: A Part/ Business Unit / Component of a Project that provides set of operations as a one project.
+
+Ex: OrderService, AuthenticationService, ProductService, PaymentService..etc
+
+*) An independent Deployable component is called as Microservices.
+> Parallel Development of independent services
+> Parallel Deployment  of independent services
+> Parallel Scaling of independent services
+
+
+---Advantages of microservices-------
+[FAST development/deployment]
+Agility – Promote agile ways of working with small teams that deploy frequently.
+
+[Scale Easily without touching other Services]
+Flexible scaling – If a microservice reaches its load capacity, new instances of that service can rapidly be deployed to the accompanying cluster to help relieve pressure. We are now multi-tenanant and stateless with customers spread across multiple instances. Now we can support much larger instance sizes. 
+
+[Deploy in servers as independent]
+Continuous deployment – We now have frequent and faster release cycles. Before we would push out updates once a week and now we can do so about two to three times a day. 
+
+[Easy to add new features and test them easily]
+Highly maintainable and testable – Teams can experiment with new features and roll back if something doesn’t work. This makes it easier to update code and accelerates time-to-market for new features. Plus, it is easy to isolate and fix faults and bugs in individual services.
+
+[Deploy without stopping other services]
+Independently deployable – Since microservices are individual units they allow for fast and easy independent deployment of individual features. 
+
+[We can develop few services in other languages/technologies]
+Technology flexibility – Microservice architectures allow teams the freedom to select the tools they desire. 
+
+[As we can maintain multiple Instances, if one/some goes down other instances exist]
+High reliability – You can deploy changes for a specific service, without the threat of bringing down the entire application.
+===========================================================================
+Disadvantages of microservices:-
+
+Development  issues
+
+Ansible-> deployment playbooks, 
+Terraform / AWS -> hosting infrastructure, 
+Docker/Kubernetes -- 1000 Instance- Docker 
+ELK -> monitoring tools, and more.
+
+updates and interfaces. 
