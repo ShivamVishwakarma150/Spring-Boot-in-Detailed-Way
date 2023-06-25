@@ -1,0 +1,78 @@
+
+			Spring Cloud Config Server
+
+1. One Application can have multiple MS# implemented using Spring REST and Spring Cloud components.
+2. Every MS# application contains application.properties file
+3. These files contains key=val few are same as other MS#(Duplicate Key=Val pairs)
+4. Such Duplicate Pairs can be placed outside of All MS# and link ie called as Config Server
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+   *********************[Config Server]*************************
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  To externalize all duplicate key=val pairs from each MS# 
+  into one common location (Ex: Github) and connect with every MS#
+  at runtime using a medium server ie runs at port:8888
+
+*) Every MS# should have Config Client Dependency and URL of Config Server
+*) Config Server recommended port number is 8888
+*) Config Server will load all KEY=VALs into Environment(I)
+shivam2023sample@gmail.com
+Model@12034
+
+
+--Stage@1-------Create Github Properties file-------------------
+> Goto https://github.com/signup?source=login
+> Fill Form and get Registered
+shivam2023sample@gmail.com
+Model@12034
+
+> Click on Plus Symbol > Create Repository > Enter name 
+Ex: SpringCloudConfigServerEx
+> Finish
+
+> Creating new file > Enter name : application.properties
+> with some key=vals
+> Commit
+
+GitLink: https://github.com/shivam2023sample/SpringCloudConfigServerEx.git
+=====================================================================
+--Stage@2---------Create Config Server Application--------------
+Name : SpringCloudConfigServerEx
+Dep  : Config Server
+
+> At main class: @EnableConfigServer
+> application.properties
+------------------
+server.port=8888
+
+spring.cloud.config.server.git.uri=https://github.com/shivam2023sample/SpringCloudConfigServerEx.git
+spring.cloud.config.server.git.username=shivam2023sample
+spring.cloud.config.server.git.password=Model@12034
+spring.cloud.config.server.git.default-label=main
+--------------------------
+
+> Run main class and Enter URL:
+ http://localhost:8888/actuator/refresh
+
+===================================================================
+--Stage@3---------Integrate Every MS# with Config server--------
+
+1 Add Config Client Dependency
+> Right click on Project (MS# app)
+> Spring > add Starter > Config Client
+> Next > select pom.xml checkbox > next > finish
+
+2 Add Location of Server at MS# properties file
+
+spring.config.import=optional:configserver:http://localhost:8888
+
+=================================================================
+Execution order:
+1. Run Config Server | Eureka Server 
+2. Run MS# Apps
+3. Enter URL:
+http://localhost:8084/cart/info
+
+--------------------------------------------------------------
+Check at console: At Cart Service / Order Service 
+ConfigServerConfigDataLoader : Fetching config from server at : http://localhost:8888
