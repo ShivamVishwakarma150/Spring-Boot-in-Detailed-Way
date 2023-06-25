@@ -1,0 +1,231 @@
+
+			Microservices Communication
+
+*) MS# Communication: If one MS# wants to send request and get response
+from another MS# then it is called as MS# communication.
+
+*) All MS# are internally Spring Boot REST apps. So, we can use RestTemplate. But hardcoding URL of MS# is not a good approach.
+
+Why?
+-> MS# instances may run at different systems (IP May be diff in realtime)
+-> MS# multiple instances may be created for LoadBalancing.
+
+========================================================================
+Spring Cloud has provided Client APIs (or) Communication APIs
+They are:
+
+1. DiscoveryClient (Legacy)
+2. **LoadBalancerClient
+3. *** Feign Client (open Feign)
+
+*** Above clients helps to link two MS# apps.(for Communication only)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ ***********************[DiscoveryClient]*************************
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+This is given by Spring Cloud to fetch details from Register of a 
+given MS# based on ServiceId(application name) of client MS#
+
+The result of DiscoveryClient#getInstances(serviceId) is
+    List<ServiceInstance>
+
+One ServiceInstance means one MS# Instance details (one line)
+  ServiceInstance = serviceId + instanceId + URI(HOST+PORT) + LF..etc
+
+*) Here, if Client MS# is running only once, then result is List<SI>
+  with only one object(index#0)
+
+ From Index#0 we read SI(ServiceInstanec) and read URI (IP+PORT)
+ finally create URL by adding path (fixed always in code)
+
+*) Pass the URL to restTemplate to make call to Consumer MS# app
+   and get response ResponseEntity<T>.
+
+Q) Why DiscoveryClient?
+A) TO get MS# details from Eureka Server at runtime.
+    Based on MS# serviceId
+    
+Q) Can DiscoveryClient make request to MS# application?
+A) NO. It always connectes to Eureka Server.
+  it is never used to make Http Request/Response to MS# apps.
+
+Q) Can Eureka Server makes HTTP request to MS# application?
+A) Never. Eureka Just stores details and provide if you want of MS#.
+
+Q) What is ServiceInstance?
+A) ServiceInstance means details of One MS# instance.
+  ServiceInstance = serviceId+ InstanceId + URI(IP/PORT) + ...
+
+Q) What is the Diff b/w URI, URL, Protocol, ResourcePath?
+A)
+  http://192.168.10.11:8086/myapp/employee/find/101
+
+  Protocol = http
+  IP       = 192.168.10.11
+  Port     = 8086
+  contextpath (project name) = /myapp  (default is /  in boot)
+  Resource Path = /employee/find/101 (dynamic path)
+
+  URI = IP + PORT
+
+  URL = Protocol + URI + ContextPath + ResourcePath
+
+===Code=================================================================
+3 projects
+1. Eureka Server
+
+Name : SpringCloudEurekaServer
+Dep  : Eureka Server
+
+Main : @EnableEurekaServer
+
+application.properties
+# RECOMANDED PORT NUMBER
+server.port=8761
+
+# DISABLE SELF REGISTER
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+
+*******************************************************************
+2. CartService
+Name : SpringCloudCartService
+Dep  : Spring Web, Eureka Discovery Client
+
+Main: @EnableEurekaClient
+
+--application.properties--
+#PORT
+server.port=8081
+
+# ServiceId (app Name)
+spring.application.name=CART-SERVICE
+
+#Provide eureka location
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+# Register with Eureka
+eureka.client.register-with-eureka=true
+# Enable Fetching other MS# Details
+eureka.client.fetch-registry=true
+
+
+--RestController-------
+package com.app.shivam.rest;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/cart")
+public class CartRestController {
+
+	@GetMapping("/info")
+	public ResponseEntity<String> showMessage() {
+		return ResponseEntity.ok("WELCOME TO CART SERVICE");
+	}
+}
+
+*******************************************************************
+3. OrderService
+
+Main: @EnableEurekaClient
+
+--application.properties--
+#PORT
+server.port=8094
+
+# ServiceId (app Name)
+spring.application.name=ORDER-SERVICE
+
+#Provide eureka location
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+
+--Consumer code--------
+package com.app.shivam.consumer;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class CartConsumer {
+
+	//Impl class is : EurekaDiscoveryClient -- given by Netflix Eureka
+	@Autowired
+	private DiscoveryClient client;
+
+	public String getCartResponse() {
+		// Goto Eureka server with serviceId
+		List<ServiceInstance> list = client.getInstances("CART-SERVICE");
+
+		// read at index#0 ==> returns SI
+		ServiceInstance si = list.get(0);
+
+		// read URI
+		URI uri = si.getUri();
+
+		// add path ==> return URL
+		String url = uri + "/cart/info";
+
+		// use RestTemplate and call
+		RestTemplate rt = new RestTemplate();
+		
+		//make HTTP Request and get response
+		ResponseEntity<String> response = rt.getForEntity(url, String.class);
+
+		//return response body
+		return response.getBody();
+	}
+}
+
+--RestController-------
+
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.consumer.CartConsumer;
+
+@RestController
+@RequestMapping("/order")
+public class OrderRestController {
+	
+	@Autowired
+	private CartConsumer consumer;
+	
+	@GetMapping("/place")
+	public ResponseEntity<String> placeOrder() {
+		String cartResp = consumer.getCartResponse();
+		return ResponseEntity.ok("ORDER PLACED WITH => " + cartResp);
+	}
+
+}
+========================================================================
+--Execution Order--
+1. Run Eureka Server
+2. Run Cart Service 
+3. Run Order Service
+4. Goto Eureka (http://localhost:8761)
+5. Click on Order Service link
+  May look like : http://localhost:8094/actuator/info
+6. Modify Full URL of Cart service 
+ex:
+ http://localhost:8094/order/place
+
+Output: Order service output ( Order Service Response + Cart Service Response)
+  ORDER PLACED WITH => WELCOME TO CART SERVICE
