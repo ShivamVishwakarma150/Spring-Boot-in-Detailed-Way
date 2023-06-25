@@ -1,0 +1,195 @@
+
+			Microservices Communication
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ *********************[LoadBalancerClient]*************************
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+1. If run same MS# application multiple times (at different servers)
+   then multiple instances are created.
+
+2. To provider better/faster service to end-customers, multiple instances
+	are required.
+
+3. In above case, if Consumer wants to read one instance using DiscoveryClient
+   (which has less load factor) that is not possible, Bcoz it returns
+   List<ServiceInstance> (all instances)
+
+4. LoadBalancerClient(I) will get only one Instance from Eureka Server
+   that has less Load Factor (it internall follows round robin concept)
+
+
+5.** If you want run your MS# application as multiple instances
+ then must provide : eureka.instance.instance-id=_________
+  (Any String type data)
+-----------------------------------------------------------------------
+===Code=================================================================
+3 projects
+1. Eureka Server
+
+Name : SpringCloudEurekaServer
+Dep  : Eureka Server
+
+Main : @EnableEurekaServer
+
+application.properties
+# RECOMANDED PORT NUMBER
+server.port=8761
+
+# DISABLE SELF REGISTER
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+
+*******************************************************************
+2. CartService
+Name : SpringCloudCartService
+Dep  : Spring Web, Eureka Discovery Client
+
+Main: @EnableEurekaClient
+
+--application.properties--
+#PORT
+server.port=8081
+
+# ServiceId (app Name)
+spring.application.name=CART-SERVICE
+
+#Provide eureka location
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+# Generating Instance ID
+eureka.instance.instance-id=${spring.application.name}:${random.value}
+
+
+--RestController-------
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/cart")
+public class CartRestController {
+	
+	@Value("${server.port}")
+	private String port;
+
+	@GetMapping("/info")
+	public ResponseEntity<String> showMessage() {
+		return ResponseEntity.ok("WELCOME TO CART SERVICE =>" + port);
+	}
+}
+
+
+*******************************************************************
+3. OrderService
+Name : SpringCloudOrderService
+Dep : Spring web, Eureka Discovery Client, Cloud LoadBalacer
+
+Main: @EnableEurekaClient
+
+--application.properties--
+#PORT
+server.port=9091
+
+# ServiceId (app Name)
+spring.application.name=ORDER-SERVICE
+
+#Provide eureka location
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+
+--Consumer code--------
+package com.app.shivam.consumer;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class CartConsumer {
+
+	@Autowired
+	private LoadBalancerClient client;
+
+	public String getCartResponse() {
+		ServiceInstance si = client.choose("CART-SERVICE");
+		String url = si.getUri() + "/cart/info";
+		System.out.println("*********************** " + url +" **********************");
+		
+		RestTemplate rt = new RestTemplate();
+		ResponseEntity<String> response = rt.getForEntity(url, String.class);
+		return response.getBody();
+	}
+}
+
+--RestController-------
+
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.consumer.CartConsumer;
+
+@RestController
+@RequestMapping("/order")
+public class OrderRestController {
+	
+	@Autowired
+	private CartConsumer consumer;
+	
+	@GetMapping("/place")
+	public ResponseEntity<String> placeOrder() {
+		String cartResp = consumer.getCartResponse();
+		return ResponseEntity.ok("ORDER PLACED WITH => " + cartResp);
+	}
+
+}
+========================================================================
+--Execution Order--
+1. Run Eureka Server
+2. Run Cart Service (3 times with different port number)
+3. Run Order Service (1 time)
+4. Goto Eureka (http://localhost:8761)
+5. Click on Order Service link
+  May look like : http://localhost:9091/actuator/info
+6. Modify Full URL of Cart service 
+ex:
+ http://localhost:9091/order/place
+
+Output: Order service output ( Order Service Response + Cart Service Response)
+  ORDER PLACED WITH => WELCOME TO CART SERVICE =>8083
+
+*) Note:
+1. ${random.value} Generates one Random value using class
+   RandomValuePropertySource(C)
+
+
+Q) Why LoadBalancerClient is used?
+A) To work with multiple instances of Producer MS# app
+  it is also called as Client Side Load Balancer.
+
+Q) What it the old LoadBalancer Vendor name?
+A) Ribbon. it is removed now.
+   New one is : Cloud Load Balancer
+
+Q) How many Instances does it return for a single request from eureka?
+A) Alway one ServiceInstance which has Less Load Factor
+
+
+Q) Do we need RestTemplate also if we use LoadBalancerClient?
+A) Yes RestTemplate is Required. 
+  Because LoadBalancerClient interacts with Eureka. 
+  LoadBalancerClient will not make any HTTP Request to REST/MS# apps.
+======================================================================
