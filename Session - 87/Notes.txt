@@ -1,0 +1,99 @@
+
+		        Microservices : Spring Cloud
+
+Q) Why Spring Cloud is used?
+A) To implement one application in java using Microservices design.
+
+Q) How Spring Cloud is different from Spring Boot?
+A) Spring Cloud is built on-top of Spring Boot.
+
+  Spring Boot mainly used for Webapps(Web MVC, REST), DATA JPA, Email,
+     Security, Configurations...etc
+
+  Spring Cloud : Register & Discovery Server, Config Server, Gateway..etc
+
+
+Q) How our app is connected with both Spring Cloud and Spring boot
+	(using Maven)?
+A) To link with Spring Boot, in our project inside pom.xml there is
+	<parent> tag exist.
+
+   Maven will allow only one <parent> tag.
+   To link with 2nd parent use BOM (Bill Of Materials) concepts.
+   ie using <dependencyManagement> tag to link next parent (like HAS-A
+   relation in java)
+
+dependencyManagement = Using a Parent (another pom.xml) as a Link
+   [set of JARS possible] to our project.
+
+======================================================================
+Q) What is Instance ? and Why?
+A) An Application running under server.
+   More instance gives services to multiple users in parallel.
+
+Q) What is a Register and Discovery Server? Give Example?
+   How it is different from webserver(tomcat)?
+
+A) Register : It will store all MS# instance details in ServiceInstance format
+      
+    1 ServiceInstance = 1 ServiceId + 1 InstanceId + 1 IP + 1 PORT + 1 LF (data)
+
+  ServiceId = application-name
+  InstanceId = (Some Number/code/application-name:random value) 
+  IP/PORT = IP Address/ Port Number
+  LF = Load Factor
+
+  Discovery : It will support to get another MS# details from Register
+          to communicate with that MS#.
+
+*) Register and Discovery Server example: Netflix Eureka Server,
+		Apache ZooKeeper.
+
+*) Webservers are used to run .war files. (webapps)
+   Register and Discovery Server for MS# apps.
+
+==================================================================
+Q) How can we expose our MS# or Register ? How can we enable to get
+	other MS# data from Register?
+
+A) In every MS# application , follow below steps
+
+1. Add Spring Cloud Eureka Discovery Client Dependency (along with WEB)
+2. At main class add: @EnableEurekaClient
+
+3. At properties file provide below keys
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
+
+*) Note: if we provide register-with-eureka=false, then we can not
+ communicate with that MS# (from ourside, or from another MS#)
+============================================================
+Q)  In MS# apps, register-with-eureka=true key and fetch-registry=true
+    must be given?
+
+A) No. By default Spring Cloud parent has given JARS and config props
+	for Eureka. There it has given default value 'true' for
+   register-with-eureka and fetch-registry.
+
+Q) Why do we need to provide 
+   register-with-eureka=false and fetch-registry=false 
+   at Eureka Server?
+
+A) Even for Eureka Server, spring cloud has provided default values as true
+   So, self register is done by eureka, that creates one UNKNOW instance
+   which takes some memory at Eureka server (no meaning) [No error, No Exception]
+============================================================================
+Q) What is the defaultZone value if we did not provide in MS#?
+A) EurekaClientConfigBean is given by Spring Cloud.
+   That is storing config details for location of Eureka as a Map.
+   The default URL is given as:
+   http://localhost:8761/eureka
+
+==========================================================================
+Q) K8s. What is Deployment and Replicasets?
+A) 
+  MS# --> Container Image --> Pod --> ReplicaSets --> Deployments
+
+ReplicaSets : No.of Instances of a Pod
+==========================================================================
