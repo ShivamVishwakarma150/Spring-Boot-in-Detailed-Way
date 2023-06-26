@@ -1,0 +1,84 @@
+
+		Spring Cloud Config Server : Refresh Scope
+
+Problem Statement:
+ Once we start MS# apps with Eureka and Config server, then we modify/
+ update any key=vals at Config Server (+Git properties File)
+ those will not get effected at MS# until we restart MS# apps.
+
+Solution Statement:
+ We have to implement "Refresh Scope" at MS# app. So, that if any
+ key=val is updated at Config server that will be updated at MS# app
+ also, without restarting MS# apps.
+
+--Coding Steps---
+*) Code changes at MS# app only
+
+1. Add Actuator Dependency at MS#
+> Right click on MS# Project > Spring > Add Starters > Choose Actuator
+> Next > pom.xml checkbox > finish
+
+2. Activate Actuator by adding one key=val in properties
+management.endpoints.web.exposure.include=*
+
+3. At RestController (or at main class)
+@RefreshScope
+
+4. Start all apps in order (Eureka, Config Server, MS# apps)
+ check: http://localhost:8082/cart/info
+
+5. Modify value at Github and make POSTMAN Request
+  POST   http://localhost:8082/actuator/refresh   [SEND]
+
+ check: http://localhost:8082/cart/info
+
+*) Above POST call should be implemented using RestTemplate with one
+   Scheduler Service that gets latest data always.
+
+==Ex========================================
+Name: SpringCloudSchedulerService
+Dep : Web
+
+application.properties
+server.port=9601
+
+> at main class: @EnableScheduling
+
+--Scheduler code--
+package com.app.shivam.scheduler;
+
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class FetchLatestDataFromProps {
+
+	@Scheduled(cron = "10 * * * * *")
+	public void fetch() {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> entity = new HttpEntity<String>("{}", headers);
+		
+		RestTemplate rt = new RestTemplate();
+		String output = rt.postForEntity(
+				"http://localhost:8082/actuator/refresh", entity, String.class)
+				.getBody();
+		System.out.println(output);
+	}
+}
+===============================================================
+*) ConfigServerConfigDataLoader is given by Spring Cloud Config Client
+   that gets latest key=val from Config Server. It internally fetch
+   the data from Environment(I) using PropertySource process.
+
+*) If a key is present at MS# app and Github(Config Server)
+  then priority is given to Config server properties file key=val only.
+  ie our MS# Properties are overridden.
+
+======================================================================
+
