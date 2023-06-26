@@ -1,0 +1,83 @@
+
+Ref:
+https://kafka.apache.org/intro
+
+Quick Start:***
+https://kafka.apache.org/quickstart
+
+Kafka Tut:
+https://data-flair.training/blogs/kafka-terminologies/
+
+			  Message Queues (MQs)
+
+*) The continuous data flow between two systems. Producer will send data
+   and consumer will read by using a connector/mediator ie 'Message Broker'
+
+*) Client-Server applications works using HTTP protocol. 
+   There client has to make request then server will process it and
+   gives response back to client.
+
+*) But here, one time connection between producer-consumer is made using
+  Message broker, then continuous data flow is done. Consumer need not
+  to make request again and again. one time connection is fine.
+
+*)MQs usecases:
+1. Swiggy Delivery 
+2. Ola/Uber cab status
+3. Live Train status 
+4. Live Stock Market data
+5. Live Currency Updates
+6. Live Cricket Score (BCCI server-> ESPN, CricBuzz,XYZ Server)
+..etc
+
+*) MQs concept uses TCP protocol to exchange data.
+========================================================================
+1. Basic MQs (single broker - No LoadBalancer)
+JMS : Java Message Service / Apache ActiveMQ 
+
+2. Advanced MQs (Multi Broker - LoadBalancer)
+Apache Kafka***
+
+
+*) One MOM (Message Oriented Middleware) is used to connect two systems
+ [Producer and Consumer]
+
+*) MOM s/w contains destination, it is a memory that holds messages
+  given by Producer and sent to Consumer.
+
+*) Here, Both Producer and Consumer systems are connected using
+  one common destination only. ie Destination name given at consumer
+  must match with destination name given at producer.
+
+*) There is no direct connection is created between producer and consumer
+  ie NO IP/PORT details shared.
+
+*) There are two types of communications. Given as:
+1. Peer-To-Peer Communication [P2P]
+If one message is given to one Consumer, then it is called as P2P.
+In this case Destination type is known as : Queue.
+
+2. Publish-Subscribe Communication [Pub/Sub]
+If one message is given to Multiple Consumers (cloned copied)
+then it is called as Pub/Sub.
+
+In this case Destination type is known as : Topic.
+
+*)Note:
+1. There can be multiple topics, queues are created with unique names.
+2. Both P2P and Pub/Sub are used in realtime.
+
+==========Apache ActiveMQ setup====================================
+1. Download
+https://activemq.apache.org/components/classic/download/
+
+Click on : apache-activemq-5.17.3-bin.zip 
+and Extract to a Folder
+
+2. Run ActiveMQ
+> Goto Folder : D:\apache-activemq-5.17.3\bin\win64
+> Click on    : activemq.bat
+> Enter URL   : http://localhost:8161/admin/
+un: admin , pwd: admin
+
+================================================================
