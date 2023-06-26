@@ -1,0 +1,84 @@
+
+Plan -> Document -> Development -> Build -> Test -> Release -> Monitor
+
+We are having different monitoring tools like:
+1. Admin Server (+Actuator)
+2. Zipkin and Slueth
+
+These are tools used to know the current status of applications/MS# running 
+
+*) Actuator : Set of Production Ready Endpoints.
+It gives some pre-defined services which are commonly used in Production
+Environment for every MS# apps. Like:  Health Checking, Beans detaiks, 
+ mapping inforation(URL,HttpMethods), cache, heap, thread dumps..etc
+
+=> If we use only 'Actuator' that is manual process of using/checking services. We should also Integrate Admin Server to have GUI based checking.
+
+=======Steps to activate Actuator services=========================
+S#1 Add Actuator Dependency in MS# 
+> Right click > Add Starter > Actuator > Next > pom.xml checkbox
+> next > finish
+
+pom.xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+S#2 Enable Services
+management.endpoints.web.exposure.include=*
+#management.endpoints.web.exposure.include=health,beans,env
+
+
+S#3 Enter URL :  http://IP:PORT/actuator
+
+Ex:
+http://localhost:8082/actuator
+
+
+Note:
+1. If we did not specify any include services then default only
+  one service 'health' is activated.
+  (old versions : Upto 2.4.x -- 2 were activated - health, info)
+
+2. Enter service URL to check their details
+http://localhost:8082/actuator/beans
+http://localhost:8082/actuator/env
+
+======================================================================
+			Spring Cloud Adminserver
+
+It is a central server that is used to Monitor Actuator Results of 
+Every MS# which is connected using Admin Client and ADMIN URL.
+
+*) MS# will connect to Admin Server using Admin Client.
+*) Actuator must be enabled at every MS# then only Admin Client
+  can read its information.
+
+===Coding Steps=============================
+1. Admin Server
+Name : SpringCloudAdminServer
+Dep  : Admin Server
+
+> At main class: @EnableAdminServer
+> application.properties
+server.port=9999
+
+2. At MS#
+*) Add Two Dependencies : Actuator, Admin Client
+
+*) At MS# Properties file
+#Activate Actuator
+management.endpoints.web.exposure.include=*
+
+#Connect with Admin Server
+spring.boot.admin.client.url=http://localhost:9999
+
+
+--Execution order-------
+1. Eureka Server | Config Server | Admin Server
+2. MS# Apps (create multiple instances)
+
+http://localhost:8761/
+http://localhost:8888/actuator/refresh
+http://localhost:9999/applications
