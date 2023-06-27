@@ -1,0 +1,119 @@
+
+ActiveMQ 5 Download Link:
+https://activemq.apache.org/activemq-5016005-release
+
+Click on : apache-activemq-5.16.5-bin.zip
+and Extract to a Folder
+
+2. Run ActiveMQ
+> Goto Folder : D:\apache-activemq-5.17.3\bin\win64
+> Click on    : activemq.bat
+> Enter URL   : http://localhost:8161/admin/
+un: admin , pwd: admin
+
+
+*) For HTTP protocol, to see web console (Moniter Tool) Port number is : 8161
+*) For communication between systems, we use TCP protocol, runs at port: 61616
+
+
+===========================Producer===============================
+Name : SpringCloudMqProducerEx
+Dep  : ActiveMQ5
+
+*) application.properties
+#Connect with MOM
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+#Communication Type [P2P]
+spring.jms.pub-sub-domain=false
+
+#Destination name
+my.app.desti-name=my-q-abc1
+------------------------------------
+*) ProducerService
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProducerService {
+
+	@Autowired
+	private JmsTemplate jt;
+	
+	@Value("${my.app.desti-name}")
+	private String destination;
+	
+	public void sendMessage(String message) {
+		jt.send(destination, session -> session.createTextMessage(message));
+		System.out.println("MESSAGE SENT FROM PRODUCER " + message);
+	}
+}
+-----------------------------
+*) Runner class
+package com.app.shivam.runner;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.service.ProducerService;
+
+@Component
+public class TestSenderRunner { 
+//implements CommandLineRunner {
+
+	@Autowired
+	private ProducerService service;
+	
+	//public void run(String... args) throws Exception {
+	
+	@Scheduled(cron = "*/10 * * * * *")
+	public void sendMsgTest()  throws Exception {
+		service.sendMessage("HELLO "+ new Date());
+	}
+
+}
+
+*) At main class: @EnableScheduling
+
+===================Consumer Application=========================
+Name : SpringCloudMqConsumerEx
+Dep  : ActiveMQ5
+
+*) application.properties
+#Connect with MOM
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+#Communication Type [P2P]
+spring.jms.pub-sub-domain=false
+
+#Destination name
+my.app.desti-name=my-q-abc1
+---------------------------
+*) Consumer Service
+package com.app.shivam.service;
+
+import org.springframework.jms.annotation.JmsListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ConsumerService {
+
+	@JmsListener(destination = "${my.app.desti-name}")
+	public void readMsg(String message) {
+		System.out.println(message);
+	}
+}
+======Execution Order==========================================
+1. Start ActiveMQ
+2. Run Consumer and Producer apps
