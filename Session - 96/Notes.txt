@@ -1,0 +1,60 @@
+
+1st Party	Sun / Oracle - JMS API	[javax.jms package]
+
+3rd Party	Apache  - ActiveMQ 5.x API [org.apache.activemq package]
+
+2nd Party      Programmer - Application
+
+*) Set of interfaces (and few classes) are given by Sun/Oracle for 
+  Message Queues using JMS API [Java Message Service]
+
+  Ex Interface names: Session, Message
+
+*) For these interfaces Implementation is given by Apache vendor
+  with API name : ActiveMQ 5.x
+
+ Ex Impl class names: ActiveMQSession, ActiveMQTextMessage
+
+*) Spring boot JMS has given one functional interface
+
+MessageCreator(I)
+   createMessage(Session) : Message
+
+Above interface contains one method createMessage() that takes
+session as input and return Message as output.
+
+*) So, we can just call above session and pass data using createMessage()
+ with method createTextMessage().
+
+=======Note===========================================
+1. JmsTemplate(C) is given by Spring JMS which is pre-configured
+2. It has method send(destination,messageCreator) 
+3. Destination is a name must be matched with Producer and consumer
+4. MessageCreator is a Functional Interface
+5. It takes Session as input and Returns Message as output
+6. Session and Message are interfaces given by Sun/Oracle
+7. Impl classes are given by Apache ActiveMQ
+   ActiveMQSession, ActiveMQTextMessage
+
+8. We have to Just call interface methods and pass our message.
+ either using Lambda Expression or using Anonymous Inner class.
+  session -> session.createTextMessage(message)
+
+=========core java style code================
+interface C{}
+interface A{
+  C m1(String s);
+}
+------
+class D implements C{
+  D(String s) {}
+}
+class B implements A{
+  C m1(String s) {
+    return new D(s);
+  }
+}
+--------
+A oa = new B();
+------------
+C oc = oa.m1("Our Message");
