@@ -1,0 +1,54 @@
+Apache Kafka:
+https://www.youtube.com/watch?v=0V9SK6jmDPk
+https://www.youtube.com/watch?v=gg-VwXSRnmg&list=PLkz1SCf5iB4enAR00Z46JwY9GGkaS2NON&index=1
+
+
+P2P Communication : If one Message is sent to one Consumer
+Destination type is : Queue.
+
+Publish-Subscribe [Pub/Sub] Communication:
+  if one Message is sent to multiple consumers. Destination type : Topic.
+
+*) In Producer and Consumer applications we need to set one Property
+   spring.jms.pub-sub-domain as true. Default is false.
+
+=> false means P2P communication, true means Pub/sub.
+=> Just define multiple consumers and set spring.jms.pub-sub-domain=true.
+=> Cloned Copies of Actual Message is sent to multiple consumers.
+=> Make Sure, all destination names (Producer and Consumer apps)
+   must be matching.
+
+Q) What if we delete topic from MQ Broker?
+A) A new topic with same name is created. But old data will be removed.
+  It is not a recommended approach.
+
+Q) What if we stop one consumer and start from some time?
+  In case of P2P and Pub/Sub?
+
+A)
+ P2P : There will be only one consumer. So , all Producer mesages single
+ 	copy is persisted at MOM Destination. Once consumer is up
+	then all Messages are delivered.
+
+ Pub/Sub : Based on No.of Consumers, Cloned Copies are created and sent to
+ 	consumer applications. [not persisted]
+	Ex: 3 consumers are connected first.
+	    1 Message in = 3 Message out.
+	    If One Consumer is stopped in middle
+	    1 Message in = 2 Message out
+
+Input x Consumers = Output
+ 5    x 0         = 0   (data lost)
+ 2    x 2         = 4   (delivered)
+
+
+Q) Does ActiveMQ supports LoadBalancing?
+   What if MOM S/w ActiveMQ is down?
+
+A) ActiveMQ comes with single instance (No LoadBalance)
+   if it is down data lose may occurs.
+
+=====Execution order===================
+1. Start ActiveMQ
+2. Start Consumer Application#1 and #2
+3. Start Producer application
