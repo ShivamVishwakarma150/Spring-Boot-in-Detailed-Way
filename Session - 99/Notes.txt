@@ -1,0 +1,81 @@
+https://kafka.apache.org/quickstart
+
+			     Apache Kafka
+
+*) It is a Open Source API used to connect multiple applications to
+   send data (Message Queue)
+
+*) Multi-Broker concept : it contains multiple brokers (Cluster)
+   to send data to multiple consumers.
+
+   [ActiveMQ - Single broker].
+
+*) Scaling/Load Balancing can be done in Cluster.
+*) Protocol independent (uses app protocol).
+
+*) Kafka supports Pub/Sub Model only. No P2P. To send data to one consumer
+   use only Pub/Sub.
+
+*) Full Kafka S/w is called as EcoSystem. This system contains mainly
+  3 parts. They are:
+
+  1. Zoo Keeper : Controls entire system.
+  2. Kafka Cluster : Group of Message Brokers(old version: min 3, new version: min 1)
+  3. Topics : Memory that stores data in partitions
+
+
+*) Data is exchanged in Serialized format (String/JSON/XML Data)
+*) Producer and Consumer both are connected using TopicName.
+*) By using KafkaTemplate<K,V> producer app will send data to Kafka.
+   K = TopicName and V = Data
+   and @KafkaListener(K) is used to read data at consumer app.
+
+
+*) Topics is a memory that holds data in packets formats [dat blocks].
+   Those are identified using index numbers starts from zero [offset]
+
+*) MR : Messsage Replica creates cloned copies of actual data to send
+   it to consumer.
+
+*) ZooKeeper controls Eco-System like, create/manage topic, 
+   allocate a broker to consumer, increase cluster size..etc
+
+==========================================================================
+Download : https://kafka.apache.org/downloads
+Link: Scala 2.12  - kafka_2.12-2.8.1.tgz (asc, sha512)
+
+Commands:
+1. Start ZooKeeper
+[Windows]
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+[Linux/MacOS]
+.\bin\zookeeper-server-start.sh .\config\zookeeper.properties
+
+*) Starts on Port : 2181
+
+==============================================================
+2. Start Kafka Server
+[Windows]
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+[Linux/MacOS]
+.\bin\kafka-server-start.sh .\config\server.properties
+
+*) Starts on port : 9092
+================================================================
+3. Create one topic
+
+.\bin\windows\kafka-topics.bat --create --topic myabc --bootstrap-server localhost:9092
+
+4. Start Producer Console
+
+.\bin\windows\kafka-console-producer.bat --topic myabc --bootstrap-server localhost:9092
+
+5. Start Consumer Console
+
+.\bin\windows\kafka-console-consumer.bat --topic myabc --bootstrap-server localhost:9092
+.\bin\windows\kafka-console-consumer.bat --topic myabc --from-beginning --bootstrap-server localhost:9092
+
+*) Press ctrl+C to stop (execute in below order)
+ Consumer > Producer > Kafka server > ZooKeeper
