@@ -1,0 +1,28 @@
+Kafka:
+https://kafka.apache.org/quickstart
+
+			MQs - Message Queues
+
+*) Session(I) is given by Sun/Oracle, this is used to make connection
+   and create Message to send data to Consumer.
+
+-> interface is given,
+1. Write Subclass (or Impl class) and create object
+2. Anonymous Inner class [MAM]
+
+ new interfaceName() {
+   //override methods
+ }
+
+3. If it is FI(Functional interface), [SAM]
+  Define Lambda Expression
+
+==Note=============================================================
+1. Both Producer and Consumer must be connected to same destination.
+2. Both internally uses JMS API that is Session support
+3. They are connected using TCP protocol and PORT number 61616
+4. To view Web UI output use HTTP protocol and PORT 8161.
+5. JmsTemplate (C) is pre-configured by Spring Boot.
+6. Incase of Consumer application we need to apply @EnableJms
+   and also use @JmsListener.
+====================================================================
