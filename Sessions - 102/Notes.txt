@@ -1,0 +1,124 @@
+
+*) JACKSON API (open source Java API)
+ This API is used to convert
+	1. Java Object to JSON 
+	2. JSON to Java Object
+
+(C) ObjectMapper 
+	(M) write__   Obj->JSON
+	(M) read__    JSON->OBJ
+
+==Example code==========
+*) if we create any Spring boot application with Web Dependency then by default JACKSON API is also added.
+
+
+1. Model / Entity
+package com.app.shivam.entity;
+
+import lombok.Data;
+@Data
+public class StockInfo {
+	private Integer stkId;
+	private String stkCode;
+	private Double stkCost;
+	
+}
+
+2. Test class
+package com.app.shivam;
+
+import com.app.shivam.entity.StockInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class Test {
+	
+	//JSON to Object
+	public static void main(String[] args) {
+		String json ="{\"stkId\":101,\"stkCode\":\"A\",\"stkCost\":200.0}";
+		
+		try {
+			ObjectMapper om = new ObjectMapper();
+			StockInfo si = om.readValue(json, StockInfo.class);
+			System.out.println(si);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	//Object to JSON
+	public static void main1(String[] args) {
+		StockInfo si = new StockInfo();
+		si.setStkCode("A");
+		si.setStkCost(200.0);
+		si.setStkId(101);
+		
+		try {
+			ObjectMapper om = new ObjectMapper();
+			String s = om.writeValueAsString(si);
+			System.out.println(s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+======================================================================
+Topic: Apache Kafka supports only Topics to send data even for 1 to 1 also.
+ No P2P -- Queue concept in kafka. Everything is Pub/Sub -- Topic 
+
+@Bean
+public NewTopic topic() {
+       return TopicBuilder.name("topic1")
+               .partitions(10) //based on message sizes
+               .replicas(1) // no.of consumers
+               .build();
+}
+//default values are : partitions=1 , replicas =1 
+(or) KafkaTemplate creates given topic name on the fly (at runtime)
+
+*)Group : Logical unit of a multiple consumers which are using same topicName
+ In this case MessageBroker informs MessageReplica to create Cloned Copies
+
+ ex: group=abc, consumers=5 , topicName=TEST-A
+  MessageBroker-5 is allocated, MR-5 copies of actual message from TEST-A
+
+======================================================================
+*) When ever KafkaTemplate calls send method then Kafka API creates one object
+  ProducerRecord (C)
+
+Internal code: Data --> Serialized
+ProducerRecord<K, V> producerRecord = new ProducerRecord<>(topic, data);
+
+*) @KafkListener that reads data from given topicName into ConsumerRecord(C)
+
+//Data -> Deserialized
+ConsumerRecord<K,V> consumerRecord = new ConsumerRecord<>(topic,data);
+
+*) Internally data format is binary (byte[]) easy for trasfer and partitions
+
+=> One consumer can read data from multiple topics too.
+Ex:
+@KafkaListener(topics = {
+           "${my.topic.name2}",
+	   "${my.topic.name1}",
+	   "${my.topic.name3}"
+         },
+	groupId = "abcd")
+
+
+*) Spring with Kafka uses MessagingMessageListenerAdapter(C)
+ which is a Listener class that reads data from Kafka broker and
+ converts data. 
+
+*) Our application is connected with Kafka Server that runs on port : 9092
+  Zookeeper runs on port: 2181 
+=====================================================================
+Gateway: Single entry and exit point for entire MS# apps.
+
+=> Expose One IP/PORT
+=> Single Entry and exit
+=> Load Balancer
+=> Connected with consumer apps (Angular/ReactJS/3rd Party)
+=> Routing Table (Which request --> Where to Go)
+
+ http://sampleapp.com/user/find/101
+ http://sampleapp.com/cart/modify/106
