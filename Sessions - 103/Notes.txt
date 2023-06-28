@@ -1,0 +1,80 @@
+		     Spring Cloud : API Gateway
+
+
+API Gateway : It is a single entry and exit point for our MS# application.
+
+=> There may be multiple MS# apps running as multiple Instances
+=> All these details are stored at Eureka Server
+=> Eureka Server is a Register (Store data).  It never makes any HTTP call to any MS#
+
+=> We can not expose all MS# IP and PORTs to client machine/app. We should give only one IP and PORT ie Gateway IP and PORT.
+
+Why Gateway?
+1. Routing : Dispatching a client request to MS# application
+2. LoadBalancing : Choose one Instance from Eureka based on LoadFactor
+			for every request
+3. Filters : Modify Request/ Response details (Encryption, Authentication..etc)
+
+Dynamic Routing | Dynamic Dispatching : Routing + Load Balancing.
+
+*) Router needs Input as Routing table which is configured by Developers
+*) Predicate compares Request Path with Routertable path if matching
+   returns true means select MS# serviceId and goto eureka.
+
+*) Pre-Filter(optional), if exist Modify the request before sending to MS# app.
+   Post-Filter(optional), if exist Modify the Response before sending to Client.
+   
+*) Gateway also one type of MS#, It needs to be register with Eureka.
+   It uses Porxy client (Feign) generated at Gateway, to make call to MS#.
+===========================================================================
+*) Spring Cloud API Gateway Routing(or Config) can be defined in two ways
+1. YAML/Properties file
+2. ***Java based Config
+
+---EXAMPLE ROUTING TABLE ------------------
+    PATH                    URI                          
+  /order/**          lb://ORDER-SERVICE
+
+  /cart/**           lb://CART-SERVICE
+--------------------------------------------
+If request URL contains /order in Path
+ex: http://localhost:80/order/find/10 
+  then select ORDER-SERVICE goto Eureka, fetch one ORDER-SERVICE instance
+    and execute request for path "/order/find/10"
+
+===Example Java Config=========================================
+Dep : Gateway, Eureka Discovery Client
+
+1. Config class for Routing table
+
+
+package com.app.shivam.config;
+
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MyRouteConfig {
+
+	//use lb://ServiceId for multiple instance of MS#
+	//use http://IP:PORT for single instance of MS#
+	@Bean
+	public RouteLocator configRoutes(RouteLocatorBuilder builder) {
+		
+		return builder.routes()
+				//.route("cartRoutingId", r->r.path("/cart/**").uri("http://172.10.12.36:9696")) //one cart instance only
+				.route("cartRoutingId", r->r.path("/cart/**").uri("lb://CART-SERVICE"))
+				.route("orderRoutingId", r->r.path("/order/**").uri("lb://ORDER-SERVICE"))
+				.build();
+	}
+}
+
+
+2. properties file
+#server.port=80
+server.port=9600
+
+# Register with eureka
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
