@@ -1,0 +1,283 @@
+
+	Spring Boot + Apache Kafka Integration Example
+
+*) We need to add Kafka API using Spring Boot in pom.xml
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+
+*) EcoSystem creates a connection with Producer application
+ (by taking some properties) and supports sending data from producer
+ to EcoSystem using KafkaTemplate<K,V> class.
+
+
+*) If consumer also connected with EcoSystem, then one Message Broker
+  is allocated to read data from TopicName using Message Replica(creates
+   one copy of actual message)
+
+  4 Consumers --> 1 Group --> Message Broker --> MR(4 copies)
+  @KafkaListener takes topicName and groupId to read data from EcoSystem.
+
+*) Im using RestController and MessageStore additionally to send data
+   and view output.
+
+======code=========================
+Name : SpringBootKafkaServiceEx
+Dep  : Lombok, Data JPA, MySQL, Web, Devtools, Spring For apache kafka
+
+
+1. application.properties
+# server port
+server.port=8686
+
+# Producer properties
+spring.kafka.producer.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+
+# Consumer properties
+spring.kafka.consumer.bootstrap-servers=localhost:9092
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.group-id=abcd
+
+# TopicName
+my.topic.name=TEST-SAMPLE
+
+# Database Properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot
+spring.datasource.username=root
+spring.datasource.password=Shivam@123
+
+# JPA Properties
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=create
+
+
+2. Entity
+package com.app.shivam.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="stocktab")
+public class StockInfo {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="sid")
+	private Integer stkId;
+	
+	@Column(name="scode")
+	private String stkCode;
+	
+	@Column(name="scost")
+	private Double stkCost;
+	
+}
+
+3. Repository
+package com.app.shivam.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.StockInfo;
+
+public interface StockInfoRepository extends JpaRepository<StockInfo, Integer> {
+
+}
+
+4. JSONUTIL
+package com.app.shivam.util;
+
+import com.app.shivam.entity.StockInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class JsonUtil {
+
+	public static StockInfo convertToObj(String message) {
+		try {
+			return new ObjectMapper().readValue(message, StockInfo.class);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String convertToString(StockInfo si) {
+		try {
+			return new ObjectMapper().writeValueAsString(si);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+}
+
+5. MessageStore
+package com.app.shivam.db;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.entity.StockInfo;
+import com.app.shivam.repo.StockInfoRepository;
+import com.app.shivam.util.JsonUtil;
+
+@Component
+public class MessageStore {
+	
+	@Autowired
+	private StockInfoRepository repo;
+
+	public void add(String message) {
+		//JSON TO Object
+		StockInfo si = JsonUtil.convertToObj(message);
+		repo.save(si);
+	}
+
+	public List<StockInfo> getAll() {
+		return repo.findAll();
+	}
+
+}
+
+6. Consumer Service
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+import com.app.shivam.db.MessageStore;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@Slf4j
+public class ConsumerService {
+	
+	@Autowired
+	private MessageStore store;
+
+	@KafkaListener(topics = "${my.topic.name}",groupId = "abcd")
+	public void readMessage(String message) {
+		log.info("MESSAGE AT CONSUMER : {}", message);
+		store.add(message);
+	}
+}
+
+
+7. Producer service
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@Slf4j
+public class ProducerService {
+
+	@Autowired
+	private KafkaTemplate<String, String> template;
+	
+	@Value("${my.topic.name}")
+	private String topicName;
+	
+	public void sendMessage(String message) {
+		log.info("MESSAGE IS AT PRODUCER SERVICE");
+		template.send(topicName, message);
+	}
+}
+
+
+8. RestController
+package com.app.shivam.rest;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.db.MessageStore;
+import com.app.shivam.entity.StockInfo;
+import com.app.shivam.service.ProducerService;
+import com.app.shivam.util.JsonUtil;
+
+@RestController
+@RequestMapping("/api/v1/kafka")
+public class StockRestController {
+	
+	@Autowired
+	private ProducerService service;
+	
+	@Autowired
+	private MessageStore store;
+
+	//send?code=__&cost=__
+	@GetMapping("/send")
+	public String readMessage(
+			@RequestParam String code,
+			@RequestParam Double cost
+			) 
+	{
+		//create Entity class object
+		StockInfo si = new StockInfo();
+		si.setStkCode(code);
+		si.setStkCost(cost);
+		
+		//convert to JSON
+		String message = JsonUtil.convertToString(si);
+		
+		//call producer service
+		service.sendMessage(message);
+		
+		return "SENT";
+	}
+	
+	@GetMapping("/all")
+	public List<StockInfo> fetchAll() {
+		return store.getAll();
+	}
+	
+	
+}
+
+
+
+=======execution order==========================
+1. run zookeeper
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+2. run kafka server
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+
+3. run your app
+
+4. enter urls
+
+http://localhost:8686/api/v1/kafka/send?code=A&cost=50.0
+http://localhost:8686/api/v1/kafka/all
