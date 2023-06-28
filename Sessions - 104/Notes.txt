@@ -1,0 +1,88 @@
+
+			Spring Cloud : API Gateway
+
+1. Routing : Request --> MS# using Eureka
+2. LoadBalancing : Choose one Instance has less LF (Round Robin)
+3. Filters : Modify Request/Response
+
+*) Router is a pre-defined component that taking Routing table data. Routing table must be configured by Programmer.
+
+  Routing table = PATH + URI(serviceId/IP:PORT/HOSTNAME)
+
+  ---------------------------------------------------------
+     ID           PATH                     URI
+  ---------------------------------------------------------
+     CID        /cart/**              lb://CART-SERVICE
+     OID	/order/**             lb://ORDER-SERVICE
+  ---------------------------------------------------------
+
+=> Every Routing table contains List<Route>
+=>  1 route contains = 1 id + 1 path + 1 uri + multiple filters
+    1 MS = 1 route
+
+=> Eureka gives ServiceInstance(serviceId,InstanceId, IP, PORT, LF)
+
+=> If a MS# which is not configured at ApiGateway can never be accessed from outside world.
+
+Step#1 Define one Application for ApiGateway with 2 dependencies
+a. Spring Cloud Gateway
+b. Eureka Discovery Client
+
+Step#2 Must be Registered with Eureka Server
+
+--application.properties---
+server.port=80
+#server.port=9600
+
+spring.application.name=API-GATEWAY
+
+# Register with eureka
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+Step#3 Define Java Configuration for Routing Table configuration
+ RouteLocator stores List<Route> / Flux<Route>
+ (Reactive Programming: Mono-1, Flux-n objects)
+
+package com.app.shivam.config;
+
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MyRouteConfig {
+
+	@Bean
+	public RouteLocator configureRoutes(RouteLocatorBuilder builder) {
+
+		return builder.routes()
+				.route("cartId", r -> r.path("/cart/**").uri("lb://CART-SERVICE"))
+				.route("orderId", r -> r.path("/order/**").uri("lb://ORDER-SERVICE"))
+				.build();
+	}
+
+}
+
+
+==Execution order=========
+1. Config Server | Eureka Server | Admin Server
+http://localhost:8888/actuator/refresh
+http://localhost:8761
+http://localhost:9999/applications
+
+2. MS# apps (Cart, Order) run multiple times
+Cart MS# - port - 8081, 8082, 8084 (3 times started)
+Order MS#- 9091,9092,9094 (3 times)
+
+3. Api Gateway - start once
+Enter URL:
+http://192.168.0.3:80/cart/find/101
+http://192.168.0.3:80/order/fetch/33
+
+Here IP and PORT of API GATEWAY: 192.168.0.3:80
+
+cmd> ipconfig
+sh> ifconfig   (or) ip addr show
+    ifconf
+=================================================
