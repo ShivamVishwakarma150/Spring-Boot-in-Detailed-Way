@@ -1,0 +1,116 @@
+			Spring Cloud : API Gateway
+
+Filters:-
+ To Modify existed request/response data at API Gateway level
+ we use filters.
+
+*) Here we have two types:
+1. Pre-Filter : That adds/modify data at Request
+2. Post-Filter: That adds/modify data at Response
+
+Inside routing config we can provide headers to request like:
+.filters(f->
+	f.addRequestHeader("MyToken", "Basic "+UUID.randomUUID().toString())
+	.addResponseHeader("Service Mode", "Active")
+)
+
+==code changes====================================
+1. API Gateway
+package com.app.shivam.config;
+
+import java.util.UUID;
+
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MyRouteConfig {
+
+	@Bean
+	public RouteLocator configureRoutes(RouteLocatorBuilder builder) {
+
+		return builder.routes()
+
+				.route("cartId", r -> r.path("/cart/**")
+						.filters(f->
+						f.addRequestHeader("MyToken", "Basic "+UUID.randomUUID().toString())
+						.addResponseHeader("Service-Mode", "Active")
+						)
+						
+						.uri("lb://CART-SERVICE"))
+				.route("orderId", r -> r.path("/order/**").uri("lb://ORDER-SERVICE")).build();
+	}
+
+}
+
+
+2. Cart RestController
+@RestController
+@RequestMapping("/cart")
+@RefreshScope
+public class CartRestController {
+	
+	@Value("${my.app.title}")
+	private String title;
+
+	@GetMapping("/info")
+	public ResponseEntity<String> showMessage(
+			@RequestHeader("MyToken") String token 
+			)
+	{
+		return ResponseEntity.ok("WELCOME TO CART SERVICE =>" + token);
+	}
+	....
+}
+
+
+==Execution order=========
+1. Config Server | Eureka Server | Admin Server
+http://localhost:8888/actuator/refresh
+http://localhost:8761
+http://localhost:9999/applications
+
+2. MS# apps (Cart, Order) run multiple times
+Cart MS# - port - 8081, 8082, 8084 (3 times started)
+Order MS#- 9091,9092,9094 (3 times)
+
+3. Api Gateway - start once
+Enter URL:
+http://192.168.0.2/cart/info
+
+Here IP and PORT of API GATEWAY: 192.168.0.2:80
+
+cmd> ipconfig
+sh> ifconfig   (or) ip addr show
+    ifconf
+=================================================
+
+Equal YAML Configuration for API Gateway:
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+server:
+  port: 80
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+      - id: cartId
+        uri: lb://CART-SERVICE
+        predicates:
+        - Path=/cart/**
+        filters:
+        - AddRequestHeader=MyToken,BasicTEST
+        - AddResponseHeader=Service-Mode, Active
+      - id: orderId
+        uri: lb://ORDER-SERVICE
+        predicates:
+        - Path=/order/**
+          
+ 
