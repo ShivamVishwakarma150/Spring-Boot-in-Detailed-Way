@@ -1,0 +1,70 @@
+
+
+*) Define Multiple MS# applications using
++ Web, Zipkin and Sleuth Dependencies
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-sleuth</artifactId>
+</dependency>
+
+We can even add : Admin Client, Eureka Discovery Client, Config Client..etc
+
+*) Define one config file
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class AppConfig {
+	
+	@Bean
+	public RestTemplate rt() {
+		return new RestTemplate();
+	}
+
+}
+
+*)Define RestController
+package com.app.shivam.rest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+@RestController
+public class ProcessARestController {
+	
+	private static final Logger log = LoggerFactory.getLogger(ProcessARestController.class);
+
+	@Autowired
+	private RestTemplate rt;
+	
+	@GetMapping("/showA")
+	public String showMsg() {
+		log.info("WE ARE AT A SERVICE...");
+		
+		String resp = rt.getForEntity("http://localhost:8082/showB", String.class).getBody();
+		
+		return "FROM A.."+resp;
+	}
+}
+
+*) Repeate same for multiple MS# applications
+  ServiceB, ServiceC examples.
+
+*) Sleuth and Zipkin stores data using Logs and format looks like
+ [ServiceName, TraceId, spanId, ExportFlag]
+
+TraceId: Id generated for one entire request flow
+spanId : Id generated for one MS# request flow.
+parentId: Previous MS# spanId is current MS# parentId
+
+*) Run apps in order and enter URL
+http://localhost:8081/showA
+
+*) Check at Zipkin Server , click on Trace.
