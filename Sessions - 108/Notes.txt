@@ -1,0 +1,58 @@
+
+		    Spring Boot Reactive Programming
+
+*) Spring Boot WEB (MVC and REST)
+starter: spring-boot-starter-web
+@Controller, @RestController, @RequestMapping, @GetMapping...
+@ModelAttribute, Model ..etc
+
+
+*) Server: *Tomcat, Undertow, Jetty..etc
+*) Tomcat is the default server, that allocates one Thread for one Request
+ which will process request and returns response.
+
+*) By default every Thread allocated to process is "BLOCKING MODEL".
+ ie Thread if is making NIO call, then it will be idel, it will not
+ process any other request meanwhile.
+
+*) NON BLOCKING MODE says do not keep any thread idel.
+   Use it for another request processing if is waiting for NIO call output.
+   once we get NIO output allocate same thread or different one for
+   processing response.
+
+=> Spring Boot WebFlux (Spring 5.x), comes with Netty Server.
+=> We need to use NoSQL DB like MongoDB, Redis..etc
+    stores: JSON Format/Documents Data
+
+Ouptput: Mono<T> (0/1), Flux<T> (0..n) output.
+
+
+=> We have to use Spring boot reavtie API which is implemented using
+   Spring Webflux. Here DB are used NoSQL Reactive suported.
+
+==MongoDB setup====================================
+1. Goto : https://www.mongodb.com/try/download/community
+2. Fill details and download
+3. Run Executable
+4. Create folder system C:/data/db
+5. To start Mongodb server 
+  cmd: mongod  (starts on port: 27017)
+
+6. To start mongodb client
+   cmd: mongo
+
+7. Enter commands like:
+> show dbs;
+> use bootdb;
+> show collections;
+> db.student.insert({"sid":10,"sname":"VIKASH","sfee":300.0});
+> db.student.find();
+> db.student.find().pretty();
+
+Ref:
+#1
+https://www.mongodb.com/docs/v4.2/crud/
+#2
+https://data-flair.training/blogs/mongodb-relationships/
+#3
+https://www.mongodb.com/docs/manual/reference/sql-comparison/
