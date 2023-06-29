@@ -1,0 +1,64 @@
+
+			Distributed Tracing
+			[Sleuth and Zipkin]
+
+=> For one request, there can be multiple MS# executed.
+Example Flow:
+ Req#1 --> API Gateway --> Eureka -> Gateway --> MS#1 --> MS#2 -->MS#3->MS#2-->MS#1-> Gateway --> Resp#1
+
+=> Distributed Tracing concept is used to find out,
+1. No of MS# called
+2. Execution Path (method->Method)
+3. Time taken for exact service and all services
+
+=> It is type of debugging (Flow Debug).
+=> Spring Cloud API has given : Sleuth and Zipkin to handle 
+	"Distributed Tracing"
+
+=> Sleuth : Generates details like Tracing Info/Execution Path/
+            Execution Time.
+=> Zipkin server will store and display Sleuth Result.
+
+*) Eureka Server : Will store Instance details (Not request details)
+ How Many MS#? Instance count? LF ? IP / PORT ?
+
+*) Zipkin Server: 
+ How many Request processed?
+ Execution Path?
+ How Many MS# called?
+ How much time taken?
+
+==========Download and test Zipkin Server=========================
+Goto : 
+https://repo1.maven.org/maven2/io/zipkin/java/zipkin-server/2.12.9/
+
+Click on :
+zipkin-server-2.12.9-exec.jar  
+
+Execute Command:
+ java -jar zipkin-server-2.12.9-exec.jar  
+
+Enter URL:
+ http://127.0.0.1:9411/zipkin/
+
+===================================================================
+*) We have to define two MS# wich are connected using any one client.
+-> DiscoveryClient / LoadBalancerClient [manual code]
+-> Open Feign (Abstract client)
+-> RestTemplate : Supports all Apps (non-Java)
+-> WebClient : Webflux (Reactive coding)
+
+*) We need to add 2 dependencies in MS# application
+
+   <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
+
+     <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-zipkin-client</artifactId>
+    </dependency>
+
+
+
