@@ -1,0 +1,78 @@
+
+	          JAAS : Java Authentication and Authorization
+			         [Security]
+
+*) Authentication : Validating User Login details : username, password
+*) Authorization  : Validating User Role to access a service/resources
+
+Ex: BankApplication
+  URLs:  /home, /login, /checkBal, /logout, /approveLoan, /openFD ..etc
+
+User:  AJAY/AJAY  Role: Customer
+User:  SAM/SAM    Role: Manager
+User:  SYED/SYED  Role: Clerk
+..etc
+
+
+Authorization Levels(3):
+1. permitAll : A URL/Path can be accessed by every one 
+[no login/ no role is required]
+Ex: /home, /login, /contactUs, /aboutUs
+
+2. Authenticated: A URL/Path can be accessed only after login
+	[any role is valid]
+
+ex: Show Logout Link, First Login , /chagePwd, /logout ..etc
+
+3. hasAuthority: Login must and Valid Role is required
+
+ex: /approveLoan => Login and Role : Manager
+    /checkBal    => Login and Role : Customer, Manager
+
+=> Role - String, Authority(I) - SimpleGrantedAuthority(C)
+--------------------------------------------------------------
+Authentication Type(3):-
+1. InMemoryAuthentication 
+=> Storing user details inside RAM / Temp Memory.
+=> This is only for Testing purpose. (NO database is used)
+=> Not Recomanded in production.
+
+2. JDBCAuthentication
+=> We use Database to Store user data and roles (1/2 tables)
+=> But check details (login details and role details)
+   using SQL queries (manually we need to define)
+
+3.*** ORM Authentication/UserDetailsService
+=> ORM means uses Data JPA, No SQL Query
+=> It stores data in Database Table and converts into Object format
+   when it is required.
+
+====================================================================
+*) PasswordEncoder:- It is not recommended to store plain text password inside database, better convert into unreadable format ie encoding.
+
+There is no decode method is given by Spring boot.  If we enter Pwd from Login page then that is encoded and compared with DB encoded password, if matched then goto Home Page...etc
+
+===coding================================================================
+1. We need to define only one class (additionally) for security.
+  ie SecurityConfig (any equal name) called as One Configuration class.
+
+2. This class contains two methods mainly.
+  a. Authentication : InMemory/JDBC/UserDetailsService
+  b. Authorization  : permitAll/autnehticated... Login Form + Logout Link
+
+
+3. ** In Spring Boot 2.6 or before version SecurityConfig class must
+   extends one class "WebSecurityConfigurerAdapter".
+   but in new Version ie Spring Boot 2.7 or later it is not required.
+
+
+*) In our application we need to add one Dependency: Spring Security
+in pom.xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+Ref Doc:-
+https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
+=================================================================================
