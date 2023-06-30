@@ -1,0 +1,95 @@
+
+  			 Reactive Programming
+		        [consumer application]
+
+1. RestTemplate : It is a class, supports HTTP Protocol
+	connects with any language Producer application
+	Supported only Synchronous Communication
+2. LoadBalancerClient/ Open Feign : Supported for MS# application communication
+
+WebClient:-
+=> It is a Reactive Client.
+=> RestTemplate will not support reactive calls(request)
+=> It is internally Asynchronous communication.
+
+
+--coding steps---
+1. Define WebClient object using base URL
+2. Provide call details in order
+  HttpMethod
+  PATH + PathVariables
+  Body With Type
+  Execute
+  Convert Response to Type(Mono/Flux)
+  Subscribe data
+
+=> Here we need to use Spring Boot Reactive API (Webflux)
+=> Make sure port numbers are not same compared to Producer application
+
+Name: SpringBootReactiveConsumerEx
+Dep : Spring Boot Reactive Web, Lombok
+
+1. Runner class
+package com.app.shivam.runner;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.app.shivam.entity.Student;
+
+import reactor.core.publisher.Mono;
+
+@Component
+public class TestProducerCallRunner implements CommandLineRunner {
+
+	public void run(String... args) throws Exception {
+		//1. Create WebClient object using base URL 
+		WebClient client = WebClient.create("http://localhost:9090/student");
+		
+		//call 
+		/*
+		Mono<Student> result = 
+				client
+				.post() //Http Method
+				.uri("/create") //PATH
+				.body(Mono.just(new Student("AA256", "SAM", 300.0)), Student.class) //Body
+				.retrieve() // execute
+				.bodyToMono(Student.class); //convert response
+		
+		System.out.println("FROM CONSUMER ---->");
+		//access result
+		result.subscribe(System.out::println);
+		*/
+		
+		
+		/*
+		Flux<Student> flux =  client.get().uri("/all").retrieve().bodyToFlux(Student.class);
+		flux.doOnNext(System.out::println).blockLast();
+		*/
+		
+		Mono<Student> result = 
+		client.get().uri("/fetch/AA256").retrieve() 
+		.bodyToMono(Student.class);
+		result.subscribe(System.out::println);
+	}
+
+}
+
+2. Entity class
+package com.app.shivam.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Student {
+
+	private String id;
+	private String name;
+	private Double fee;
+}
+====================================================================
