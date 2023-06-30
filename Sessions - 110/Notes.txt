@@ -1,0 +1,163 @@
+
+			 Reactive Programming
+
+1. NoSQL DB : MongoDB (Reactive API)
+2. Application: Spring Webflux (Reactive API)
+	Annotations are similar to REST API
+	Output: Mono (0/1) , Flux(0..n)
+
+3. Consumer : WebClient
+
+*) execution order:
+-> Run cmd: mongod
+-> Run Application(Producer)
+
+=====================================================================
+Q) Does MongoDB Generates PK values?
+A) YES. But type must be String only (UUID value)
+   We can check in DB like
+   "_id" : ObjectId("_________"),
+
+Q) Can we pass our own PK value to MongoDB?
+A) YES. Then it is not a generated value then it will show direct value
+	without ObjectId.
+  ex: "_id" : "AA1100"
+
+===code=============
+Create a Spring Boot Application
+Name : SpringBootReactiveProducerEx
+Dep  : Reactive Web, Reactive MongoDB, Lombok, Devtools
+
+
+1. application.properties
+#Server Port
+server.port=9090
+
+#Database connection details
+spring.data.mongodb.host=localhost
+spring.data.mongodb.database=bootdb
+spring.data.mongodb.port=27017
+#spring.data.mongodb.username=
+#spring.data.mongodb.password=
+
+2. Entity class / Collection class
+package com.app.shivam.entity;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document //optional annotation
+public class Student {
+
+	@Id
+	private String id;
+	private String name;
+	private Double fee;
+}
+
+3. Repository interface
+package com.app.shivam.repo;
+
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+
+import com.app.shivam.entity.Student;
+
+public interface StudentRepository 
+	extends ReactiveMongoRepository<Student, String>{
+
+}
+
+4. Service class
+package com.app.shivam.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.app.shivam.entity.Student;
+import com.app.shivam.repo.StudentRepository;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Service
+public class StudentService {
+
+	@Autowired
+	private StudentRepository repo;
+
+	public Mono<Student> save(Student student) {
+		return repo.save(student);
+	}
+
+	public Mono<Student> getOne(String id) {
+		return repo.findById(id).switchIfEmpty(Mono.empty());
+	}
+
+	public Flux<Student> findAll() {
+		return repo.findAll().switchIfEmpty(Flux.empty());
+	}
+
+	public Mono<Void> delete(String id) {
+		return repo.deleteById(id);
+	}
+}
+
+5. RestController
+package com.app.shivam.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.shivam.entity.Student;
+import com.app.shivam.service.StudentService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/student")
+public class StudentRestController {
+
+	@Autowired
+	private StudentService service;
+
+	@PostMapping("/create")
+	public Mono<Student> save(@RequestBody Student student) {
+		return service.save(student);
+	}
+	
+	@GetMapping("/fetch/{id}")
+	public Mono<Student> getOne(@PathVariable String id) {
+		return service.getOne(id);
+	}
+	
+	@GetMapping("/all")
+	public Flux<Student> fetchAll() {
+		return service.findAll();
+	}
+	
+	@DeleteMapping("/remove/{id}")
+	public Mono<Void> deleteOne(@PathVariable String id) {
+		return service.delete(id);
+		/* service.delete(id);
+		return Mono.just("Removed Id "+id); */
+	}
+	
+}
+
+6. Execution order
+cmd> mongod
+Run application
