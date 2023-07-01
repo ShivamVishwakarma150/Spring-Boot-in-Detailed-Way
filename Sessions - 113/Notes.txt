@@ -1,0 +1,200 @@
+
+Example code samples For Authorization:-
+1. Accessed by every one : /welcome 
+
+.antMatchers("/welcome").permitAll()
+
+2. Access URL only after Login : /profile
+
+.antMatchers("/profile").authenticated()
+
+3. Access URL after login having role ADMIN : /mydata
+
+.antMatchers("/mydata").hasAuthority("ADMIN")
+
+4. Access URL after login having role MANAGER or CUSTOMER: /checkBal
+
+.antMatchers("/checkBal").hasAnyAuthority("MANAGER", "CUSTOMER")
+
+5. To indicates remaining URLs (which are not configured like above)
+
+   .anyRequest().permitAll()
+          [or]
+   .anyRequest().authenticated()
+          [or]
+   .anyRequest().hasAuthority("ADMIN")
+
+======================================================================
+		Spring Boot Security # InMemoryAuthentication
+======================================================================
+
+.antMatchers("/home","/login").permitAll()
+.antMatchers("/hello").authenticated()
+
+*) Create one user in RAM/Temp Memory (not in DB)
+
+(UserDetails)
+ username : sam
+ password : sam  (No password encoder)
+ roles    : ADMIN
+
+UserDetailsService => InMemoryUserDetailsManager(userDetails)
+
+
+*) Spring Security has given code for
+1. User Validation on Login
+2. Session Management
+3. Session Invation and Logout logic
+
+
+==============Simple Security Application====================
+Name : SpringSecurityInMemoryEx
+Dep  : Spring Web, Spring Security, Devtools, Thymeleaf
+
+1. Controller
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class HomeController {
+
+	@GetMapping({"/home","/"})
+	public String showHome() {
+		return "home";
+	}
+	
+	@GetMapping("/hello")
+	public String showHello() {
+		return "hello";
+	}
+	
+	@GetMapping("/login")
+	public String showLogin() {
+		return "login";
+	}
+}
+
+2. SecurityConfig
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+	// 2. Authorization
+	@Bean
+	public SecurityFilterChain configurePaths(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(
+				request -> request.antMatchers("/","/home").permitAll()
+				.anyRequest().authenticated()
+				)
+			.formLogin( form -> form.loginPage("/login").permitAll() )
+			.logout( logout -> logout.permitAll() );
+			
+		return http.build();
+	}
+	
+	//old style
+	/*
+	public void configure(HttpSecurity http) throws Exception {
+		http.authorizeRequests()
+		.antMatchers("/","/home").permitAll()
+		.anyRequest().authenticated()
+		
+		.and()
+		.formLogin()
+		.loginPage("/login")
+		.defaultSuccessUrl("/hello")
+		
+		.and()
+		.logout()
+		.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+		.logoutSuccessUrl("/login?logout");
+	}
+	*/
+	
+	
+
+	// 1. Authentication (InMemory)
+	@Bean
+	public UserDetailsService userDetailsService() {
+
+		UserDetails user = User.withDefaultPasswordEncoder()
+				.username("sam").password("sam").roles("ADMIN")
+				.build();
+		
+		UserDetails user2 = User.withDefaultPasswordEncoder()
+				.username("ram").password("ram").roles("CUSTOMER")
+				.build();
+		
+		return new InMemoryUserDetailsManager(user,user2);
+	}
+
+}
+
+3. UI/ View Pages
+a) home.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Spring Security Example</title>
+    </head>
+    <body>
+        <h1>Welcome!</h1>
+
+        <p>Click <a th:href="@{/hello}">here</a> to see a greeting.</p>
+    </body>
+</html>
+
+
+b) hello.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <h1>Hello world!</h1>
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Sign Out"/>
+        </form>
+    </body>
+</html>
+
+c) login.html
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Spring Security Example </title>
+    </head>
+    <body>
+        <div th:if="${param.error}">
+            Invalid username and password.
+        </div>
+        <div th:if="${param.logout}">
+            You have been logged out.
+        </div>
+        <br/>
+        <form th:action="@{/login}" method="post">
+            <div><label> User Name : <input type="text" name="username"/> </label></div>
+            <div><label> Password: <input type="password" name="password"/> </label></div>
+            <div><input type="submit" value="Sign In"/></div>
+        </form>
+    </body>
+</html>
+
+*) Run application and Enter URL:
+http://localhost:8080/home
+
