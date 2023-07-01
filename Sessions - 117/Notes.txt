@@ -1,0 +1,38 @@
+
+		Spring Boot Security using ORM
+
+1. HttpSession :
+  Once a User login is successful then server creates one Session per 
+  client/user. That stores user data.
+
+  This is an object stores user data fora period of time (Login to Logout)
+  Ex: userId, roles ..etc
+
+--internal Servlets code -------------
+#a Creating a new session
+
+	HttpSession session = request.getSession(true);
+	
+#2 Read Existed Session
+
+	HttpSession session = request.getSession(false);
+
+Note: Below line read old session, if not present creates new Session 
+    HttpSession session = request.getSession();
+
+#3 Add/Modify/Remove/Read existed data in session (key String:val Object)
+
+   session.setAttribute("userId",102345); //adds data to Session
+
+   session.setAttribute("userId",11111); //modify data to Session
+
+   int id = (Integer) session.getAttribute("userId"); //Returns Object
+
+   session.removeAttribute("userId"); //delete data from session
+
+#4 Delete Session on logout
+
+	session.invalidate();
+
+====================================================================
+   
