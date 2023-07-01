@@ -1,0 +1,185 @@
+
+		      Spring Boot Security using ORM
+
+1. Application setup and User Register  (DONE)
+2.*** User Login and Password Encoder
+3. Session Management and Internal Process.
+
+===================================================================
+		2.*** User Login and Password Encoder
+===================================================================
+		Custom UserDetailsService (ORM)
+
+*) User data is stored inside database tables : usertab and rolestab
+*) This data can be loaded into User#Entity class object using DataJPA
+*) But Spring Security needs User#Security class object, using
+   Custom UserDetailsService (ie Impl class).
+
+*) UserDetailsService(I) having one method loadUserbyUsername(String un)
+ that converts Entity class User object to Spring Security User object.
+
+
+=> We do call roles in application, but Spring security storing them as
+  Authority type internally String only.
+Ex: ADMIN, CUSTOMER, CLERK ..etc
+
+Roles allocated to one user is called as GrantedAuthority as List.
+Ex: User : SAM, GrantedAuthority: ADMIN, CUSTOMER
+
+*) GrantedAuthority(I) -Impl class- SimpleGrantedAuthority(C)
+
+
+*) We need to configure some beans
+ 1. PasswordEncoder
+ 2. UserDetailsservice Impl class object
+ 3. AuthenticationManager
+ 4. Configure DaoAuthManager using (PasswordEncoder and UserDetailsservice)
+
+
+Coding Steps:
+1. Add Security Dependencies in pom.xml
+
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+2. Configure Bean Password Encoder
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+@Configuration
+public class AppConfig {
+
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+}
+--------------------------------------
+3. Encode Password Before save operation
+
+--UserServiceImpl--
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private UserRepository repo;
+
+	public Integer saveUser(User user) {
+		String encPwd = passwordEncoder.encode(user.getUserPwd());
+		user.setUserPwd(encPwd);
+		return repo.save(user).getUserId();
+	}
+	...//other methods...
+-------------------------------------------
+4. Security Config and login pages
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+	
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private UserDetailsService userDetailsService;
+	
+	//old
+	/*
+	void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+	}*/
+
+	//new code--starts
+	@Bean
+	public AuthenticationManager authenticationManager(
+			AuthenticationConfiguration authConfig) 
+					throws Exception {
+		return authConfig.getAuthenticationManager();
+	}
+	
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setPasswordEncoder(passwordEncoder);
+		provider.setUserDetailsService(userDetailsService);
+		return provider;
+	}
+	//new code ends
+	
+	@Bean
+	public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(
+				request->request.antMatchers("/home","/","/user/**").permitAll()
+						.antMatchers("/admin").hasAuthority("ADMIN")
+						.antMatchers("/customer").hasAuthority("CUSTOMER")
+						.anyRequest().authenticated()
+				)
+		.formLogin(
+				form->form.loginPage("/login").permitAll()
+				.defaultSuccessUrl("/hello", true)
+				)
+		.logout(logout->logout.permitAll())	;
+		
+		
+		return http.build();
+	}
+	
+
+
+}
+===============================================================
+mysql> select * from usertab;
++-----+-------------+-------+--------------------------------------------------------------+
+| uid | umail       | uname | upwd                                                         |
++-----+-------------+-------+--------------------------------------------------------------+
+|   1 | ajay@gm.com | AJAY  | $2a$10$qZoopSxnSw1H.ZvnahqNiOqfnQFzNpSfzI2Y.BeGqioCUWhIcHwDW |
++-----+-------------+-------+--------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from roles_tab;
++-----+----------+
+| uid | urole    |
++-----+----------+
+|   1 | ADMIN    |
+|   1 | CUSTOMER |
++-----+----------+
+2 rows in set (0.00 sec)
+
+mysql> select * from roles_tab where urole='CUSTOMER';
++-----+----------+
+| uid | urole    |
++-----+----------+
+|   1 | CUSTOMER |
++-----+----------+
+1 row in set (0.00 sec)
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> delete from roles_tab where urole='CUSTOMER';
+Query OK, 1 row affected (0.02 sec)
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
