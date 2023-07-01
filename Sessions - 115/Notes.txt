@@ -1,0 +1,203 @@
+
+		      Spring Boot Security using ORM
+
+1. Application setup and User Register  
+2.*** User Login and Password Encoder
+3. Session Management and Internal Process.
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	   Stage#1 Application setup and User Register
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+In this stage we define Spring boot web mvc application like CRUD process
+that reads Register Form data and stores in  two tables.
+ie  User table and Roles table.
+
+For this we need to define User Entity with Repository, service and Controller
+
+
+S#1 Define One Spring boot application
+Name : 03SpringBootSecurityOrmEx
+Dep  : web, lombok, data jpa, mysql, devtools, thymeleaf.
+
+S#2 Comment Spring Security Dependencies in pom.xml
+---------------------------------------
+S#3 application.properties
+server.port=9090
+
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot
+spring.datasource.username=root
+spring.datasource.password=Shivam@123
+
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=create
+------------------------------------------
+S#4 Entity class
+package com.app.shivam.entity;
+
+import java.util.Set;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="usertab")
+public class User {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="uid")
+	private Integer userId;
+	
+	@Column(name="uname")
+	private String userName;
+	
+	@Column(name="umail")
+	private String userEmail;
+	
+	@Column(name="upwd")
+	private String userPwd;
+	
+	@ElementCollection
+	@CollectionTable(name="roles_tab",
+		joinColumns = @JoinColumn(name="uid")
+	)
+	@Column(name="urole")
+	private Set<String> userRoles;
+	
+}
+-----------------------------------
+S#5 Repository interface
+package com.app.shivam.repo;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.User;
+
+public interface UserRepository extends JpaRepository<User, Integer>{
+
+	Optional<User> findByUserEmail(String userEmail);
+}
+-------------------------
+S#6 Service interface/class
+package com.app.shivam.service;
+
+import java.util.Optional;
+
+import com.app.shivam.entity.User;
+
+public interface IUserService {
+
+	Integer saveUser(User user);
+	Optional<User> getOneUser(Integer id);
+}
+--------------
+package com.app.shivam.service.impl;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.app.shivam.entity.User;
+import com.app.shivam.repo.UserRepository;
+import com.app.shivam.service.IUserService;
+
+@Service
+public class UserServiceImpl implements IUserService {
+
+	@Autowired
+	private UserRepository repo;
+	
+	public Integer saveUser(User user) {
+		return repo.save(user).getUserId();
+	}
+
+	public Optional<User> getOneUser(Integer id) {
+		return repo.findById(id);
+	}
+
+}
+
+
+7. Controller
+package com.app.shivam.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.app.shivam.entity.User;
+import com.app.shivam.service.IUserService;
+
+@Controller
+@RequestMapping("/user")
+public class UserController {
+
+	@Autowired
+	private IUserService service;
+	
+	//1. show Register page
+	@GetMapping("/register")
+	public String showReg() {
+		return "UserRegister";
+	}
+	
+	//2. save user data
+	@PostMapping("/save")
+	public String saveUser(
+			@ModelAttribute User user, Model model)
+	{
+		Integer id = service.saveUser(user);
+		String message = "User '"+id+"' created!";
+		model.addAttribute("message", message);
+		return "UserRegister";
+	}
+	
+	
+}
+
+8. UI View Page 
+-- UserRegister.html --
+<html xmlns:th="https://www.thymeleaf.org/">
+	<head>
+		<title>SECURITY USING ORM</title>
+	</head>
+	<body>
+		<h3> WELCOME TO REGISTER PAGE</h3>
+		<form th:action="@{/user/save}" method="POST">
+		<pre>
+			NAME   : <input type="text" name="userName"/>
+			EMAIL  : <input type="text" name="userEmail"/>
+			PASSWD : <input type="password" name="userPwd"/>
+			ROLES :
+				<input type="checkbox" name="userRoles" value="ADMIN"/> ADMIN
+				<input type="checkbox" name="userRoles" value="CUSTOMER"/> CUSTOMER
+				<input type="submit" value="Create User"/>
+		</form>
+		</pre>
+		<div>[[${message}]]</div>
+	</body>
+
+</html>
+==================================================================
