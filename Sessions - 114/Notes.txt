@@ -1,0 +1,287 @@
+
+
+		   Spring Boot Security - using JDBC
+
+*) InMemoryAuthentication : Recommended to use in Dev Environment only.
+  It is for testing purpose. Do not use in Production.
+
+*) To store/fetch user details using Database, we use JDBC API.
+*) Here we are going to use PasswordEncoder to add user data.
+
+Two tables are created to store user data
+	users (username, password, enabled)
+	authorities(username, authority)
+
+
+*) Password encoder is recommended to use to encode and store passwords
+  in database tables.
+=================sample -- Test class===================
+package com.app.shivam;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+public class Test {
+
+	public static void main(String[] args) {
+		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+		String pwd = encoder.encode("ram");
+		System.out.println(pwd);
+	}
+}
+======================================================================
+
+Database Setup:
+create table users(
+	username varchar(50) not null primary key,
+	password varchar(500) not null,
+	enabled boolean not null);
+
+create table authorities (
+	username varchar(50) not null,
+	authority varchar(50) not null,
+	constraint fk_authorities_users foreign key(username) 
+	references users(username));
+
+create unique index ix_auth_username on authorities (username,authority);
+
+
+==MySQL Console=================================
+mysql> drop database boot;
+Query OK, 5 rows affected (0.12 sec)
+
+mysql> create database boot;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use boot;
+Database changed
+mysql> create table users(
+    -> username varchar(50) not null primary key,
+    -> password varchar(500) not null,
+    -> enabled boolean not null);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql>
+mysql> create table authorities (
+    -> username varchar(50) not null,
+    -> authority varchar(50) not null,
+    -> constraint fk_authorities_users foreign key(username)
+    -> references users(username));
+Query OK, 0 rows affected (0.15 sec)
+
+mysql>
+mysql> create unique index ix_auth_username on authorities (username,authority);
+Query OK, 0 rows affected (0.09 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+================================================================
+Name : 02SpringBootSecurityJdbcAuthEx
+Dep  : Spring web, Spring Security, Devtools, JDBC, MySQL, Thymeleaf
+
+
+1. Controller class
+package com.app.shivam.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class HomeController {
+
+	//EVERY ONCE CAN ACCESS
+	// .antMatchers("/home").permitAll
+	@GetMapping({"/home","/"})
+	public String showHome() {
+		return "home";
+	}
+	
+	//ONLY AFTER LOGIN
+	// .antMatchers("/hello").authenticated()
+	@GetMapping("/hello")
+	public String showHello() {
+		return "hello";
+	}
+	
+	//ONLY ADMIN After login
+	// .antMatchers("/admin").hasAuthority("ADMIN")
+	@GetMapping("/admin")
+	public String showAdmin() {
+		return "admin";
+	}
+	
+	//ONLY CUSTOMER After login
+	// .antMatchers("/customer").hasAuthority("CUSTOMER")
+	@GetMapping("/customer")
+	public String showCustomer() {
+		return "customer";
+	}
+	
+	@GetMapping("/login")
+	public String showLogin() {
+		return "login";
+	}
+}
+
+2. Security Config
+package com.app.shivam.config;
+
+import javax.sql.DataSource;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+	
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	//authorization
+	@Bean
+	public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
+		http.authorizeHttpRequests(
+				request->request.antMatchers("/home","/").permitAll()
+						.antMatchers("/admin").hasAuthority("ADMIN")
+						.antMatchers("/customer").hasAuthority("CUSTOMER")
+						.anyRequest().authenticated()
+				)
+		.formLogin(
+				form->form.loginPage("/login").permitAll()
+				.defaultSuccessUrl("/hello", true)
+				)
+		.logout(logout->logout.permitAll())	;
+		
+		
+		return http.build();
+	}
+	
+	//authentication
+	@Bean
+	public UserDetailsService userDetailsService(DataSource datasource) {
+		UserDetails user1  = User.withUsername("sam")
+				.password("$2a$10$TD7ldmKUQw3EHFxVivyA8OUrzy7butY9QDRnltnBS/b9aI0j6reYq")
+				.authorities("ADMIN").build();
+		
+		UserDetails user2  = User.withUsername("ram")
+				.password("$2a$10$dEm8gdOC0R2S7IgXSnBKFOSeeKbCNuVeMC/hP24eY7zdADlUif4n.")
+				.authorities("CUSTOMER").build();
+		
+		JdbcUserDetailsManager users = new JdbcUserDetailsManager(datasource);
+		users.createUser(user1);
+		users.createUser(user2);
+		
+		return users;
+	}
+
+
+}
+
+3. View pages
+a) admin.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <h1>HELLO ADMIN PAGE!!</h1>
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Sign Out"/>
+        </form>
+    </body>
+</html>
+
+b) customer.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <h1>HELLO CUSTOMER PAGE!!</h1>
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Sign Out"/>
+        </form>
+    </body>
+</html>
+
+
+c) hello.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <h1>Hello world!</h1>
+        <form th:action="@{/logout}" method="post">
+            <input type="submit" value="Sign Out"/>
+        </form>
+    </body>
+</html>
+
+d) home.html
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Spring Security Example</title>
+    </head>
+    <body>
+        <h1>Welcome!</h1>
+
+        <p>Click <a th:href="@{/hello}">here</a> to see a greeting.</p>
+    </body>
+</html>
+
+e) login.html
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <title>Spring Security Example </title>
+    </head>
+    <body>
+        <div th:if="${param.error}">
+            Invalid username and password.
+        </div>
+        <div th:if="${param.logout}">
+            You have been logged out.
+        </div>
+        <br/>
+        <form th:action="@{/login}" method="post">
+            <div><label> User Name : <input type="text" name="username"/> </label></div>
+            <div><label> Password: <input type="password" name="password"/> </label></div>
+            <div><input type="submit" value="Sign In"/></div>
+        </form>
+    </body>
+</html>
+
+
+4) application.properties
+
+#DB Connection
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot
+spring.datasource.username=root
+spring.datasource.password=root
+
+5) Run app and enter URL
+http://localhost:8080
+
+*) If we enter details user : sam he is a ADMIN, and 
+trying to access CUSTOMER PAGE, which is not allowed then FC throws
+   403 Error Forbidden
+
+==Run below SQLs while starting application if you get any issue===
+mysql> delete from authorities;
+mysql> delete from users;
+====================================================================
