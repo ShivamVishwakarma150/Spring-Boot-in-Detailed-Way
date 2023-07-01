@@ -78,9 +78,7 @@ Overall, the **Spring-Boot-in-Detailed-Way** repository serves as a valuable res
 - HTML Form: Handling HTML form submissions in Spring MVC.
 - Thymeleaf tags: Working with Thymeleaf template engine and its tags.
 - Thymeleaf Form: Creating forms using Thymeleaf form tags.
-- DevTools: Enh
-
-ancing development productivity with Spring DevTools.
+- DevTools: Enhancing development productivity with Spring DevTools.
 - `@RequestParam`: Handling request parameters in Spring MVC.
 - Static folder (images/css/js): Serving static resources in Spring MVC.
 - CRUD Application: Building a CRUD application using Spring MVC.
