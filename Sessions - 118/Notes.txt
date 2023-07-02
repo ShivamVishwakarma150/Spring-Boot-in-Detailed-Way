@@ -1,0 +1,104 @@
+
+			Spring Boot Security
+
+*) Token based Authentication:-
+=> Server Generates one Token after validating user login details
+  by using one Security Hasing Algorithm and Secret key.
+
+=> Once a token is generated then it will be sent to client using
+   response. Client App has to store the token data.
+
+=> Server will never store any user data, no session, no token even.
+=> When client wants to make a request then it has to send token
+   along with request. 
+
+=> Server validates token using Secret key if valid provide response
+   Else redirect to login page (or any other).
+
+=======================================================================
+JWT - JSON Web Token is used to implement Token based Authentication.
+
+=> JJWT is open Source API used by java applications to generate,
+    validate, read/parse Tokens.
+
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt</artifactId>
+    <version>0.9.1</version>
+</dependency>
+
+=> JWT Token Contains 3 Parts:
+1. Head : JWT Related Information
+2. Payload: Username and other details(expDate, provider, ....etc)
+3. Signature : SignUsingSecret(Encoded[Header]+ Encoded[Payload])
+
+=> Token Format looks like:
+   xxxxxxxxxx.yyyyyyyyyyyyyyyy.zzzzzzzzzzz
+
+=> Always Signature is validated at server using Secret.
+=====================================================================
+
+
+Maven Project:
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
+			<version>0.9.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+
+	</dependencies>
+
+*) Test class:
+package com.app.shivam;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+public class Test {
+
+	public static void main(String[] args) {
+		String secret = "TestAppOneSample";
+		
+		String token = 
+		Jwts.builder()
+		.setId("8562455") //user UnqId
+		.setSubject("sample") //username
+		.setIssuedAt(new Date(System.currentTimeMillis())) //created time
+		.setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(2))) //exp time
+		.setIssuer("VIKASHIT") //token provider name
+		.signWith(SignatureAlgorithm.HS256, secret.getBytes()) //sec algo, secret
+		.compact();
+		
+		System.out.println(token);
+		
+		Claims c =
+		Jwts.parser()
+		.setSigningKey(secret.getBytes())
+		.parseClaimsJws(token).getBody();
+		
+		System.out.println(c.getSubject());
+		System.out.println(c.getIssuer());
+		System.out.println(c.getExpiration());
+		
+	}
+}
+================================================================
+task: 
+1. What are Filters in Servlet API?
+2. Why they need ?
+3. How can we define them ?
