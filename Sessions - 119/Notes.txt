@@ -1,0 +1,212 @@
+			Spring Boot Security
+
+1) User Register
+=> Read data as JSON From POSTMAN and Store in DB
+
+
+2) User Login and Token Generation
+Define JWT Token service to generate token after login success
+
+3) Token validation and Service
+Check Auth Header using Filter and validate using JwtUtil
+if valid then continue to service/controller code
+
+
+
+			Spring Boot Security
+1. Filter : 
+=> In general Filters are used to execute PRE/POST processing logic
+  for a servlet.
+=> We need to define one Filter that is used execute for every request only
+   OncePerRequestFilter(C) # doFilterInternal()
+=> In this Filter, define below coding steps
+*) Read Authorization Header (Read Token)
+*) Validate Token by using JwtUtil
+*) Read Subject/username
+*) Validate Username by loading userdata from db
+*) Create UsernamePasswordAuthenticationToken
+*) Link to current request and SecurityContext
+  (which is valid upto Response)
+
+
+2. Security Config
+=> Define Authentication, Authorization
+=> Make Configuration for security as Stateless(No HTTPSession)
+=> Add/Register Filter that gets executed before FC.
+
+================================================================
+
+1. Create user
+
+POST  http://localhost:9090/user/save   [SEND]
+	Body
+		(*) raw		[JSON]
+{
+    "name" : "AJAY",
+    "username" : "ajay@gm.com",
+    "password" : "ajay",
+    "roles" : ["ADMIN","CUSTOMER"]
+}
+
+
+2. Login user 
+
+POST  http://localhost:9090/user/login   [SEND]
+	Body
+		(*) raw		[JSON]
+{
+    "username" : "ajay@gm.com",
+    "password" : "ajay"
+
+}
+
+3. Check Secured Resources
+
+POST   http://localhost:9090/user/welcome  [SEND]
+	Headers
+
+ Key			Value
+ Authorization		Paste your token here
+
+===============================================
+*) Sun/Oracle has given one Security Contract ie : Principal(I)
+  ie If any F/w, Tech is implementing Security Concept then
+  store current user details inside Principal Object.
+
+  Principal(I)   --- Stores only name
+	IS-A
+  Authentication(I) -- Given by Spring Security that holds
+  			username and roles
+     IS-A
+  UsernamePasswordAuthenticationToken(C)  Impl class
+
+*) To hold current user details object inside container to access
+ globally, Spring Security provided SecurityContextHolder(C)
+ which creates SecurityContext(I).
+=======================================================
+1. Filter class
+package com.app.shivam.filter;
+
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.app.shivam.util.JwtUtil;
+
+@Component
+public class SecurityFilter extends OncePerRequestFilter {
+
+	@Autowired
+	private JwtUtil jwtUtil;
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+
+		// read Token from Request Header
+		String token = request.getHeader("Authorization");
+		if (token != null) {
+
+			// validate and read subject from token
+			String username = jwtUtil.getUsername(token);
+
+			// check userdetails
+			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+				// load user from DB
+				UserDetails user = userDetailsService.loadUserByUsername(username);
+				UsernamePasswordAuthenticationToken authenitcation = new UsernamePasswordAuthenticationToken(username,
+						user.getPassword(), user.getAuthorities());
+				authenitcation.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authenitcation);
+			}
+		}
+
+		filterChain.doFilter(request, response);
+	}
+
+}
+-------------------------------------
+2. Security Config
+package com.app.shivam.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.app.shivam.filter.SecurityFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+	
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private AuthenticationEntryPoint authenticationEntryPoint;
+	
+	@Autowired
+	private SecurityFilter securityFilter;
+	
+	@Bean
+	public AuthenticationManager authenticationManager(
+			AuthenticationConfiguration configuration
+			) throws Exception 
+	{
+		return configuration.getAuthenticationManager();
+	}
+	
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setPasswordEncoder(passwordEncoder);
+		provider.setUserDetailsService(userDetailsService);
+		return provider;
+	}
+	
+	@Bean
+	public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+		.authorizeRequests().antMatchers("/user/save","/user/login").permitAll()
+		.anyRequest().authenticated()
+		.and()
+		.exceptionHandling()
+		.authenticationEntryPoint(authenticationEntryPoint)
+		.and()
+		.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+		.and()
+		.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+		
+		return http.build();
+	}
+	
+}
