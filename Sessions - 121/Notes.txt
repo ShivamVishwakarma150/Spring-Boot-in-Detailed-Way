@@ -1,0 +1,99 @@
+
+Stage#1 Register Client with Auth Server
+(Facebook, google, github)
+
+
+*) Goto : https://developers.facebook.com/
+ > Click on MyApps
+ > Choose Consumer > Next
+ > Enter app name > Next
+ > Click on App name (Top left corner)
+ > Create test app > Finish
+ > Click on Settings > Basics
+ > copy client-id: 1651876458565698
+ 	secret: 0b407987f0c3fea6bd82fb155819e2db
+===================================================
+
+--application.yml---
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          facebook:
+               client-id: 838612877842728
+               client-secret: a02c4ee2148d1a519e4b896ed02b4c0e
+
+==========================================================
+SecurityConfig.java
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+public class SecurityConfig {
+
+	//authentication ...
+	
+	//authorization
+	@Bean
+	public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+		http.antMatcher("/**")
+		.authorizeRequests()
+		.antMatchers("/","/login**").permitAll()
+		.anyRequest().authenticated()
+		.and()
+		.oauth2Login();
+		
+		return http.build();
+	}
+}
+========UserController========
+package com.app.shivam.rest;
+
+import java.security.Principal;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class UserController {
+
+	@GetMapping("/secure")
+	public String showHome(Principal p) 
+	{
+		System.out.println(p);
+		return "Secure";
+	}
+	
+	@GetMapping("/")
+	public String showLogin() 
+	{
+		return "Index";
+	}
+}
+
+==========Index.html===========
+<html xmlns:th="https://www.thymeleaf.org/">
+<head>
+	<title>WELCOME TO LOGIN</title>
+</head>
+<body>
+	<h2>Spring Security using OAuth2.x</h2>
+	<a href="secure">Login </a>
+</body>
+</html>
+
+==============Secure.html====================
+<html xmlns:th="https://www.thymeleaf.org/">
+<head>
+	<title>WELCOME TO LOGIN</title>
+</head>
+<body>
+	<h2>WELCOME</h2>
+	<span th:text="${#authentication.name}"></span>
+</body>
+</html>
