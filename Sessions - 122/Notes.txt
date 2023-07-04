@@ -1,0 +1,22 @@
+			  SOLID
+
+SRP: "A class should have one, and only one, reason to change"
+(We need to follow this)
+
+
+OCP: "You should be able to extend a class’s behavior, without modifying it"
+(Supported by Java) Inheritance and Override
+
+
+LSP: "Derived classes must be substitutable for their base classes."
+(Supported by Java)  Up-casting
+
+
+ISP: "Make fine grained interfaces that are client specific."
+(We need to implement) - Define multiple interfaces with specific operations
+  instead of writing all in one.
+
+DIP: "Depend on abstractions, not on concretions."
+(We need to implement) -
+create HAS-A Relation between class and interface/abstract class
+not between two classes.
