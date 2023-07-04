@@ -1,0 +1,124 @@
+
+			   Circuit Breakers
+
+*) For one request, there can be multiple MS# executed in a order.
+*) This is called as Chain of MS# also called as Circuit.
+*) If one of these MS# is not responding properly for request processing
+   Exception internally, Service Down, Resource issues, timeout issues..etc
+  Then Cascade Exception/failure may occur, which leads to invalid 
+  response/bad client response..etc
+
+--------------
+Solution:
+--------------
+ Stop executing MS# if it is failed continuously, and give some dummy
+ response/Error message to client. Admin/Support Team can fix issue
+ meanwhile.  ie called as Circuit Breaker.
+
+*) Circuit Breaker is used to avoid execution of actual MS#/external service
+   for some time incase of cascading failures.
+
+We can set one criteria based on that connection establishment can be
+tested ie called as Threshold.
+
+1. COUNT BASED : If MS# is failed for 20 request
+2. TIME BASED  : If MS# is not responding/exception for last 30 minutes
+***Default value is 100.
+
+States:
+1. CLOSED : Connection exist between Two MS# (MS#1 ----MS#2)
+2. OPEN   : Connection is broken b/w MS# (MS#1 --/  -MS#2)
+3. HALF_OPEN : Try after some 'x' time to make another request to test
+		Exceptions/issues status.
+       No Issues --> Move to CLOSED, else OPEN.
+
+*) Hystrix is removed from Spring boot, latest one is :
+   circuitbreaker-resilience4j (internally it is reactive API)
+
+*) We need to add 4 Dependencies : actuator, web, resilience4j and AOP
+*) Also provide Fallback method:
+	If circuitbreaker is OPEN status then execute Dummy method
+	instead of actual MS# application, for some time to avoid
+	cascade exceptions.
+
+*) Provide properties inside YAML file
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      orderService:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        waitDurationInOpenState: 5s
+        slidingWindowType: COUNT_BASED
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+=MS#1 Controller======
+package com.app.shivam.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
+@RestController
+public class OrderController {
+
+	private static final String ORDER_SERVICE = "orderService";
+
+	@GetMapping("/order")
+	@CircuitBreaker(name = ORDER_SERVICE, fallbackMethod = "orderFallback")
+	public ResponseEntity<String> createOrder() {
+		String response = new RestTemplate().getForObject("http://localhost:8081/item", String.class);
+		return new ResponseEntity<String>(response, HttpStatus.OK);
+	}
+
+	public ResponseEntity<String> orderFallback(Exception e) {
+		return new ResponseEntity<String>("SERVICE IS DOWN!! TRY AFTER SOME TIME", HttpStatus.OK);
+	}
+}
+
+
+===MS#2 Controller===============
+package com.app.shivam;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class OrderController {
+
+	@GetMapping("/item")
+	public ResponseEntity<String> createOrder() {
+		return new ResponseEntity<String>("HELLO USERS!!", HttpStatus.OK);
+	}
+
+}
+
+*) run with port : 8081
+
+and Enter URLs:
+http://localhost:8080/order
+http://localhost:8080/actuator/health
+==============================================================
