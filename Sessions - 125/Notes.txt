@@ -1,0 +1,116 @@
+
+			      Apache Maven 
+
+*) Dependency Exclusion:-
+
+> When we add any <dependency> in pom.xml, then
+  it may add/download either single dependency or group of
+  dependencies (Multiple child jars)
+
+> Avoid / exclude one child dependency (jar) from parent dependency
+  chain is called as Dependency Exclusion.
+
+Example:
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.25</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-aop</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+Q) How can we move from Tomcat Server to any other server in Spring boot?
+A) By using Maven Dependency Exclusion concept.
+   First we need to exclude tomcat dependency from spring web dependency
+   then add Jetty/Undertow Dependency manually.
+
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jetty</artifactId>
+		</dependency>
+
+========================================================================
+Dependency Scope in Maven:- When and Which jar is used?
+
+1. compile : if we did not specify any scope then it is default
+	   it says JAR is required from compile time onwards.
+  
+  F/w Depenencies : Hibernate Core, Spring Context ..etc
+
+
+2. runtime : Jar is required while running, not at compile time.
+  Database Dependencies : ojdbc jar, mysql jar..etc
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.32</version>
+			<scope>runtime</scope>
+		</dependency>
+
+
+3. test : Jar is required while UnitTesting only
+   JUnit F/w, TestNg , Mocking F/w ..etc
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.9.1</version>
+			<scope>test</scope>
+		</dependency>
+
+4. provided : Jar is taken from Server/container specifics
+		[servlet-api.jar taken from Tomcat Server]
+		[Lombok from Spring boot F/w or Containers]
+
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>javax.servlet-api</artifactId>
+    <version>3.1.0</version>
+    <scope>provided</scope>
+</dependency>
+
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.26</version>
+    <scope>provided</scope>
+</dependency>
+
+
+5. system  : Jar is not present in .m1/.m2 then load from system drives
+If a JAR exist inside our System Drives
+
+		<dependency>
+			<groupId>com.app</groupId>
+			<artifactId>sample-abcd</artifactId>
+			<version>3.32</version>
+			<scope>system</scope>
+			<systemPath>D:/abcd/sample</systemPath>
+		</dependency>
+=====================================================================
+Web Application:
+> File > new > Maven > Maven project > Next [no checkbox]
+> Next > DropDown [internal] > Search for web
+> maven-archtype-webapp > Next > Enter details
+
+groupId: com.app
+artifactId: FirstwebApp
+Version : 1.0
+
+> Next > Finish
