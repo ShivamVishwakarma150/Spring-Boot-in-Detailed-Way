@@ -1,0 +1,125 @@
+
+			      Apache Maven 
+
+*) Development : ___.java
+*) Compile     : ___.class
+*) Build       : ___.jar / __.war / ___.ear
+ 
+ JAR - Java Archive ( Group of .class files)
+ WAR - Web Archive ( Group of .class[servlets], HTML, CSS, Images)
+ EAR - Enterprise Archive ( EJBs + Web Apps)
+
+*) JAR is a Collection of .class files
+
+*) Dependency : Required JAR files for application is called as Dependency
+*) Dependency Chain : one JAR can be internally using other JAR classes
+	then those JARs are called as Dependency Chain.
+ 
+===============================================================
+Project Management Tool : Maven
+
+1. Project Folder System
+2. All Required Dependencies [Dependency Chain]
+3. Compile, Test Code
+4. Build Our Project (.jar/.war)
+
+
+*) Maven Folder System:-
+
+src/main/java          <--Development/.java files
+src/main/resources    <--Development/non java files[.xml,.yaml..etc]
+
+src/test/java		<-- Unit Test/.java files
+src/test/resources      <-- Unit Test/non java files[.xml,.yaml..etc]
+
+
+target folder : It contains our current project build files
+	ex:  myapp-1.0.jar
+             <artifactId>-<version>.jar (format)
+
+groupId: Provider details [folder name using domain name]
+ex: com.oracle, com.google, in.test.app
+
+
+*) pom.xml [ Project Object Model]
+  How and What a Project should Have?
+
+*) Types of Maven Application
+1. Simple Maven Project (Stand alone)
+2. ArchType Project (Web, template..)
+
+==============================================================
+~/.m2 : It is called as Local Repository that holds all download
+     jars from Maven Central Repository 
+
+Ex:
+C:\Users\shivam\.m2
+
+--example--
+pom.xml
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.32</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.9.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+--code--
+package com.app;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseConnection {
+
+	public Connection getConnection() {
+		Connection con = null;
+		try {
+			con = DriverManager.getConnection(
+					"jdbc:mysql://localhost:3306/boot7am",
+					"root", "root");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return con;
+	}
+}
+
+-------
+package com.app;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.sql.Connection;
+
+import org.junit.jupiter.api.Test;
+
+public class TestDatabaseConnection {
+	
+	@Test
+	public void testGetConnection() {
+		DatabaseConnection dbc = new DatabaseConnection();
+		Connection con = dbc.getConnection();
+		assertNotNull(con);
+	}
+	
+}
+
+
+> Right click on project > Run As > Maven Build ...
+> clean package > apply and run
+
