@@ -1,0 +1,98 @@
+
+			      Apache Maven 
+
+Apache Tomcat:-
+> Download and Configure : apache-tomcat-9.0.72
+> Make sure set Path and JAVA_HOME
+> Goto tomcat folder / bin / click on startup.bat file
+> Enter URL: http://localhost:8080/
+
+================================================
+Web Application:
+> File > new > Maven > Maven project > Next [no checkbox]
+> Next > DropDown [internal] > Search for web
+> maven-archtype-webapp > Next > Enter details
+
+groupId: com.app
+artifactId: FirstwebApp
+Version : 1.0
+
+> Next > Finish
+
+*) WAR Plugin
+<plugins>
+	<plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-war-plugin</artifactId>
+		<version>3.3.1</version>
+	</plugin>
+</plugins>
+
+***) Configure server in IDE for API access
+> Window > Preferences > Servers > Runtime Environments > Add
+> Select Apache > Tomcat 9 > Next > Enter location of tomcat
+> next/finish > apply and close
+
+***) Add server to Project
+> Right click on Project > Build path > Configure build path
+> Library tab > Add Library > server runtime > Select Apache tomcat
+> finish
+
+***) open web.xml and remove dtd lines code (top 3 lines)
+
+*) Right click on project > Run as > Maven Build ...
+  > enter goals " clean package " >> apply and run
+
+*) Refresh project > copy war file from target folder
+> paste inside Tomcat webapps folder > Run tomcat
+> Enter URL : http://localhost:8080/FirstwebApp/
+
+
+===============================================================
+Parent Maven Project (Parent Project)  type: pom
+*) We can create one Maven Project with type pom and specify
+  all codes and dependencies for child application connected using
+  <parent> tag.
+
+*) We can specify Dependencies directly or using <dependencyManagement>
+  for handling dependency version management.
+
+Step#1 Create Parent Project
+> File > new > Maven > Simple Project > Next > Enter details
+ packgin type : pom
+
+> open pom.xml and add code like
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>5.3.25</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+
+
+Step#2 Create Child project
+> File > new > Maven > Simple Project > Next > Enter details
+> and also enter parent project details at same time
+
+	<parent>
+		<groupId>___</groupId>
+		<artifactId>___</artifactId>
+		<version>__</version>
+	</parent>
+
+
+We can access parent available dependencies (from BOM: Bill Of Materials)
+without version:
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+	</dependencies>
+
+================================================================
