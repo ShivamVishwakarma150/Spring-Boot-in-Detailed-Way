@@ -1,0 +1,64 @@
+
+  Logging:- Finding/Reading Messages from application like
+   Success, Info, warning, Errors and Exceptions..etc
+   where is running in dev/production/stage servers.
+
+ *) Console is a limited area to see all log lines.
+    So, we use a storage area like a File(Log File), Database..etc
+
+ *) We have different Logging F/w in Java:
+    => Commons Logging 
+    => Log4J
+    => Logback
+    => Java Loggin Basic F/w
+    ..etc
+
+  *) SLF4J (Simple Logging Facade for Java) is a abstract f/w built on logging f/w. If we move from one Logging F/w to another F/w, our logging code remains same.
+========================================================================
+			Apache Log4J 2.x
+     
+3 Components:-
+
+1. Logger   : This Object needs to be created inside a Class 
+		(for which Logging needs to be enabled)
+ In our apps: RestControllers, Controllers .. must need
+
+2. Appender : It says about location to store log messages
+
+Types:
+ConsoleAppender  : Write Log messages to Console
+FileAppender/RollingFileAppender/DailyRollingFileAppender
+		: Write Log messages to File
+
+JDBCAppender  : Write Log messages to Database
+SmtpAppender  : Write Log messages to Email (Admin Mail)
+TelnetAppender: Write Log messages to Network/Stream
+
+3. Layout : Format of Log Messages
+
+=> SimpleLayout : Print Log message to Appender and goto next line
+=> HTMLLayout   : Print Log message in HTML Format
+=> XMLLayout    : Print Log message in XML Format
+=> PatternLayout*** :  Print Log message in Custom Pattern
+
+
+-> Logger Priority methods: Prints Message to Appender
+  TRACE  : Find Current Service in Distribution.
+  DEBUG  : Print data/message of variables/objects ...etc
+  INFO   : What is the current stage
+  	(Service is done, entered into Controller..etc)
+  WARN   : To print Warnings
+  ERROR  : Exceptions in application (ArrayIndexOutofBounds..etc)
+  FATAL  : High Level issues(Network, Memory, Connection)
+------------------------------------------------------------
+
+*) Inside our class, we need to create Logger object as
+
+private static final Logger LOG = LogManager.getLogger(__.class);
+
+in pom.xml
+<dependency>
+	<groupId>org.apache.logging.log4j</groupId>
+	<artifactId>log4j-core</artifactId>
+	<version>2.20.0</version>
+</dependency>
