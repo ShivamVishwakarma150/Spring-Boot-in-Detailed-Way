@@ -1,0 +1,356 @@
+
+			   Log4j 2.x
+
+*) We need to define one Logging ConfigurationFile
+Name : log4j2.xml
+<Configuration>
+	<Appenders>
+           <Console .../> ++ Layout
+	   <File ../>    ++ Layout
+	</Appenders>
+	<Loggers>
+		Root Level - DEBUG/INFO/WARN...
+	</Loggers>
+</Configuration>
+=================================================
+Step#1 Create one simple Maven Project
+Group ID: com.app.shivam
+Artifact ID : LoggingApp
+Version : 1.0
+
+Step#2 Add in pom.xml
+	<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.9.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.31</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.14.0</version>
+		</dependency>
+	</dependencies>
+
+Step#3 define log4j2.xml file under src/main/resources folder
+
+
+Step#4 Define one test class
+package com.app;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class Test {
+
+	private static final Logger LOG = LogManager.getLogger(Test.class);
+	
+	public static void main(String[] args) {
+		LOG.debug("FROM DEBUG");
+		LOG.info("FROM INFO");
+		LOG.warn("FROM WARN");
+		LOG.error("FROM ERROR");
+		LOG.fatal("FROM FATAL");
+	}
+}
+
+
+-----------priority methods ------------------
+Name           Number	Method
+----------------------------------------------
+DEBUG	-	1	- debug()
+INFO	-	2	- info()
+WARN	-	3	- warn()
+ERROR	-	4	- error()
+FATAL	-	5	- fatal()
+----------------------------------------------
+
+*) To write Log Messages to DB:
+
+	<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.31</version>
+		</dependency>
+
+*) Create table:
+create table EVENT_LOGS (
+    ID varchar(50) primary key,
+    DATE_TIME timestamp,
+    CLASS varchar(100),
+    LEVEL varchar(10),
+    MESSAGE TEXT
+);
+
+==MySQL Console================
+mysql> drop database boot;
+Query OK, 1 row affected (0.07 sec)
+
+mysql> create database boot;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use boot;
+Database changed
+mysql> show tables;
+Empty set (0.01 sec)
+
+mysql> create table EVENT_LOGS (
+    ->     ID varchar(50) primary key,
+    ->     DATE_TIME timestamp,
+    ->     CLASS varchar(100),
+    ->     LEVEL varchar(10),
+    ->     MESSAGE TEXT
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+================================================================
+<SMTP name="LogToMail" subject="Error Log From Log4j" 
+		from="javabyshivam@gmail.com" 
+		to="javabyshivam@gmail.com" 
+		smtpHost="smtp.mailgun.org" 
+		smtpPort="587" 
+		smtpUsername="____.mailgun.org" 
+		smtpPassword="____" 
+      bufferSize="100">
+</SMTP>
+
+
+Gmail Host: smtp.gmail.com
+port : 587
+
+also in pom.xml
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        pom.xml
+<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.9.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.31</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.14.0</version>
+		</dependency>
+	</dependencies>
+
+log4j2.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+	<Appenders>
+		<Console name="LogToConsole" target="SYSTEM_OUT">
+			<PatternLayout>
+				<Pattern>%d{ddMMMyy HHmmss} -- %C %M (%t) - [%p] : %L: %m %n </Pattern>
+			</PatternLayout>
+		</Console>
+		<File name="LogToFile" fileName="logs/myapp.log">
+			<PatternLayout>
+				<Pattern>%d{dd/MMM/yy--HHmmss} -- %C %M (%p)%L~%m %n</Pattern>
+			</PatternLayout>
+		</File>
+
+		<RollingFile name="LogToRollingFile" fileName="logs/app-info.html" filePattern="logs/app-info-%d{yyyy-MM-dd}.html.gz">
+			<!--<XMLLayout />-->
+			<HTMLLayout charset="UTF-8" title="HTML LOGS" locationInfo="true" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
+				<SizeBasedTriggeringPolicy size="1 KB" />
+			</Policies>
+		</RollingFile>
+
+		<JDBC name="LogToDb" tableName="EVENT_LOGS">
+			<ConnectionFactory class="com.app.shivam.LogsStoreConnectionFactory" method="getConnection" />
+			<Column name="ID" pattern="%u" />
+			<Column name="DATE_TIME" isEventTimestamp="true" />
+			<Column name="CLASS" pattern="%logger" />
+			<Column name="LEVEL" pattern="%level" />
+			<Column name="MESSAGE" pattern="%message" />
+		</JDBC>
+		<SMTP name="LogToMail" subject="Error Log From Log4j" 
+			from="javabyshivam@gmail.com" to="javabyshivam@gmail.com" 
+		      smtpHost="smtp.mailgun.org" smtpPort="587" 
+		      smtpUsername="postmaster@sandbox79ddd5dc958545dbaae485b2ae467b96.mailgun.org" 
+		      smtpPassword="e197b1c631f3ac37aab4207b0111f86b-2de3d545-3c77c8bf" 
+		      bufferSize="100">
+		</SMTP>
+	</Appenders>
+	<Loggers>
+		<Logger level="debug" name="com.app.shivam" additivity="false">
+			<AppenderRef ref="LogToRollingFile" />
+			<AppenderRef ref="LogToConsole" />
+			<AppenderRef ref="LogToFile" />
+			<AppenderRef ref="LogToDb" />
+			<AppenderRef ref="LogToMail" />
+		</Logger>
+		<Root level="trace">
+			<AppenderRef ref="LogToConsole" />
+		</Root>
+	</Loggers>
+</Configuration>
+
+Schema.sql
+create table EVENT_LOGS (
+    ID varchar(50) primary key,
+    DATE_TIME timestamp,
+    CLASS varchar(100),
+    LEVEL varchar(10),
+    MESSAGE TEXT
+);
+
+Connection Class
+package com.app.shivam;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
+public class LogsStoreConnectionFactory {
+	
+	private static BasicDataSource dataSource;
+
+	private LogsStoreConnectionFactory() {
+	}
+
+	public static Connection getConnection() throws SQLException {
+		if (dataSource == null) {
+			dataSource = new BasicDataSource();
+			dataSource.setUrl("jdbc:mysql://localhost:3306/boot");
+			dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+			dataSource.setUsername("root");
+			dataSource.setPassword("Shivam@123);
+		}
+		return dataSource.getConnection();
+	}
+}
+
+Test class:
+package com.app.shivam;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class Test {
+
+	private static final Logger logger = LogManager.getLogger(Test.class);
+	
+	public static void main(String[] args) {
+
+		logger.trace("FROM TRACE");
+		logger.debug("FROM DEBUG");
+		try {
+			System.out.println("DONE");
+			logger.info("FROM INFO");
+			logger.warn("FROM WARN");
+			System.out.println(getData());
+		} catch (IllegalArgumentException e) {
+			logger.error("FROM ERROR");
+			logger.error("{}", e.getMessage());
+		}
+		logger.fatal("FROM FATAL");
+
+	}
+
+	private static int getData() throws IllegalArgumentException {
+		throw new IllegalArgumentException("Sorry IllegalArgumentException!");
+	}
+}
+
