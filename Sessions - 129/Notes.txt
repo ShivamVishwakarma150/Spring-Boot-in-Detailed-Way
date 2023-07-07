@@ -1,0 +1,118 @@
+
+			   Log4j 2.x with Spring Boot
+
+=> Logging Service : Fetch all types of messages from Server
+			[mainly used at Production]
+=> Types of Messages: Success, Warning, Information, Exception..etc
+
+=> Logger is created inside the class that contains Priority methods
+-------------------------------------------
+   Name		Order		method
+-------------------------------------------
+   DEBUG	1		debug()
+   INFO		2		info()
+   WARN		3		warn()
+   ERROR	4		error()
+   FATAL	5		fatal()
+-------------------------------------------
+
+=> Appender + Layout must be configured using XML/Properties file.
+
+Appender: Where to write Log Message
+ ConsoleAppender, FileAppender (__.log), JDBCAppender (Write to DB),
+ SmtpAppender (Send Email)..
+
+*) PatternLayout: Date, Time, Method, Class, Message ..etc
+
+============Sample RestController code with Logging Details============
+package com.app.rest;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+//@RestController
+//@RequestMapping("/users")
+public class UserRestController {
+	
+	private static final Logger LOG = LogManager.getLogger(UserRestController.class);
+
+	//@PostMapping("/save")
+	public String saveUser() {
+		LOG.info("Entered into User#save Operation ");
+		try {
+			LOG.warn("May not be good choice.. But valid for operation");
+			//some code for save operation
+			Integer id = 999;
+			LOG.debug("User created with {} ",  id);
+		} catch(Exception e) {
+			LOG.error("Unable to process details {}", e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		LOG.info("About to Leave Save Operation");
+		return "SUCCESS";
+	}
+}
+=======Ex code #2========================================================
+package com.app.shivam.rest;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@RequestMapping("/users")
+@Slf4j
+public class UserRestController {
+	
+	//private static final Logger log = LogManager.getLogger(UserRestController.class);
+
+	@PostMapping("/save")
+	public String saveUser() {
+		log.info("Entered into User#save Operation ");
+		try {
+			log.warn("May not be good choice.. But valid for operation");
+			//some code for save operation
+			Integer id = 999;
+			log.debug("User created with {} ",  id);
+		} catch(Exception e) {
+			log.error("Unable to process details {}", e.getMessage());
+			e.printStackTrace();
+			throw e;
+		}
+		log.info("About to Leave Save Operation");
+		return "SUCCESS";
+	}
+}
+
+*) SLF4J : Simple Logging Facade : This is an abstract f/w designed
+   on top of Logging F/w (Log4J, Common Logging, Java Logging Util)
+
+=> if we move from one Logging F/w to another Logging F/w, our code
+  (RestController) Logger objects and method calls remains same.
+
+=> We need to add Logger object line using
+private static final Logger log = LoggerFactory.getLogger(__.class);
+
+=> Project Lombok says, I'll generate above line:
+   Just add @Slf4j over class.
+
+*) If we add any dependency in Spring Boot (ie created Spring app)
+ then by default Spring Boot Logging Dependency is added.
+
+<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-logging</artifactId>
+</dependency>
+
+It comes with Logback, Log4J and JUL support.
+
+*) Our Log files data is configured with RollingFileAppender
+  that says if File Reaches to Max Limit then create a backup
+  as a Zip Format and move to any Archival Service
+
+*) BASH_SCRIPT : .gz file (tar.gz) -> AWS SDK API -> AWS S3 glacier.
+Ref:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-services-glacier.html
