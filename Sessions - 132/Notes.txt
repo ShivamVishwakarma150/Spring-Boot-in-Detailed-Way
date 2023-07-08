@@ -1,0 +1,34 @@
+
+				    Docker
+
+1. To Run our application in any environment we need softwares
+and dependencies like: JRE/Java, Tomcat Server, MySQL Database
+Jars/Dependncies, Cache Server, ..etc
+
+2. Environment can be : Linux, Windows Server, MAC OS ..etc
+
+3. Softwares and application dependencies are OS Dependent.
+
+4. To make them OS Independent, we use Virtual OS concept ie Docker
+
+5. Docker works based on Images and Containers.
+
+Image : Software/Application in packed format with dependencies.
+Containers : if we run Image, then it is called as Container.
+
+6. We can create our application image by using Dockerfile(info)
+   and build it.
+
+7. We can push into docker hub (repository) to store and share images
+   to other dev/prod/qa environments.
+
+8. We can pull images and run using docker in any environment.
+
+9. Task by Dev:
+Code
+create Dockerfile
+Create Docker Image (build)
+Run Docker image (Container)
+Create Docker Tag (username/image)
+Push the tag -> hub
+Pull From Hub
