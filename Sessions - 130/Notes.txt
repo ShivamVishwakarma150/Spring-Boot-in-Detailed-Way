@@ -1,0 +1,94 @@
+Unit testing:-
+=> Every developer will write code for a assigned task
+=> once code is done, need to be tested by Developer only.
+=> Such Testing is done by Unit Test F/w.
+
+*) General meaning of Unit is : Part of Code/Module/task..
+*) Manul test    : Testing manually on changes, enhancements is repeated work.
+   Automated Test: One time code, Execute/call same code next time.
+	Ex: JUnit F/w, TestNG..etc
+
+====================================================================
+JUnit 5.x:-
+ It is open Source java F/w to test java applications (PASS/FAIL)
+
+=> Actual Result after operation and expected result are same or not?
+
+1. JUnit Annotations
+2. JUnit Assert API
+
+=> We need to define one class that execute UnitTesting ie called as
+	 Test Case
+=> Inside this class, we define a method with @Test, ie called as 
+	Test method.
+Ex:
+class SampleTest {
+  @Test
+  void testSave() {
+  
+  }
+}
+
+===============Ex#2=====================================
+service code:
+package com.app.shivam;
+
+public class Calculator {
+
+    public int multiply(int a, int b) {
+        return a * b;
+    }
+
+}
+
+Test code:
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class CalculatorTest {
+
+	Calculator c;
+	int a, b, actual, expected;
+
+	@BeforeEach
+	public void setup() {
+		c = new Calculator();
+		a = 10;
+		b = 20;
+		expected = 200;
+	}
+
+	@Test
+	@Order(10)
+	@DisplayName("TESTING NULL CHECK")
+	public void testObjCreated() {
+		assertNotNull(c);
+	}
+	
+	@Order(20)
+	@Test
+	@DisplayName("TESTING MULTIPLY OPERATION")
+	public void testMultiply() {
+		actual = c.multiply(a, b);
+		assertEquals(expected, actual);
+	}
+
+	@AfterEach
+	public void clean() {
+		c = null;
+	}
+
+}
+
+
