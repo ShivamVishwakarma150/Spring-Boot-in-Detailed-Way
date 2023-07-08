@@ -1,0 +1,539 @@
+			     Mockito
+
+*) We are Dev-3 working on Module-3.
+*) I want to Code for Module-3 and test but it is internally dependent 
+	on Module-2
+*) So, I'll Create Dummy Implementation of Module-2 for Develop and 
+   Test Module-3. ie called as Mocking.
+*) Mocking can be done for even Database Connections, Server setup, 
+	Request object creation..etc
+
+//depends on
+interface ProductService {
+  Integer saveProduct();
+}
+
+//develop and test
+class ProductController {
+  ProductService ps;
+
+}
+
+ProductService ps = mock(ProductService.class);
+
+*) Stub is created for ProductService (Dummy Impl class)
+
+class Proxy$1 implements ProductService {
+  public Integer saveProduct() {
+    return 0;
+  }
+}
+
+ProductService ps = new Proxy$1();
+--------------------------------------
+when(ps.saveProduct()).thenReturn(100);
+when(ps.saveProduct()).thenReturn(Mock.anyInt());
+
+==========Mockito Basic Example#1===================
+*) Service class:
+package com.app.shivam;
+
+public interface ProcessInfo {
+
+	Integer getCode(String code);
+}
+
+*) Test class:
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Test;
+
+public class TestMockProcessInfo {
+	@Test
+	public void testInfo() {
+		ProcessInfo ps = mock(ProcessInfo.class);
+		when(ps.getCode("ABC")).thenReturn(100);
+		
+		assertEquals(ps.getCode("ABC"), 100);
+	}
+}
+=======Basic Example#2=======================================================
+*) Application code:
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class Repository {
+	
+	public List<String> getData() throws SQLException {
+		return null;
+	}
+}
+
+-------------
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Service {
+
+    private Repository repository;
+
+    public Service(Repository repository) {
+        this.repository = repository;
+    }
+    
+    public List<String> getDataLen() {
+        try {
+            return repository.getData().stream()
+                    .filter(data -> data.length() < 5)
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            return Arrays.asList();
+        }
+    }
+}
+
+
+*) Test class code:
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public class ServiceTest {
+
+	@Mock //creates stub for Repository (Dummy Impl code)
+	private Repository repo;
+	
+	@InjectMocks //creates actual object of service with dummy Repo object injected
+	private Service sob;
+	
+	@Test
+	public void testGetDataLen() throws SQLException {
+		//provide dummy impl for method getData(), that returns Array of 5 elements
+		when(repo.getData())
+		.thenReturn(Arrays.asList("A","B","TEST","WELCOME","FORMAT"));
+		
+		List<String> list = sob.getDataLen();
+		assertNotNull(list);
+		assertEquals(list.size(), 3);
+		
+	}
+	
+}
+======================================================================
+*) Recommended to use Embedded Databases: H2 for Testing Spring Boot Applications
+
+MOCKITO
+
+Mockito is a java based mocking framework, used in conjunction with other testing frameworks such as JUnit. It internally uses Java Reflection API and allows to create objects of a service. A mock object returns a dummy data and avoids external dependencies.
+
+What is Mocking?
+It is a process of Creating a Dummy Implementation for dependent code.
+
+What is Mocking?
+Mocking is a way to test the functionality of a class in isolation. 
+Mocking does not require a database connection or properties file read or file server read to test a functionality. 
+Mock objects do the mocking of the real service. A mock object returns a dummy data corresponding to some dummy input passed to it.
+
+
+What are Benefits of Mocking?
+ 
+
+No handwriting: In Mockito, there is no requirement for writing your mock objects.
+Safe refactoring: While renaming the method name of an interface or interchanging the parameters do not change the test code, as mock objects are created at runtime.
+Exception support: It supports the exception. In Mockito, the stack trace is used to find the cause of the exception.
+Annotation support: It creates mock objects using annotations like @Mock.
+Order support: It provides a check on the order of the method calls.
+
+
+Creating Mock Object for a class:
+T obj = mock(T.class)
+
+Provide Implementation to mock object (We can call training even)
+To Return a value:
+when(obj.method()).thenReturn(output)
+To throw any exception:
+when(obj.method()).thenThrow(exceptionObj)
+Mocking Void methods:
+doNothing().when(instance).methodName();
+
+EXAMPLE#1
+Service Code:
+package com.app.shivam;
+
+public interface ProcessInfo {
+
+	Integer getCode(String code);
+}
+
+Mocking with Methods:
+package com.app.shivam;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Test;
+
+public class ProcessInfoTest {
+	@Test
+	void testgetCode() {
+		ProcessInfo p = mock(ProcessInfo.class);
+		when(p.getCode("Hello")).thenReturn(5);
+		
+		System.out.println(p.getCode("Hello"));
+		assertEquals(p.getCode("Hello"), 5);
+	}
+}
+
+
+EXAMPLE#2
+Annotations based: 
+@Mock: Creates A Mock object of a type
+@InjectMock: Injects the Dependency Mock objects
+@ExtendWith(MockitoExtension.class) : Enable Mockito annotations with JUnit
+
+
+SERVICE CODE: -
+
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class Repository {
+    public List<String> getData() throws SQLException {
+    	return null;
+    }
+}
+-------------------------------------------------------------------
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Service {
+    private Repository repository;
+
+    public Service(Repository repository) {
+        this.repository = repository;
+    }
+
+    public List<String> getDataLen() {
+        try {
+            return repository.getData().stream()
+                    .filter(data -> data.length() < 5)
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            return Arrays.asList();
+        }
+    }
+}
+
+
+TEST CLASS: -
+
+package com.app.shivam;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class ServiceTest {
+	
+	@Mock
+	Repository repository;
+
+	@InjectMocks
+	Service service;
+
+	@Test
+	void testSuccess() {
+		// Setup mock scenario
+		try {
+			Mockito.when(repository.getData()).thenReturn(
+					Arrays.asList("A", "B", "CDEFGHIJK", "12345", "1234"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		// Execute the service that uses the mocked repository
+		List<String> data = service.getDataLen();
+
+		// Validate the response
+		Assertions.assertNotNull(data);
+		Assertions.assertEquals(3, data.size());
+	}
+
+	@Test
+	void testException() {
+		// Setup mock scenario
+		try {
+			Mockito.when(repository.getData()).thenThrow(
+					new SQLException("Connection Exception"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		// Execute the service that uses the mocked repository
+		List<String> data = service.getDataLen();
+
+		// Validate the response
+		Assertions.assertNotNull(data);
+		Assertions.assertEquals(0, data.size());
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+SPRING BOOT TESTING EXAMPLES
+
+EXAMPLE#3 Spring Boot Data JPA JUnit with Mock Example 
+Dependencies: Data JPA, H2, Lombok
+ 
+
+Entity:
+
+package com.app.shivam.entity;
+
+import java.time.LocalDate;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "moviestab")
+public class Movie {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	
+	private String name;
+	
+	private String gener;
+	
+	private LocalDate releaseDate;
+}
+
+Repository:
+package com.app.shivam.repo;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.shivam.entity.Movie;
+
+public interface MovieRepository extends JpaRepository<Movie, Long>{
+	
+	List<Movie> findByGener(String gener);
+}
+
+TEST CASE:
+package com.app.shivam;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+import com.app.shivam.entity.Movie;
+import com.app.shivam.repo.MovieRepository;
+
+@DataJpaTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class MovieRepositoryTest  {
+
+	@Autowired
+	private MovieRepository movieRepository;
+	
+	@Order(1)
+	@Test
+	@DisplayName("IT SHOULD SAVE THE MOVIE TO THE DATABASE")
+	void save() {
+		Movie avatarMovie = new Movie();
+		avatarMovie.setName("Avatar");
+		avatarMovie.setGener("Action");
+		avatarMovie.setReleaseDate(LocalDate.of(2000, Month.APRIL, 23));
+		
+		Movie newMovie = movieRepository.save(avatarMovie);
+		assertNotNull(newMovie);
+		assertThat(newMovie.getId()).isNotEqualTo(null);
+	}
+	
+	@Order(2)
+	@Test
+	@DisplayName("IT SHOULD RETURN THE MOVIES LIST WITH SIZE OF 2")
+	void getAllMovies() {
+		Movie rrr = new Movie();
+		rrr.setName("RRR");
+		rrr.setGener("Action");
+		rrr.setReleaseDate(LocalDate.of(2022, Month.MARCH, 24));
+		movieRepository.save(rrr);
+		
+		Movie kantara = new Movie();
+		kantara.setName("KANTARA");
+		kantara.setGener("Thriller");
+		kantara.setReleaseDate(LocalDate.of(2022, Month.SEPTEMBER, 30));
+		movieRepository.save(kantara);
+		
+		List<Movie> list = movieRepository.findAll();
+		
+		assertNotNull(list);
+		assertThat(list).isNotNull();
+		assertEquals(2, list.size());
+	}
+	
+	@Order(3)
+	@Test
+	@DisplayName("IT SHOULD RETURN THE MOVIE BY ITS ID")
+	void getMovieById() {
+		Movie rrr = new Movie();
+		rrr.setName("RRR");
+		rrr.setGener("Action");
+		rrr.setReleaseDate(LocalDate.of(2022, Month.MARCH, 24));
+		movieRepository.save(rrr);
+		
+		Movie newMovie = movieRepository.findById(rrr.getId()).get();
+		
+		assertNotNull(newMovie);
+		assertEquals("Action", newMovie.getGener());
+		assertThat(newMovie.getReleaseDate()).isBefore(LocalDate.of(2022, Month.APRIL, 24));
+	}
+	
+	@Order(4)
+	@Test
+	@DisplayName("IT SHOULD RETURN THE MOVIES LIST WITH GENER THRILLER")
+	void getMoviesByGenera() {
+		Movie rrr = new Movie();
+		rrr.setName("RRR");
+		rrr.setGener("Action");
+		rrr.setReleaseDate(LocalDate.of(2022, Month.MARCH, 24));
+		movieRepository.save(rrr);
+		
+		Movie kantara = new Movie();
+		kantara.setName("KANTARA");
+		kantara.setGener("Thriller");
+		kantara.setReleaseDate(LocalDate.of(2022, Month.SEPTEMBER, 30));
+		movieRepository.save(kantara);
+		
+		List<Movie> list = movieRepository.findByGener("Thriller");
+		
+		assertNotNull(list);
+		assertThat(list.size()).isEqualTo(1);
+	}
+	
+	@Order(5)
+	@Test
+	@DisplayName("IT SHOULD UPDATE THE MOVIE GENERA WITH FANTACY")
+	void updateMovie() {
+		Movie rrr = new Movie();
+		rrr.setName("RRR");
+		rrr.setGener("Action");
+		rrr.setReleaseDate(LocalDate.of(2022, Month.MARCH, 24));
+		movieRepository.save(rrr);
+		
+		Movie existingMovie = movieRepository.findById(rrr.getId()).get();
+		existingMovie.setGener("Fantacy");
+		Movie updatedMovie = movieRepository.save(existingMovie);
+		
+		assertEquals("Fantacy", updatedMovie.getGener());
+		assertEquals("RRR", updatedMovie.getName());
+	}
+	
+	@Order(6)
+	@Test
+	@DisplayName("IT SHOULD DELETE THE EXISTING MOVIE")
+	void deleteMovie() {
+		Movie kantara = new Movie();
+		kantara.setName("KANTARA");
+		kantara.setGener("Thriller");
+		kantara.setReleaseDate(LocalDate.of(2022, Month.SEPTEMBER, 30));
+		movieRepository.save(kantara);
+		Long id = kantara.getId();
+		
+		Movie rrr = new Movie();
+		rrr.setName("RRR");
+		rrr.setGener("Action");
+		rrr.setReleaseDate(LocalDate.of(2022, Month.MARCH, 24));
+		movieRepository.save(rrr);
+		
+		movieRepository.delete(kantara);
+		
+		List<Movie> list = movieRepository.findAll();
+		
+		Optional<Movie> exitingMovie = movieRepository.findById(id);
+		
+		assertEquals(1, list.size());
+		assertThat(exitingMovie).isEmpty();
+		
+	}
+
+}
+
