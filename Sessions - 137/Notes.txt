@@ -1,0 +1,18 @@
+	JIRA Tool
+--------------------------------------------
+JIRA : AGILE Process Management Tool
+Issue Tacking S/w.
+Issues: EPIC, Story, Bug, Task, Subtask.
+
+org: JIRA A/c created by ADMIN Team.
+
+Role		What is the work?
+---------------------------------------------------
+BA		Creates EPIC, Stories
+
+Dev		Implement Stories (Change status, comments, Documents) 
+
+QA		Report Bugs, Check Stories which are resolved and test.
+---------------------------------------------------
+
+https://www.atlassian.com/software/jira
