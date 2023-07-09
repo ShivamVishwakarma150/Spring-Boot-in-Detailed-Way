@@ -167,7 +167,7 @@ Overall, the **Spring-Boot-in-Detailed-Way** repository serves as a valuable res
 - GitHub: Using Git and GitHub for version control and collaboration.
 - Zipkin and Sleuth: Distributed tracing with Zipkin and Sleuth for Microservices.
 
-## Bonus Concepts
+## Extra Concepts
 
 - Email: Sending emails from Spring Boot applications.
 - Scheduling: Scheduling tasks in Spring Boot applications.
