@@ -1,0 +1,69 @@
+			  AGILE Method
+
+PO : Product Owner
+BA : Business Analyst
+
+EPIC : Product / Project Document.
+
+Stroy : Work need to be done. (Module/ Part Module)
+
+--Example Story----------------
+Ticket: WH-3466  <UniqueId>
+Title : User Register Process
+Description: <What need to be done>
+
+Acceptance Criteria :
+>> Point-1
+>> Point-2
+>> Point-3
+
+**) Efforts Estimation Time (EET) Story Points : 1 = 8hrs
+ex: SP : 3 ( 3 days = 24 Hrs)
+
+Created By : ___________
+Assigned To : __________
+
+Labels: Sprint1.0, RP1.0 
+--------------------------------
+
+Ex: Story  WH-001 .... WH-200
+
+** PB : Product Backlogs : Unplanned Stories / Unimplemented Stories.
+
+===================================================================
+Scrum Team : Group of people involved in Development.
+
+Scrum Master : head of team.
+
+Sprint : Milestone (2weeks , 1 month, 3 months ..plan)
+
+> Sprint Planning : Creating a Plan for all Scrum Team members.
+> Sprint Execution : Starting work from next day onwards..
+> Sprint Retrospective : What went Good, Bad, Learnings..
+===================================================================
+Story Life Cycle:
+OPEN		: Work is accepted to implement , but not started
+IN-PROGRESS	: Coding Started
+RESOLVED	: Coding is done , it is in stage/qa/UAT environments.
+CLOSED		: Testing also done, working fine.
+
+Bug Life Cycle:
+Bug : issue in work/application. 
+
+*) Application are tested and Bug are reported by QA Team.
+OPEN		: Bug is Accepted (Need to be implemented)
+FIXING		: Coding is started
+FIXED           : Bug is fixed by Dev Team
+CLOSED		: Bug is tested and working fine.
+REJECTED	: Bug is duplicated, not as part of story...
+
+===============================================================
+Issue Types:
+EPIC		: Full and Final Document
+STORY		: A work/module/..
+BUG		: Issue in work
+TASK		: Story can be converted into small works ..ie TASK
+	User Module --> 1. User Register, 2. user Login, 3. Profile page
+
+SUB TASK : A part of Task.
+=============================================================
