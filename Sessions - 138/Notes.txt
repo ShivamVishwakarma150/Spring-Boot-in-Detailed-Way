@@ -1,0 +1,16 @@
+Spring Boot Email
+-----------------
+
+SMTP : Simple Mail Transfer Protocol
+
+1. Mail Server (Open Source / Paid Service)
+2. Email Application
+3. Mail Input (To, subject, cc, Text .. etc)
+
+
+Google Mail Server:
+host => smtp.gmail.com
+port=> 587
+username=> 
+password=> 
+
