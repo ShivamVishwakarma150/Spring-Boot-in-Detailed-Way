@@ -1,0 +1,218 @@
+
+		Apache Camel
+-------------------------------------------------------------
+1. Integrate two different machines/Systems and trasfer data 
+    then we can use camel s/w.
+
+2. Open Source API, used to trasfer data between systems.
+
+3. Supports different porotocols HTTP, FTP, FILE, JMS, JDBC..etc
+
+4. Supports Integration with different languages Hadoop, Python..etc
+
+5. Supports different data formats processing/filtering , XML, JSON, text..etc
+
+*) camel s/w supports 3 types of operations
+A. Routing : Trasfer data from source to destination
+B. Filter : Apply conditions to avoid un-wanted data.
+C. Processing: Convertions/Modification/calculations
+
+*) Camel uses EIP concept to implement above operations
+  EIP: Enterprise Integration Patterns
+=========================================================
+Spring Boot supports Integration concept using Camel.
+For that we need to apache camel dependency in pom.xml
+
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-spring-boot-starter</artifactId>
+			<version>3.20.2</version>
+		</dependency>
+
+#1 We need to define one class for Routing that implements RouteBuilder(AC)
+ contains one abstract method:
+    public abstract void configure() throws Exception;
+ This we need to override.
+
+#2 Define EIP inside configure() method
+
+#3 When we stop main class/app, also stop routing
+camel.springboot.main-run-controller=true
+
+
+=====EIP Patterns=======================================
+#1
+ package com.app.shivam.route;
+
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyFilesRouting extends RouteBuilder {
+
+	@Override
+	public void configure() throws Exception {
+		from("file:D:\\source").to("file:D:\\desti");
+		
+	}
+}
+
+#2 By default all source files are taken backup into .camel folder
+in Source location and sent to destination.
+If we send same file one more time, new data is overriden at destination.
+
+To avoid new data override for existed file, just add ?noop=true
+
+from("file:D:\\source?noop=true").to("file:D:\\desti");
+
+#3 We can pass locations from proeprties files then read those using
+ {{key}} in code
+
+--application.properties---
+
+my.app.source=file:D:\\source?noop=true
+my.app.desti=file:D:\\desti
+
+--configure method---
+from("{{my.app.source}}").to("{{my.app.desti}}");
+=================================================
+#4 for MQs to File
+
+A) in pom.xml
+<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-spring-boot-starter</artifactId>
+			<version>3.20.2</version>
+		</dependency>
+		
+		<!-- JMS - Active MQ Integration -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-activemq</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-pool</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jms</artifactId>
+			<version>3.20.2</version>
+		</dependency>
+
+B) in properties file
+#When we stop main class/app, also stop routing
+camel.springboot.main-run-controller=true
+
+#Apache ActiveMQ
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+C) Router class
+package com.app.shivam.route;
+
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyMqFileRoute extends RouteBuilder {
+
+	@Override
+	public void configure() throws Exception {
+		from("jms:queue:indata").to("file:D:/desti?fileName=info.txt");
+	
+	}
+}
+
+D) Start activeMQ and create a queue name :indata
+E) click on sendTo and enter message , click send
+
+=========================================================
+#5 To connect with Database
+
+in pom.xml
+	<!--Camel and JDBC-->
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jdbc</artifactId>
+			<version>3.20.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+AppConfig for database connection
+package com.app.shivam.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+
+@Configuration
+public class AppConfig {
+
+	@Bean
+	public DriverManagerDataSource dataSource() {
+		DriverManagerDataSource ds=new DriverManagerDataSource();
+		ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		ds.setUrl("jdbc:mysql://localhost:3306/cameldb");
+		ds.setUsername("root");
+		ds.setPassword("Shivam@123");
+		return ds;
+	}
+}
+
+
+--MySQL Commands--------
+mysql> create database cameldb;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use cameldb;
+Database changed
+mysql> create table users(uid int, uname varchar(20), urole varchar(20));
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> insert into users values(10,'A','ADMIN');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into users values(11,'B','CUSTOMER');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+=======================================
+Router class:
+package com.app.shivam.route;
+
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyJdbcToFileRoute extends RouteBuilder{
+
+	@Override
+	public void configure() throws Exception {
+
+		from("timer:/timer1?repeatCount=1")
+		.setBody(constant("select * from users"))
+		.to("jdbc:dataSource")
+		.process(ex->{
+			String s=ex.getMessage().getBody(String.class);
+			System.out.println(s);
+			ex.getMessage().setBody(s);
+		})
+		.to("file:d:/desti?fileName=aa.txt");
+	}
+}
