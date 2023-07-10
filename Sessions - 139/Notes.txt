@@ -1,0 +1,137 @@
+
+		Spring Boot Scheduling
+
+Scheduling is a process of executing a task in a loop based
+on period of time or point of time.
+
+=> Automated task
+=> Repeated on a time gap.
+
+
+Examples:-
+1. Bank Monthly/Weekly Statements
+2. Credit Call Bills (for every 30 days)
+3. Electricty bill
+4. ACT Fiber Bill
+5. Monthly/ Quarterly reports..
+6. Salary Payments
+..etc
+
+*) Period of Time : Time gap 
+4hrs
+30 minutes
+2 days
+15 days
+
+*) Point of Time: Exact start time
+1st Jan 9:00:00 AM
+
+========================================================================
+Spring Boot supports Scheduling concept by default for every application
+(It is from Spring Core)
+
+We need to provide two annotations
+1. @EnableScheduling : At main class
+2. @Scheduled annotation
+
+*) fixedDelay=(mill sec)  [1000 mill sec -> 1 sec]
+To execute a task based on period of time.
+
+==Example code===================
+package com.app.shivam.service;
+
+import java.util.Date;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ReportService {
+
+	@Scheduled(fixedDelay = 60000) //1000mill sec = 1 sec
+	public void printReport() {
+		System.out.println("REPORT " + new Date());
+	}
+}
+=======================================================================
+cron Expression : Date and Time (from Linux)
+
+	SEC     MIN     HRS     DAY      MONTH     WEEKDAY
+	0-59    0-59    0-23    1-31     1-12      0-7 SUN-SAT
+
+Symbols :
+*   = all / any
+?   = any (DAY OR WEEKDAY when MONTH IS GIVEN)
+,   = Possible values
+-   = Range
+/   = Period of time
+
+--Examples-------------------------------
+Ex#1 cron = 0 0 9 * * *
+Execute a Task every day at 9:00:00 AM
+
+Ex#2 cron = 0 0 18 * * *
+Execute a Task every day at 6:00:00 PM
+
+Ex#3 cron = 0 0 6,18 * * *
+Execute a Task every day 6:00:00AM and 6:00:00PM
+
+Ex#4 cron = 0 0 8-10 * * *
+Execute a Task every day 8:00:00AM, 9:00:00AM and 10:00:00AM
+
+Ex#5 cron = 59 59 23 31 12 SUN-SAT
+Execute a Task every year Dec-31st night 11:59:59 PM
+It can be any weekday
+
+Ex#6 cron = 0 0 0 * * *
+Execute a Task every day mid night 12 NOON => 12:00:00 AM
+
+Ex#7 cron = 0 0 * * * *
+Execute a Task every hour (starting) 0th Min and 0th Sec
+
+8:58 PM
+9:00:00 PM  --Execute task
+10:00:00 PM --Execute task
+11:00:00 PM --Execute task
+
+Ex#8 cron = 0 10 * * * *
+Execute a Task every hour, 10th minute 0th Sec
+9:10:00 , 10:10:00, 11:10:00
+
+Ex#9 cron = 10 * * * * *
+           SEC MIN HRS DAY MONTH WEEKDAY
+Execute a Task every minute 10th Sec, not 10 sec gap.
+
+---------Period of time ==> use symbol / ==============
+Ex#10 cron = */10 * * * * *
+ Execute task for every 10 sec
+
+Ex#11 cron =  * * * * * *  (is equals to) */1 * * * * *
+ Executes a task with gap of 1 sec
+
+Ref:
+https://spring.io/blog/2020/11/10/new-in-spring-5-3-improved-cron-expressions
+
+
+==Example code=======
+package com.app.shivam.service;
+
+import java.util.Date;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ReportService {
+
+	//@Scheduled(fixedDelay = 60000) //1000mill sec = 1 sec
+	//@Scheduled(cron = "0 0 9 * * *")
+	//@Scheduled(cron = "10 * * * * *")
+	//@Scheduled(cron = "*/10 * * * * *")
+	//@Scheduled(cron = "* * * * * *")
+	@Scheduled(cron = "@hourly") //0 0 * * * *
+	public void printReport() {
+		System.out.println("REPORT " + new Date());
+	}
+}
+====================================================================
