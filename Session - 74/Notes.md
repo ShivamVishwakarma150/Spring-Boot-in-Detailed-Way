@@ -1,5 +1,3 @@
----
-
 **@CrossOrigin:**
 
 `@CrossOrigin` is an annotation used in Java Spring Boot applications to enable Cross-Origin Resource Sharing (CORS). CORS is a mechanism that allows resources (e.g., APIs) on a web page to be requested from another domain outside the domain from which the resource originated. In the given example, the `@CrossOrigin` annotation is used at the class level of a REST controller to allow requests from two specific origins, "http://localhost:3000" and "http://localhost:4200".
