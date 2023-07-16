@@ -1,7 +1,3 @@
-			 Date : 02-12-2022
-		    Spring Boot and Microservices
-			7AM | Mr. Raghu | (ASHOK IT)
-  ---------------------------------------------------------------------
 *) AT Rest Controller class level:
 @CrossOrigin({
 	"http://localhost:3000/",
