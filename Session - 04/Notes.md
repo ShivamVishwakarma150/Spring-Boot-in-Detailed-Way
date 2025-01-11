@@ -1,5 +1,3 @@
----
-
 ## **Spring Container (Spring IoC) - Inversion of Control**
 
 The **Spring Container** is the core of the Spring Framework. It follows the principle of **Inversion of Control (IoC)**, where the framework takes control of object creation and dependency management, instead of the application manually doing it. Here's what the Spring Container does:
